@@ -261,13 +261,13 @@
 
 **Purpose**: Responsive design, error handling, E2E tests, production readiness
 
-- [ ] T097 Add responsive layout with Tailwind responsive breakpoints: tablet-first design for iPad, collapsible sidebar on mobile, touch-friendly table rows and buttons, test at 768px and 1024px breakpoints across all pages
-- [ ] T098 Create error boundary and custom error pages: src/app/error.tsx (Thai "เกิดข้อผิดพลาด" + retry button), src/app/not-found.tsx (Thai "ไม่พบหน้าที่ต้องการ" + go home link), global-error.tsx for uncaught errors
-- [ ] T099 [P] Create Playwright E2E test for dashboard flow: navigate to / → redirect to login → enter test session ID → submit → dashboard loads → verify hospital table has rows → click first hospital → patient list loads → click first patient → detail page with charts renders in tests/e2e/dashboard.spec.ts
-- [ ] T100 [P] Create Playwright E2E test for admin flow: login as admin → navigate to /admin → verify hospital table → click edit on hospital → enter tunnel URL → save → test connection → verify status updates in tests/e2e/admin.spec.ts
-- [ ] T101 Create StaleBanner component: fixed top banner when all hospital connections are OFFLINE "ระบบไม่สามารถเชื่อมต่อ HOSxP ได้ — ข้อมูลที่แสดงอาจไม่เป็นปัจจุบัน", per-hospital inline warning when individual hospital is offline in src/components/shared/StaleBanner.tsx
-- [ ] T102 Create Dockerfile: multi-stage build (Stage 1: Node 20 alpine + npm ci + npm run build, Stage 2: Node 20 alpine + copy standalone output + expose 3000) and update docker-compose.yml to build from Dockerfile
-- [ ] T103 Run quickstart.md validation: execute all 8 verification steps end-to-end (login, dashboard loads, hospital data, patient list, patient detail, real-time update, offline handling, print form, admin panel) and document results
+- [x] T097 Add responsive layout with Tailwind responsive breakpoints: tablet-first design for iPad, collapsible sidebar on mobile, touch-friendly table rows and buttons, test at 768px and 1024px breakpoints across all pages
+- [x] T098 Create error boundary and custom error pages: src/app/error.tsx (Thai "เกิดข้อผิดพลาด" + retry button), src/app/not-found.tsx (Thai "ไม่พบหน้าที่ต้องการ" + go home link), global-error.tsx for uncaught errors
+- [x] T099 [P] Create Playwright E2E test for dashboard flow: navigate to / → redirect to login → enter test session ID → submit → dashboard loads → verify hospital table has rows → click first hospital → patient list loads → click first patient → detail page with charts renders in tests/e2e/dashboard.spec.ts
+- [x] T100 [P] Create Playwright E2E test for admin flow: login as admin → navigate to /admin → verify hospital table → click edit on hospital → enter tunnel URL → save → test connection → verify status updates in tests/e2e/admin.spec.ts
+- [x] T101 Create StaleBanner component: fixed top banner when all hospital connections are OFFLINE "ระบบไม่สามารถเชื่อมต่อ HOSxP ได้ — ข้อมูลที่แสดงอาจไม่เป็นปัจจุบัน", per-hospital inline warning when individual hospital is offline in src/components/shared/StaleBanner.tsx
+- [x] T102 Create Dockerfile: multi-stage build (Stage 1: Node 20 alpine + npm ci + npm run build, Stage 2: Node 20 alpine + copy standalone output + expose 3000) and update docker-compose.yml to build from Dockerfile
+- [x] T103 Run quickstart.md validation: execute all 8 verification steps end-to-end (login, dashboard loads, hospital data, patient list, patient detail, real-time update, offline handling, print form, admin panel) and document results
 
 ---
 
