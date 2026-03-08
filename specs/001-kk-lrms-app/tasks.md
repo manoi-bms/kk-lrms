@@ -217,18 +217,18 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T083 [P] [US5] Write test for BMS Session auth provider: validates session ID via hosxp.net, maps BMS position to UserRole (director→ADMIN, doctor→OBSTETRICIAN, default→NURSE), rejects expired sessions, handles hosxp.net connection errors in tests/unit/lib/auth.test.ts
-- [ ] T084 [P] [US5] Write test for audit service: logAccess creates audit_logs row with all required fields (user_id, action, resource_type), enforces append-only (no update/delete methods), validates required fields in tests/unit/services/audit.test.ts
+- [x] T083 [P] [US5] Write test for BMS Session auth provider: validates session ID via hosxp.net, maps BMS position to UserRole (director→ADMIN, doctor→OBSTETRICIAN, default→NURSE), rejects expired sessions, handles hosxp.net connection errors in tests/unit/lib/auth.test.ts
+- [x] T084 [P] [US5] Write test for audit service: logAccess creates audit_logs row with all required fields (user_id, action, resource_type), enforces append-only (no update/delete methods), validates required fields in tests/unit/services/audit.test.ts
 
 ### Implementation for User Story 5
 
-- [ ] T085 [US5] Configure NextAuth.js v5 with custom CredentialsProvider: authorize(credentials) takes bms_session_id, calls BmsSessionClient to validate → extract user identity, map position→UserRole, create/update users table record, return JWT with user id + name + role + hospitalCode in src/lib/auth.ts
-- [ ] T086 [US5] Create NextAuth catch-all route handler exporting GET and POST from NextAuth(authConfig) in src/app/api/auth/[...nextauth]/route.ts
-- [ ] T087 [US5] Create POST /api/auth/bms-session convenience route: receive { sessionId }, validate via BmsSessionClient, return { user: { name, role, hospitalCode }, expiresAt } for client-side pre-validation, return 401 for invalid in src/app/api/auth/bms-session/route.ts
-- [ ] T088 [US5] Implement audit service: logAccess(userId, action, resourceType, resourceId?, ip?, userAgent?, metadata?) inserts audit_logs record, no update/delete methods exposed, validateRequiredFields before insert in src/services/audit.ts
-- [ ] T089 [US5] Create login page: centered Card with Thai heading "เข้าสู่ระบบ KK-LRMS", BMS Session ID input field with placeholder, "เข้าสู่ระบบ" Button, loading state during validation, Thai error messages ("Session ID ไม่ถูกต้องหรือหมดอายุ"), auto-redirect to dashboard on success via signIn() in src/app/(auth)/login/page.tsx
-- [ ] T090 [US5] Create Next.js middleware: check NextAuth session token, redirect unauthenticated users to /login for all /(dashboard)/* and /admin/* paths, check role=ADMIN for /admin/* paths → redirect to / if not admin, pass-through for /api/auth/*, /_next/*, /login in src/middleware.ts
-- [ ] T091 [US5] Integrate audit logging into existing API routes: add logAccess(userId, 'VIEW_PATIENT', 'PATIENT', an) in GET /api/patients/[an]/route.ts, add logAccess(userId, 'VIEW_DASHBOARD', 'DASHBOARD') in GET /api/dashboard/route.ts, extract user from NextAuth session in src/app/api/patients/[an]/route.ts and src/app/api/dashboard/route.ts
+- [x] T085 [US5] Configure NextAuth.js v5 with custom CredentialsProvider: authorize(credentials) takes bms_session_id, calls BmsSessionClient to validate → extract user identity, map position→UserRole, create/update users table record, return JWT with user id + name + role + hospitalCode in src/lib/auth.ts
+- [x] T086 [US5] Create NextAuth catch-all route handler exporting GET and POST from NextAuth(authConfig) in src/app/api/auth/[...nextauth]/route.ts
+- [x] T087 [US5] Create POST /api/auth/bms-session convenience route: receive { sessionId }, validate via BmsSessionClient, return { user: { name, role, hospitalCode }, expiresAt } for client-side pre-validation, return 401 for invalid in src/app/api/auth/bms-session/route.ts
+- [x] T088 [US5] Implement audit service: logAccess(userId, action, resourceType, resourceId?, ip?, userAgent?, metadata?) inserts audit_logs record, no update/delete methods exposed, validateRequiredFields before insert in src/services/audit.ts
+- [x] T089 [US5] Create login page: centered Card with Thai heading "เข้าสู่ระบบ KK-LRMS", BMS Session ID input field with placeholder, "เข้าสู่ระบบ" Button, loading state during validation, Thai error messages ("Session ID ไม่ถูกต้องหรือหมดอายุ"), auto-redirect to dashboard on success via signIn() in src/app/(auth)/login/page.tsx
+- [x] T090 [US5] Create Next.js middleware: check NextAuth session token, redirect unauthenticated users to /login for all /(dashboard)/* and /admin/* paths, check role=ADMIN for /admin/* paths → redirect to / if not admin, pass-through for /api/auth/*, /_next/*, /login in src/middleware.ts
+- [x] T091 [US5] Integrate audit logging into existing API routes: add logAccess(userId, 'VIEW_PATIENT', 'PATIENT', an) in GET /api/patients/[an]/route.ts, add logAccess(userId, 'VIEW_DASHBOARD', 'DASHBOARD') in GET /api/dashboard/route.ts, extract user from NextAuth session in src/app/api/patients/[an]/route.ts and src/app/api/dashboard/route.ts
 
 **Checkpoint**: Full auth flow working — login, session management, role-based access, audit trail for PDPA
 

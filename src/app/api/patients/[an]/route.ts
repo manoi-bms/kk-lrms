@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/db/connection';
 import { decrypt, getEncryptionKey } from '@/lib/encryption';
+import { auth } from '@/lib/auth';
+import { logAccess } from '@/services/audit';
 import type { PatientDetailResponse } from '@/types/api';
 
 export async function GET(
@@ -11,6 +13,18 @@ export async function GET(
   try {
     const { an } = await params;
     const db = await getDatabase();
+
+    // T091: Audit logging
+    const session = await auth();
+    if (session?.user) {
+      const userId = (session.user as unknown as { id?: string }).id ?? 'unknown';
+      await logAccess(db, {
+        userId,
+        action: 'VIEW_PATIENT',
+        resourceType: 'PATIENT',
+        resourceId: an,
+      }).catch(() => {});
+    }
 
     // Query patient with hospital info
     const patients = await db.query<{
