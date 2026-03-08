@@ -39,59 +39,59 @@
 
 ### Type Definitions
 
-- [ ] T010 [P] Define BMS Session types: BmsSessionResponse, UserIdentity, UserRoles, DatabaseInfo, SessionConfig, BmsQueryResult, BmsApiError in src/types/bms-session.ts
-- [ ] T011 [P] Define HOSxP source row types: HosxpPatientRow, HosxpIptRow, HosxpPregnancyRow, HosxpVitalSignRow, HosxpLaborRow, HosxpAncRow matching actual HOSxP column names in src/types/hosxp.ts
-- [ ] T012 [P] Define KK-LRMS domain types and enums: Hospital, CachedPatient, CachedVitalSign, CpdScore, User, AuditLog, HospitalBmsConfig; enums HospitalLevel, ConnectionStatus, LaborStatus, RiskLevel, UserRole in src/types/domain.ts
-- [ ] T013 [P] Define API response types: DashboardResponse, PatientListResponse, PatientDetailResponse, VitalSignsResponse, PartogramResponse, ContractionsResponse, ErrorResponse, Pagination per contracts/api-routes.md in src/types/api.ts
+- [x] T010 [P] Define BMS Session types: BmsSessionResponse, UserIdentity, UserRoles, DatabaseInfo, SessionConfig, BmsQueryResult, BmsApiError in src/types/bms-session.ts
+- [x] T011 [P] Define HOSxP source row types: HosxpPatientRow, HosxpIptRow, HosxpPregnancyRow, HosxpVitalSignRow, HosxpLaborRow, HosxpAncRow matching actual HOSxP column names in src/types/hosxp.ts
+- [x] T012 [P] Define KK-LRMS domain types and enums: Hospital, CachedPatient, CachedVitalSign, CpdScore, User, AuditLog, HospitalBmsConfig; enums HospitalLevel, ConnectionStatus, LaborStatus, RiskLevel, UserRole in src/types/domain.ts
+- [x] T013 [P] Define API response types: DashboardResponse, PatientListResponse, PatientDetailResponse, VitalSignsResponse, PartogramResponse, ContractionsResponse, ErrorResponse, Pagination per contracts/api-routes.md in src/types/api.ts
 
 ### Configuration
 
-- [ ] T014 [P] Create risk level config: score thresholds (<5=LOW, 5-9.5=MEDIUM, >=10=HIGH), colors (green #22c55e, yellow #eab308, red #ef4444), Thai labels (ต่ำ/ปานกลาง/สูง), CPD factor weights per SPEC.md section 4.1.3 in src/config/risk-levels.ts
-- [ ] T015 [P] Create hospital level definitions: A_S, M1, M2, F1, F2, F3 enum values with Thai display names, sort order, level descriptions in src/config/hospitals.ts
-- [ ] T016 [P] Create dual-dialect SQL query templates: ACTIVE_LABOR_PATIENTS, PREGNANCY_VITAL_SIGNS, PATIENT_DEMOGRAPHICS, LABOR_RECORD, ANC_DATA with both PostgreSQL and MySQL variants; parameterized, no hardcoded conditions in src/config/hosxp-queries.ts
+- [x] T014 [P] Create risk level config: score thresholds (<5=LOW, 5-9.5=MEDIUM, >=10=HIGH), colors (green #22c55e, yellow #eab308, red #ef4444), Thai labels (ต่ำ/ปานกลาง/สูง), CPD factor weights per SPEC.md section 4.1.3 in src/config/risk-levels.ts
+- [x] T015 [P] Create hospital level definitions: A_S, M1, M2, F1, F2, F3 enum values with Thai display names, sort order, level descriptions in src/config/hospitals.ts
+- [x] T016 [P] Create dual-dialect SQL query templates: ACTIVE_LABOR_PATIENTS, PREGNANCY_VITAL_SIGNS, PATIENT_DEMOGRAPHICS, LABOR_RECORD, ANC_DATA with both PostgreSQL and MySQL variants; parameterized, no hardcoded conditions in src/config/hosxp-queries.ts
 
 ### Database Abstraction Layer
 
-- [ ] T017 Create TableDefinition type with FieldDefinition (name, abstract type, nullable, default, unique, references) and IndexDefinition (columns, unique) in src/db/table-definition.ts
-- [ ] T018 Create abstract DatabaseAdapter class with methods: execute(sql, params), query<T>(sql, params), getTableNames(), getColumnInfo(table), transaction(fn), close() in src/db/adapter.ts
-- [ ] T019 Write test and implement SqliteAdapter: better-sqlite3 in-memory mode, type mapping (boolean→INTEGER 0/1, datetime→TEXT ISO8601, json→TEXT, string[]→TEXT JSON array), all DatabaseAdapter methods in src/db/sqlite-adapter.ts and tests/unit/db/sqlite-adapter.test.ts
-- [ ] T020 Write test and implement PostgresAdapter: pg.Pool connection pooling, type mapping (TIMESTAMPTZ, JSONB, BOOLEAN, TEXT[]), parameterized queries with $1/$2 placeholders in src/db/postgres-adapter.ts and tests/unit/db/postgres-adapter.test.ts
-- [ ] T021 Write test and implement SchemaSync engine: introspect current DB schema, diff against TableDefinitions, CREATE TABLE for missing tables, ALTER TABLE ADD COLUMN for missing columns, CREATE INDEX for missing indexes, idempotent re-runs in src/db/schema-sync.ts and tests/unit/db/schema-sync.test.ts
-- [ ] T022 Write test and implement QueryBuilder: SELECT/INSERT/UPDATE/DELETE builder, WHERE clauses (=, !=, IN, IS NULL, LIKE), JOINs, ORDER BY, LIMIT/OFFSET, driver-specific placeholders ($1 for PG, ? for SQLite) in src/db/query-builder.ts and tests/unit/db/query-builder.test.ts
-- [ ] T023 Create connection factory: NODE_ENV-based routing (test→SqliteAdapter in-memory, development/production→PostgresAdapter from DATABASE_URL) in src/db/connection.ts
+- [x] T017 Create TableDefinition type with FieldDefinition (name, abstract type, nullable, default, unique, references) and IndexDefinition (columns, unique) in src/db/table-definition.ts
+- [x] T018 Create abstract DatabaseAdapter class with methods: execute(sql, params), query<T>(sql, params), getTableNames(), getColumnInfo(table), transaction(fn), close() in src/db/adapter.ts
+- [x] T019 Write test and implement SqliteAdapter: better-sqlite3 in-memory mode, type mapping (boolean→INTEGER 0/1, datetime→TEXT ISO8601, json→TEXT, string[]→TEXT JSON array), all DatabaseAdapter methods in src/db/sqlite-adapter.ts and tests/unit/db/sqlite-adapter.test.ts
+- [x] T020 Write test and implement PostgresAdapter: pg.Pool connection pooling, type mapping (TIMESTAMPTZ, JSONB, BOOLEAN, TEXT[]), parameterized queries with $1/$2 placeholders in src/db/postgres-adapter.ts and tests/unit/db/postgres-adapter.test.ts
+- [x] T021 Write test and implement SchemaSync engine: introspect current DB schema, diff against TableDefinitions, CREATE TABLE for missing tables, ALTER TABLE ADD COLUMN for missing columns, CREATE INDEX for missing indexes, idempotent re-runs in src/db/schema-sync.ts and tests/unit/db/schema-sync.test.ts
+- [x] T022 Write test and implement QueryBuilder: SELECT/INSERT/UPDATE/DELETE builder, WHERE clauses (=, !=, IN, IS NULL, LIKE), JOINs, ORDER BY, LIMIT/OFFSET, driver-specific placeholders ($1 for PG, ? for SQLite) in src/db/query-builder.ts and tests/unit/db/query-builder.test.ts
+- [x] T023 Create connection factory: NODE_ENV-based routing (test→SqliteAdapter in-memory, development/production→PostgresAdapter from DATABASE_URL) in src/db/connection.ts
 
 ### Table Definitions
 
-- [ ] T024 [P] Define hospitals table: id uuid PK, hcode varchar(5) UNIQUE NOT NULL, name varchar(255), level varchar(5), is_active boolean DEFAULT true, last_sync_at datetime NULL, connection_status varchar(10) DEFAULT 'UNKNOWN', timestamps in src/db/tables/hospitals.ts
-- [ ] T025 [P] Define hospital_bms_config table: id uuid PK, hospital_id uuid FK→hospitals UNIQUE, tunnel_url varchar(500) NOT NULL, session_id varchar(50) NULL, session_jwt text NULL, session_expires_at datetime NULL, database_type varchar(20) NULL, timestamps in src/db/tables/hospital-bms-config.ts
-- [ ] T026 [P] Define cached_patients table: id uuid PK, hospital_id FK, hn varchar(20), an varchar(20), name varchar(255) encrypted, cid varchar(13) encrypted, age integer, gravida, ga_weeks, anc_count, admit_date, height_cm, weight_kg, weight_diff_kg, fundal_height_cm, us_weight_g, hematocrit_pct, labor_status DEFAULT 'ACTIVE', delivered_at, synced_at; unique composite (hospital_id, an) in src/db/tables/cached-patients.ts
-- [ ] T027 [P] Define cached_vital_signs table: id uuid PK, patient_id FK, measured_at datetime, maternal_hr integer, fetal_hr varchar(50), sbp integer, dbp integer, cervix_cm decimal, effacement_pct decimal, station varchar(10), hct decimal, pph_amount_ml integer, synced_at; unique composite (patient_id, measured_at) in src/db/tables/cached-vital-signs.ts
-- [ ] T028 [P] Define cpd_scores table: id uuid PK, patient_id FK, score decimal, risk_level varchar(10), recommendation varchar(500), factor_gravida, factor_anc_count, factor_ga_weeks, factor_height_cm, factor_weight_diff, factor_fundal_ht, factor_us_weight, factor_hematocrit, missing_factors text[], calculated_at, created_at in src/db/tables/cpd-scores.ts
-- [ ] T029 [P] Define users table: id uuid PK, bms_user_name varchar(255), bms_hospital_code varchar(10), bms_position varchar(100), role varchar(20), is_active boolean DEFAULT true, last_login_at datetime NULL, timestamps in src/db/tables/users.ts
-- [ ] T030 [P] Define audit_logs table: id uuid PK, user_id FK→users, action varchar(50), resource_type varchar(50), resource_id varchar(50), ip_address varchar(45), user_agent varchar(500), metadata jsonb, created_at; append-only constraint in src/db/tables/audit-logs.ts
+- [x] T024 [P] Define hospitals table: id uuid PK, hcode varchar(5) UNIQUE NOT NULL, name varchar(255), level varchar(5), is_active boolean DEFAULT true, last_sync_at datetime NULL, connection_status varchar(10) DEFAULT 'UNKNOWN', timestamps in src/db/tables/hospitals.ts
+- [x] T025 [P] Define hospital_bms_config table: id uuid PK, hospital_id uuid FK→hospitals UNIQUE, tunnel_url varchar(500) NOT NULL, session_id varchar(50) NULL, session_jwt text NULL, session_expires_at datetime NULL, database_type varchar(20) NULL, timestamps in src/db/tables/hospital-bms-config.ts
+- [x] T026 [P] Define cached_patients table: id uuid PK, hospital_id FK, hn varchar(20), an varchar(20), name varchar(255) encrypted, cid varchar(13) encrypted, age integer, gravida, ga_weeks, anc_count, admit_date, height_cm, weight_kg, weight_diff_kg, fundal_height_cm, us_weight_g, hematocrit_pct, labor_status DEFAULT 'ACTIVE', delivered_at, synced_at; unique composite (hospital_id, an) in src/db/tables/cached-patients.ts
+- [x] T027 [P] Define cached_vital_signs table: id uuid PK, patient_id FK, measured_at datetime, maternal_hr integer, fetal_hr varchar(50), sbp integer, dbp integer, cervix_cm decimal, effacement_pct decimal, station varchar(10), hct decimal, pph_amount_ml integer, synced_at; unique composite (patient_id, measured_at) in src/db/tables/cached-vital-signs.ts
+- [x] T028 [P] Define cpd_scores table: id uuid PK, patient_id FK, score decimal, risk_level varchar(10), recommendation varchar(500), factor_gravida, factor_anc_count, factor_ga_weeks, factor_height_cm, factor_weight_diff, factor_fundal_ht, factor_us_weight, factor_hematocrit, missing_factors text[], calculated_at, created_at in src/db/tables/cpd-scores.ts
+- [x] T029 [P] Define users table: id uuid PK, bms_user_name varchar(255), bms_hospital_code varchar(10), bms_position varchar(100), role varchar(20), is_active boolean DEFAULT true, last_login_at datetime NULL, timestamps in src/db/tables/users.ts
+- [x] T030 [P] Define audit_logs table: id uuid PK, user_id FK→users, action varchar(50), resource_type varchar(50), resource_id varchar(50), ip_address varchar(45), user_agent varchar(500), metadata jsonb, created_at; append-only constraint in src/db/tables/audit-logs.ts
 
 ### Data Seeders
 
-- [ ] T031 Create abstract DataSeeder class with shouldRun(db): Promise<boolean>, seed(db): Promise<number>, getName(): string in src/db/seeds/seeder.ts
-- [ ] T032 [P] Create HospitalSeeder with all 26 KK community hospitals: 10670 รพ.ชุมแพ M1, 10671 รพ.น้ำพอง M1, 10672 รพ.บ้านไผ่ A_S, 10673 รพ.พล M2, 10674 รพ.ภูเวียง M1, etc. per data-model.md in src/db/seeds/hospital-seeder.ts
-- [ ] T033 [P] Create AdminSeeder: default admin user (bms_user_name='admin', role='ADMIN', is_active=true), only seeds if users table has 0 rows in src/db/seeds/admin-seeder.ts
-- [ ] T034 Write test and implement seed orchestrator: register seeders, run shouldRun checks, execute seed in order, log "HospitalSeeder: seeded 26 records", skip already-seeded in src/db/seeds/index.ts and tests/unit/db/seeds.test.ts
+- [x] T031 Create abstract DataSeeder class with shouldRun(db): Promise<boolean>, seed(db): Promise<number>, getName(): string in src/db/seeds/seeder.ts
+- [x] T032 [P] Create HospitalSeeder with all 26 KK community hospitals: 10670 รพ.ชุมแพ M1, 10671 รพ.น้ำพอง M1, 10672 รพ.บ้านไผ่ A_S, 10673 รพ.พล M2, 10674 รพ.ภูเวียง M1, etc. per data-model.md in src/db/seeds/hospital-seeder.ts
+- [x] T033 [P] Create AdminSeeder: default admin user (bms_user_name='admin', role='ADMIN', is_active=true), only seeds if users table has 0 rows in src/db/seeds/admin-seeder.ts
+- [x] T034 Write test and implement seed orchestrator: register seeders, run shouldRun checks, execute seed in order, log "HospitalSeeder: seeded 26 records", skip already-seeded in src/db/seeds/index.ts and tests/unit/db/seeds.test.ts
 
 ### Shared Libraries
 
-- [ ] T035 Write test and implement BmsSessionClient: constructor(tunnelUrl), getSessionId() via GET tunnel_url/api/SessionID, validateSession(sessionId) via hosxp.net/phapi/PasteJSON → JWT + bms_url, executeQuery(sql, params?) via GET/POST bms_url/api/sql with Bearer JWT, parseResponse(raw) → BmsQueryResult, refreshSession(), getDatabaseType() → 'postgresql'|'mysql', error handling (501 unauthorized, 409 SQL error, timeout) in src/lib/bms-session.ts and tests/unit/lib/bms-session.test.ts
-- [ ] T036 Write test and implement PDPA field encryption: AES-256-GCM encrypt(plaintext, key)/decrypt(ciphertext, key), key from ENCRYPTION_KEY env var, random IV per encryption, support for encrypting patient name and CID fields in src/lib/encryption.ts and tests/unit/lib/encryption.test.ts
-- [ ] T037 [P] Create general utilities: formatThaiDate(date), formatThaiTime(date), calculateAge(birthday), riskLevelToColor(level), riskLevelToThaiLabel(level), formatHospitalLevel(level), truncateName(name, maxLen) in src/lib/utils.ts
-- [ ] T038 [P] Create SSE event emitter: singleton SseManager class with addClient(id, res), removeClient(id), broadcast(event, data), heartbeat interval (30s keepalive `:ping`), client count tracking in src/lib/sse.ts
+- [x] T035 Write test and implement BmsSessionClient: constructor(tunnelUrl), getSessionId() via GET tunnel_url/api/SessionID, validateSession(sessionId) via hosxp.net/phapi/PasteJSON → JWT + bms_url, executeQuery(sql, params?) via GET/POST bms_url/api/sql with Bearer JWT, parseResponse(raw) → BmsQueryResult, refreshSession(), getDatabaseType() → 'postgresql'|'mysql', error handling (501 unauthorized, 409 SQL error, timeout) in src/lib/bms-session.ts and tests/unit/lib/bms-session.test.ts
+- [x] T036 Write test and implement PDPA field encryption: AES-256-GCM encrypt(plaintext, key)/decrypt(ciphertext, key), key from ENCRYPTION_KEY env var, random IV per encryption, support for encrypting patient name and CID fields in src/lib/encryption.ts and tests/unit/lib/encryption.test.ts
+- [x] T037 [P] Create general utilities: formatThaiDate(date), formatThaiTime(date), calculateAge(birthday), riskLevelToColor(level), riskLevelToThaiLabel(level), formatHospitalLevel(level), truncateName(name, maxLen) in src/lib/utils.ts
+- [x] T038 [P] Create SSE event emitter: singleton SseManager class with addClient(id, res), removeClient(id), broadcast(event, data), heartbeat interval (30s keepalive `:ping`), client count tracking in src/lib/sse.ts
 
 ### Shared UI Components
 
-- [ ] T039 [P] Create CpdBadge component: rounded pill showing score number, background color from risk-levels.ts (green/yellow/red), size variants (sm/md/lg), tooltip with Thai recommendation "ควรประสานส่งต่อทันที!" for HIGH risk in src/components/shared/CpdBadge.tsx
-- [ ] T040 [P] Create RiskIndicator component: colored circle dot + Thai risk label (เสี่ยงต่ำ/เสี่ยงปานกลาง/เสี่ยงสูง), optional pulse animation when risk level just changed in src/components/shared/RiskIndicator.tsx
-- [ ] T041 [P] Create ConnectionStatus component: status dot (green=ออนไลน์, red=ออฟไลน์, gray=ไม่ทราบ) + label + last sync timestamp formatted as Thai relative time in src/components/shared/ConnectionStatus.tsx
-- [ ] T042 [P] Create LoadingState component: centered spinner with optional Thai message prop, skeleton variant for table loading, respects SWR isLoading/isValidating states in src/components/shared/LoadingState.tsx
-- [ ] T043 Initialize shadcn/ui base components: Button, Card, Table, Badge, Dialog, Input, Tooltip, Select, Tabs, Separator via shadcn CLI in src/components/ui/
-- [ ] T044 Create root layout with Noto Sans Thai font import, SWRConfig provider with global config (30s dedupingInterval), HTML lang="th", viewport meta for tablet responsiveness, Thai page title in src/app/layout.tsx
+- [x] T039 [P] Create CpdBadge component: rounded pill showing score number, background color from risk-levels.ts (green/yellow/red), size variants (sm/md/lg), tooltip with Thai recommendation "ควรประสานส่งต่อทันที!" for HIGH risk in src/components/shared/CpdBadge.tsx
+- [x] T040 [P] Create RiskIndicator component: colored circle dot + Thai risk label (เสี่ยงต่ำ/เสี่ยงปานกลาง/เสี่ยงสูง), optional pulse animation when risk level just changed in src/components/shared/RiskIndicator.tsx
+- [x] T041 [P] Create ConnectionStatus component: status dot (green=ออนไลน์, red=ออฟไลน์, gray=ไม่ทราบ) + label + last sync timestamp formatted as Thai relative time in src/components/shared/ConnectionStatus.tsx
+- [x] T042 [P] Create LoadingState component: centered spinner with optional Thai message prop, skeleton variant for table loading, respects SWR isLoading/isValidating states in src/components/shared/LoadingState.tsx
+- [x] T043 Initialize shadcn/ui base components: Button, Card, Table, Badge, Dialog, Input, Tooltip, Select, Tabs, Separator via shadcn CLI in src/components/ui/
+- [x] T044 Create root layout with Noto Sans Thai font import, SWRConfig provider with global config (30s dedupingInterval), HTML lang="th", viewport meta for tablet responsiveness, Thai page title in src/app/layout.tsx
 
 **Checkpoint**: Foundation ready — user story implementation can begin
 
