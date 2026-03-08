@@ -140,14 +140,14 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T060 [P] [US2] Write test for CPD score service: calculateCpdScore with all 8 factors returns correct score using weights from SPEC.md, partial score with 3 missing factors returns lower score + missingFactors array, classifyRiskLevel boundaries (<5=LOW, 5=MEDIUM, 9.5=MEDIUM, 10=HIGH), generateRecommendation returns Thai text for HIGH in tests/unit/services/cpd-score.test.ts
-- [ ] T061 [P] [US2] Write test for CpdBadge component: renders with green background and score "3" for LOW, yellow background and score "7" for MEDIUM, red background and score "12" for HIGH, shows tooltip with "ควรประสานส่งต่อทันที!" for HIGH only in tests/unit/components/CpdBadge.test.tsx
+- [x] T060 [P] [US2] Write test for CPD score service: calculateCpdScore with all 8 factors returns correct score using weights from SPEC.md, partial score with 3 missing factors returns lower score + missingFactors array, classifyRiskLevel boundaries (<5=LOW, 5=MEDIUM, 9.5=MEDIUM, 10=HIGH), generateRecommendation returns Thai text for HIGH in tests/unit/services/cpd-score.test.ts
+- [x] T061 [P] [US2] Write test for CpdBadge component: renders with green background and score "3" for LOW, yellow background and score "7" for MEDIUM, red background and score "12" for HIGH, shows tooltip with "ควรประสานส่งต่อทันที!" for HIGH only in tests/unit/components/CpdBadge.test.tsx
 
 ### Implementation for User Story 2
 
-- [ ] T062 [US2] Implement CPD score service: calculateCpdScore(factors: Partial<CpdFactors>) applies configurable weights from risk-levels.ts to each of 8 factors (gravida, ancCount, gaWeeks, heightCm, weightDiffKg, fundalHeightCm, usWeightG, hematocritPct), classifyRiskLevel(score) returns RiskLevel enum, handleMissingFactors(available) returns { adjustedScore, missingFactors[] }, generateRecommendation(riskLevel) returns Thai text in src/services/cpd-score.ts
-- [ ] T063 [US2] Integrate CPD calculation into sync service: after upsertCachedPatients, for each patient call calculateCpdScore with patient's clinical data, INSERT new cpd_scores row, compare with previous risk level, broadcast SSE patient-update with riskLevel if changed in src/services/sync.ts (update pollHospital)
-- [ ] T064 [US2] Create HighRiskAlert dialog component: shadcn Dialog with red border, large CpdBadge showing score, bold Thai text "ควรประสานส่งต่อทันที!", patient AN and name, dismiss button "รับทราบ"; auto-opens when patient CPD >= 10 on detail page in src/components/shared/HighRiskAlert.tsx
+- [x] T062 [US2] Implement CPD score service: calculateCpdScore(factors: Partial<CpdFactors>) applies configurable weights from risk-levels.ts to each of 8 factors (gravida, ancCount, gaWeeks, heightCm, weightDiffKg, fundalHeightCm, usWeightG, hematocritPct), classifyRiskLevel(score) returns RiskLevel enum, handleMissingFactors(available) returns { adjustedScore, missingFactors[] }, generateRecommendation(riskLevel) returns Thai text in src/services/cpd-score.ts
+- [x] T063 [US2] Integrate CPD calculation into sync service: after upsertCachedPatients, for each patient call calculateCpdScore with patient's clinical data, INSERT new cpd_scores row, compare with previous risk level, broadcast SSE patient-update with riskLevel if changed in src/services/sync.ts (update pollHospital)
+- [x] T064 [US2] Create HighRiskAlert dialog component: shadcn Dialog with red border, large CpdBadge showing score, bold Thai text "ควรประสานส่งต่อทันที!", patient AN and name, dismiss button "รับทราบ"; auto-opens when patient CPD >= 10 on detail page in src/components/shared/HighRiskAlert.tsx
 
 **Checkpoint**: CPD scoring functional — badges visible on dashboard and patient lists, high-risk alerts trigger
 
