@@ -163,15 +163,15 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T065 [P] [US3] Write test for partogram service: calculateAlertLine starts at 4cm dilation with 1cm/hr progression, calculateActionLine is 4 hours to the right of alert line, generatePartogramEntries maps cervix_cm + measured_at from vital signs into PartogramEntry[] with computed alert/action values in tests/unit/services/partogram.test.ts
-- [ ] T066 [P] [US3] Write test for PartogramChart component: renders Recharts with X-axis 0-24h, Y-axis 0-10cm, cyan dilation progress line with data points, red dashed alert line, blue dashed action line, circular badge showing latest dilation value in tests/unit/components/PartogramChart.test.tsx
+- [x] T065 [P] [US3] Write test for partogram service: calculateAlertLine starts at 4cm dilation with 1cm/hr progression, calculateActionLine is 4 hours to the right of alert line, generatePartogramEntries maps cervix_cm + measured_at from vital signs into PartogramEntry[] with computed alert/action values in tests/unit/services/partogram.test.ts
+- [x] T066 [P] [US3] Write test for PartogramChart component: renders Recharts with X-axis 0-24h, Y-axis 0-10cm, cyan dilation progress line with data points, red dashed alert line, blue dashed action line, circular badge showing latest dilation value in tests/unit/components/PartogramChart.test.tsx
 
 ### Implementation for User Story 3
 
-- [ ] T067 [US3] Implement partogram service: calculateAlertLine(activePhaseStartTime, startDilation=4) generates 1cm/hr reference points, calculateActionLine(alertLineEntries) offsets 4 hours right, generatePartogramEntries(vitalSigns[]) extracts cervix_cm + measured_at and pairs with computed alert/action values in src/services/partogram.ts
-- [ ] T068 [US3] Create GET /api/patients/[an]/partogram route: query cached_vital_signs WHERE patient AN AND cervix_cm IS NOT NULL ordered by measured_at, call partogram service to compute alert/action lines, return PartogramResponse per contracts/api-routes.md in src/app/api/patients/[an]/partogram/route.ts
-- [ ] T069 [US3] Create usePartogram SWR hook: fetcher for /api/patients/[an]/partogram, 30s refreshInterval, return { partogram: { startTime, entries[] }, isLoading, error } in src/hooks/usePartogram.ts
-- [ ] T070 [US3] Create PartogramChart component: Recharts ResponsiveContainer + ComposedChart, X-axis time (hours from labor start, 0-24 ticks), Y-axis cervix dilation (0-10cm), Area with cyan fill for dilation progress, Line red dashed for alert, Line blue dashed for action, large circular badge overlay showing current dilation cm + timestamp, empty state message "ยังไม่มีข้อมูล Partogram" in src/components/charts/PartogramChart.tsx
+- [x] T067 [US3] Implement partogram service: calculateAlertLine(activePhaseStartTime, startDilation=4) generates 1cm/hr reference points, calculateActionLine(alertLineEntries) offsets 4 hours right, generatePartogramEntries(vitalSigns[]) extracts cervix_cm + measured_at and pairs with computed alert/action values in src/services/partogram.ts
+- [x] T068 [US3] Create GET /api/patients/[an]/partogram route: query cached_vital_signs WHERE patient AN AND cervix_cm IS NOT NULL ordered by measured_at, call partogram service to compute alert/action lines, return PartogramResponse per contracts/api-routes.md in src/app/api/patients/[an]/partogram/route.ts
+- [x] T069 [US3] Create usePartogram SWR hook: fetcher for /api/patients/[an]/partogram, 30s refreshInterval, return { partogram: { startTime, entries[] }, isLoading, error } in src/hooks/usePartogram.ts
+- [x] T070 [US3] Create PartogramChart component: Recharts ResponsiveContainer + ComposedChart, X-axis time (hours from labor start, 0-24 ticks), Y-axis cervix dilation (0-10cm), Area with cyan fill for dilation progress, Line red dashed for alert, Line blue dashed for action, large circular badge overlay showing current dilation cm + timestamp, empty state message "ยังไม่มีข้อมูล Partogram" in src/components/charts/PartogramChart.tsx
 
 **Checkpoint**: Partogram rendering correctly with alert/action lines from cached vital sign data
 

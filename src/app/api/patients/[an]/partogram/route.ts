@@ -1,0 +1,61 @@
+// T068: GET /api/patients/[an]/partogram — partogram data with alert/action lines
+import { NextRequest, NextResponse } from 'next/server';
+import { getDatabase } from '@/db/connection';
+import { generatePartogramEntries } from '@/services/partogram';
+import type { PartogramResponse } from '@/types/api';
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ an: string }> },
+) {
+  try {
+    const { an } = await params;
+    const db = await getDatabase();
+
+    // Get patient ID from AN
+    const patients = await db.query<{ id: string; admit_date: string }>(
+      'SELECT id, admit_date FROM cached_patients WHERE an = ? LIMIT 1',
+      [an],
+    );
+
+    if (patients.length === 0) {
+      return NextResponse.json(
+        { error: 'Patient not found', code: 'NOT_FOUND' },
+        { status: 404 },
+      );
+    }
+
+    const patient = patients[0];
+
+    // Get vital signs with cervix measurements
+    const vitals = await db.query<{
+      measured_at: string;
+      cervix_cm: number;
+    }>(
+      'SELECT measured_at, cervix_cm FROM cached_vital_signs WHERE patient_id = ? AND cervix_cm IS NOT NULL ORDER BY measured_at ASC',
+      [patient.id],
+    );
+
+    const vitalInputs = vitals.map((v) => ({
+      measuredAt: v.measured_at,
+      cervixCm: v.cervix_cm,
+    }));
+
+    const entries = generatePartogramEntries(vitalInputs);
+
+    const response: PartogramResponse = {
+      partogram: {
+        startTime: patient.admit_date,
+        entries,
+      },
+    };
+
+    return NextResponse.json(response);
+  } catch (error) {
+    console.error('Partogram API error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', code: 'INTERNAL_ERROR' },
+      { status: 500 },
+    );
+  }
+}
