@@ -19,15 +19,15 @@
 
 **Purpose**: Initialize Next.js 15 project with all tooling configured
 
-- [ ] T001 Initialize Next.js 15 project with TypeScript 5.x strict mode, create package.json with name "kk-lrms" and tsconfig.json with strict: true in project root
-- [ ] T002 [P] Install runtime dependencies: next react react-dom swr recharts pg next-auth @fontsource/noto-sans-thai uuid in package.json
-- [ ] T003 [P] Install dev dependencies: vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/jest-dom better-sqlite3 @types/better-sqlite3 @types/pg @types/uuid eslint prettier @playwright/test in package.json
-- [ ] T004 [P] Configure Tailwind CSS 4 with custom KK-LRMS colors (risk green/yellow/red) and initialize shadcn/ui in tailwind.config.ts and postcss.config.mjs
-- [ ] T005 [P] Configure Vitest with React testing support, path aliases matching tsconfig, jsdom environment in vitest.config.ts
-- [ ] T006 [P] Create docker-compose.yml with PostgreSQL 16 service (db: kklrms/kklrms, port 5432) and app service (port 3000, depends_on db)
-- [ ] T007 [P] Create .env.example with DATABASE_URL, NEXTAUTH_URL, NEXTAUTH_SECRET, BMS_VALIDATE_URL, ENCRYPTION_KEY, DEV_HOSPITAL_TUNNEL_URL
-- [ ] T008 [P] Configure ESLint with TypeScript strict rules and Prettier integration in eslint.config.mjs and .prettierrc
-- [ ] T009 Configure next.config.ts (standalone output, experimental instrumentation) and verify clean build passes with `npm run build`
+- [x] T001 Initialize Next.js 15 project with TypeScript 5.x strict mode, create package.json with name "kk-lrms" and tsconfig.json with strict: true in project root
+- [x] T002 [P] Install runtime dependencies: next react react-dom swr recharts pg next-auth @fontsource/noto-sans-thai uuid in package.json
+- [x] T003 [P] Install dev dependencies: vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/jest-dom better-sqlite3 @types/better-sqlite3 @types/pg @types/uuid eslint prettier @playwright/test in package.json
+- [x] T004 [P] Configure Tailwind CSS 4 with custom KK-LRMS colors (risk green/yellow/red) and initialize shadcn/ui in tailwind.config.ts and postcss.config.mjs
+- [x] T005 [P] Configure Vitest with React testing support, path aliases matching tsconfig, jsdom environment in vitest.config.ts
+- [x] T006 [P] Create docker-compose.yml with PostgreSQL 16 service (db: kklrms/kklrms, port 5432) and app service (port 3000, depends_on db)
+- [x] T007 [P] Create .env.example with DATABASE_URL, NEXTAUTH_URL, NEXTAUTH_SECRET, BMS_VALIDATE_URL, ENCRYPTION_KEY, DEV_HOSPITAL_TUNNEL_URL
+- [x] T008 [P] Configure ESLint with TypeScript strict rules and Prettier integration in eslint.config.mjs and .prettierrc
+- [x] T009 Configure next.config.ts (standalone output, experimental instrumentation) and verify clean build passes with `npm run build`
 
 ---
 
