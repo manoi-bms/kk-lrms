@@ -18,6 +18,7 @@ export enum ConnectionStatus {
 export enum LaborStatus {
   ACTIVE = 'ACTIVE',
   DELIVERED = 'DELIVERED',
+  TRANSFERRED = 'TRANSFERRED',
 }
 
 export enum RiskLevel {
@@ -63,6 +64,7 @@ export interface CachedPatient {
   an: string;
   name: string;
   cid: string | null;
+  cidHash: string | null;
   age: number;
   gravida: number | null;
   gaWeeks: number | null;

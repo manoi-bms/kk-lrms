@@ -1,5 +1,6 @@
 // T047: Sync service — polls HOSxP via BMS Session, caches in local DB
 import { v4 as uuidv4 } from 'uuid';
+import { createHash } from 'crypto';
 import type { DatabaseAdapter } from '@/db/adapter';
 import type { HosxpIptRow, HosxpPregnancyRow, HosxpPatientRow } from '@/types/hosxp';
 import { encrypt } from '@/lib/encryption';
@@ -10,6 +11,7 @@ export interface SyncPatientData {
   an: string;
   name: string;
   cid: string | null;
+  cidHash: string | null;
   age: number;
   gravida: number | null;
   gaWeeks: number | null;
@@ -34,6 +36,9 @@ export function transformHosxpPatient(
   const fullName = `${patient.pname} ${patient.fname} ${patient.lname}`.trim();
   const encryptedName = encrypt(fullName, encryptionKey);
   const encryptedCid = patient.cid ? encrypt(patient.cid, encryptionKey) : null;
+  const cidHash = patient.cid
+    ? createHash('sha256').update(patient.cid).digest('hex')
+    : null;
   const age = calculateAge(patient.birthday);
   const admitDate = `${ipt.regdate}T${ipt.regtime || '00:00:00'}`;
   const laborStatus = ipt.dchdate ? 'DELIVERED' : 'ACTIVE';
@@ -43,6 +48,7 @@ export function transformHosxpPatient(
     an: ipt.an,
     name: encryptedName,
     cid: encryptedCid,
+    cidHash,
     age,
     gravida: pregnancy.preg_number,
     gaWeeks: pregnancy.ga,
@@ -72,13 +78,13 @@ export async function upsertCachedPatients(
       // Update existing patient
       await db.execute(
         `UPDATE cached_patients SET
-          hn = ?, name = ?, cid = ?, age = ?, gravida = ?, ga_weeks = ?,
+          hn = ?, name = ?, cid = ?, cid_hash = ?, age = ?, gravida = ?, ga_weeks = ?,
           anc_count = ?, admit_date = ?, height_cm = ?, weight_kg = ?,
           weight_diff_kg = ?, fundal_height_cm = ?, us_weight_g = ?,
           hematocrit_pct = ?, labor_status = ?, synced_at = ?, updated_at = ?
         WHERE id = ?`,
         [
-          p.hn, p.name, p.cid, p.age, p.gravida, p.gaWeeks,
+          p.hn, p.name, p.cid, p.cidHash ?? null, p.age, p.gravida, p.gaWeeks,
           p.ancCount, p.admitDate, p.heightCm ?? null, p.weightKg ?? null,
           p.weightDiffKg ?? null, p.fundalHeightCm ?? null, p.usWeightG ?? null,
           p.hematocritPct ?? null, p.laborStatus, p.syncedAt, now,
@@ -89,13 +95,13 @@ export async function upsertCachedPatients(
       // Insert new patient
       await db.execute(
         `INSERT INTO cached_patients (
-          id, hospital_id, hn, an, name, cid, age, gravida, ga_weeks,
+          id, hospital_id, hn, an, name, cid, cid_hash, age, gravida, ga_weeks,
           anc_count, admit_date, height_cm, weight_kg, weight_diff_kg,
           fundal_height_cm, us_weight_g, hematocrit_pct, labor_status,
           synced_at, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          uuidv4(), hospitalId, p.hn, p.an, p.name, p.cid, p.age,
+          uuidv4(), hospitalId, p.hn, p.an, p.name, p.cid, p.cidHash ?? null, p.age,
           p.gravida, p.gaWeeks, p.ancCount, p.admitDate,
           p.heightCm ?? null, p.weightKg ?? null, p.weightDiffKg ?? null,
           p.fundalHeightCm ?? null, p.usWeightG ?? null, p.hematocritPct ?? null,
@@ -123,6 +129,50 @@ export function detectChanges(
   const discharges = existingAns.filter((an) => !newAns.includes(an));
 
   return { newAdmissions, discharges };
+}
+
+// T104/T107: Transfer detection — cross-hospital CID matching via cid_hash
+export interface TransferDetection {
+  cidHash: string;
+  fromHospitalId: string;
+  fromAn: string;
+  toHospitalId: string;
+  toAn: string;
+}
+
+export async function detectTransfers(
+  db: DatabaseAdapter,
+  hospitalId: string,
+  patients: SyncPatientData[],
+): Promise<TransferDetection[]> {
+  const transfers: TransferDetection[] = [];
+
+  for (const p of patients) {
+    // Skip patients without CID hash — cannot match cross-hospital
+    if (!p.cidHash) continue;
+
+    // Find ACTIVE patients at OTHER hospitals with the same cid_hash
+    const matches = await db.query<{
+      hospital_id: string;
+      an: string;
+    }>(
+      `SELECT hospital_id, an FROM cached_patients
+       WHERE cid_hash = ? AND hospital_id != ? AND labor_status = 'ACTIVE'`,
+      [p.cidHash, hospitalId],
+    );
+
+    for (const match of matches) {
+      transfers.push({
+        cidHash: p.cidHash,
+        fromHospitalId: match.hospital_id,
+        fromAn: match.an,
+        toHospitalId: hospitalId,
+        toAn: p.an,
+      });
+    }
+  }
+
+  return transfers;
 }
 
 // T058: Polling scheduler
@@ -265,34 +315,65 @@ export async function pollHospital(
     const existingAns = existing.map((r) => r.an);
 
     // Transform and upsert
-    const patients: SyncPatientData[] = result.data.map((row) => ({
-      hn: String(row.hn ?? ''),
-      an: String(row.an ?? ''),
-      name: encrypt(String(row.pname ?? '') + ' ' + String(row.fname ?? '') + ' ' + String(row.lname ?? ''), encryptionKey),
-      cid: null,
-      age: 0,
-      gravida: row.preg_number != null ? Number(row.preg_number) : null,
-      gaWeeks: row.ga != null ? Number(row.ga) : null,
-      ancCount: null,
-      admitDate: `${row.regdate}T${row.regtime || '00:00:00'}`,
-      laborStatus: 'ACTIVE',
-      syncedAt: new Date().toISOString(),
-    }));
+    const patients: SyncPatientData[] = result.data.map((row) => {
+      const rawCid = row.cid ? String(row.cid) : null;
+      return {
+        hn: String(row.hn ?? ''),
+        an: String(row.an ?? ''),
+        name: encrypt(String(row.pname ?? '') + ' ' + String(row.fname ?? '') + ' ' + String(row.lname ?? ''), encryptionKey),
+        cid: rawCid ? encrypt(rawCid, encryptionKey) : null,
+        cidHash: rawCid ? createHash('sha256').update(rawCid).digest('hex') : null,
+        age: 0,
+        gravida: row.preg_number != null ? Number(row.preg_number) : null,
+        gaWeeks: row.ga != null ? Number(row.ga) : null,
+        ancCount: null,
+        admitDate: `${row.regdate}T${row.regtime || '00:00:00'}`,
+        laborStatus: 'ACTIVE',
+        syncedAt: new Date().toISOString(),
+      };
+    });
 
     const count = await upsertCachedPatients(db, hospitalId, patients);
+
+    // T107: Detect patient transfers before upserting marks old records
+    const transfers = await detectTransfers(db, hospitalId, patients);
+
+    // Get hospital hcode for SSE events (needed for transfers and later)
+    const hospitalRows = await db.query<{ hcode: string }>(
+      'SELECT hcode FROM hospitals WHERE id = ?',
+      [hospitalId],
+    );
+    const hcode = hospitalRows[0]?.hcode ?? '';
+
+    // Process detected transfers
+    for (const transfer of transfers) {
+      // Mark old hospital's patient record as TRANSFERRED
+      await db.execute(
+        `UPDATE cached_patients SET labor_status = 'TRANSFERRED', updated_at = ?
+         WHERE hospital_id = ? AND an = ?`,
+        [new Date().toISOString(), transfer.fromHospitalId, transfer.fromAn],
+      );
+
+      // Get the source hospital hcode for the SSE event
+      const fromHospitalRows = await db.query<{ hcode: string }>(
+        'SELECT hcode FROM hospitals WHERE id = ?',
+        [transfer.fromHospitalId],
+      );
+      const fromHcode = fromHospitalRows[0]?.hcode ?? '';
+
+      sseManager.broadcast('patient-update', {
+        type: 'patient_transfer',
+        fromHcode,
+        toHcode: hcode,
+        an: transfer.toAn,
+      });
+    }
 
     // T063: Calculate CPD scores for each patient after upsert
     await calculateAndStoreCpdScores(db, hospitalId, sseManager);
 
     // Detect changes and broadcast SSE
     const changes = detectChanges(patients, existingAns);
-
-    // Get hospital hcode for SSE events
-    const hospitalRows = await db.query<{ hcode: string }>(
-      'SELECT hcode FROM hospitals WHERE id = ?',
-      [hospitalId],
-    );
-    const hcode = hospitalRows[0]?.hcode ?? '';
 
     for (const an of changes.newAdmissions) {
       sseManager.broadcast('patient-update', {

@@ -14,6 +14,7 @@ export const cachedPatientsTable: TableDefinition = {
     { name: 'an', type: 'string', maxLength: 20 },
     { name: 'name', type: 'string', maxLength: 255 }, // Encrypted (PDPA)
     { name: 'cid', type: 'string', maxLength: 255, nullable: true }, // Encrypted (PDPA)
+    { name: 'cid_hash', type: 'string', maxLength: 64, nullable: true }, // SHA-256 hash for cross-hospital matching
     { name: 'age', type: 'integer' },
     { name: 'gravida', type: 'integer', nullable: true },
     { name: 'ga_weeks', type: 'integer', nullable: true },
@@ -25,7 +26,7 @@ export const cachedPatientsTable: TableDefinition = {
     { name: 'fundal_height_cm', type: 'decimal', nullable: true },
     { name: 'us_weight_g', type: 'decimal', nullable: true },
     { name: 'hematocrit_pct', type: 'decimal', nullable: true },
-    { name: 'labor_status', type: 'string', maxLength: 10, defaultValue: 'ACTIVE' },
+    { name: 'labor_status', type: 'string', maxLength: 20, defaultValue: 'ACTIVE' },
     { name: 'delivered_at', type: 'datetime', nullable: true },
     { name: 'synced_at', type: 'datetime' },
     { name: 'created_at', type: 'datetime' },
@@ -36,5 +37,7 @@ export const cachedPatientsTable: TableDefinition = {
     { name: 'idx_cp_hospital_id', columns: ['hospital_id'] },
     { name: 'idx_cp_hn', columns: ['hn'] },
     { name: 'idx_cp_labor_status', columns: ['labor_status'] },
+    { name: 'idx_cp_cid', columns: ['cid'] },
+    { name: 'idx_cp_cid_hash', columns: ['cid_hash'] },
   ],
 };
