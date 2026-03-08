@@ -244,14 +244,14 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T092 [P] [US6] Write test for admin API routes: GET /api/admin/hospitals returns hospitals with BMS config status and connection info, PUT bms-config validates tunnel URL format and tests session, POST test-connection returns DB type + version + found tables; all require ADMIN role in tests/unit/api/admin.test.ts
+- [x] T092 [P] [US6] Write test for admin API routes: GET /api/admin/hospitals returns hospitals with BMS config status and connection info, PUT bms-config validates tunnel URL format and tests session, POST test-connection returns DB type + version + found tables; all require ADMIN role in tests/unit/api/admin.test.ts
 
 ### Implementation for User Story 6
 
-- [ ] T093 [US6] Create GET /api/admin/hospitals route: query hospitals LEFT JOIN hospital_bms_config, return list with hcode, name, level, isActive, connectionStatus, lastSyncAt, bmsConfig { tunnelUrl, hasSession, sessionExpiresAt, databaseType }; require ADMIN role in src/app/api/admin/hospitals/route.ts
-- [ ] T094 [US6] Create PUT /api/admin/hospitals/[hcode]/bms-config route: receive { tunnelUrl }, validate URL format, create BmsSessionClient and connect to verify, save tunnel_url + session info + database_type to hospital_bms_config, return { status, sessionValidated, databaseType }; require ADMIN role in src/app/api/admin/hospitals/[hcode]/bms-config/route.ts
-- [ ] T095 [US6] Create POST /api/admin/hospitals/[hcode]/test-connection route: create BmsSessionClient with stored tunnel_url, connect + execute SELECT VERSION(), discover key tables (ipt, ipt_pregnancy, ipt_pregnancy_vital_sign, labor), return { connected, databaseType, databaseVersion, tablesFound[] }; require ADMIN role in src/app/api/admin/hospitals/[hcode]/test-connection/route.ts
-- [ ] T096 [US6] Create admin page: header "จัดการโรงพยาบาล", hospital management Table (HCODE, ชื่อ, ระดับ, Tunnel URL truncated, ConnectionStatus, Session Status badge, DB Type), edit Dialog (tunnel URL Input + บันทึก/ทดสอบการเชื่อมต่อ buttons), test results display (DB version, tables found), require admin auth in src/app/admin/page.tsx
+- [x] T093 [US6] Create GET /api/admin/hospitals route: query hospitals LEFT JOIN hospital_bms_config, return list with hcode, name, level, isActive, connectionStatus, lastSyncAt, bmsConfig { tunnelUrl, hasSession, sessionExpiresAt, databaseType }; require ADMIN role in src/app/api/admin/hospitals/route.ts
+- [x] T094 [US6] Create PUT /api/admin/hospitals/[hcode]/bms-config route: receive { tunnelUrl }, validate URL format, create BmsSessionClient and connect to verify, save tunnel_url + session info + database_type to hospital_bms_config, return { status, sessionValidated, databaseType }; require ADMIN role in src/app/api/admin/hospitals/[hcode]/bms-config/route.ts
+- [x] T095 [US6] Create POST /api/admin/hospitals/[hcode]/test-connection route: create BmsSessionClient with stored tunnel_url, connect + execute SELECT VERSION(), discover key tables (ipt, ipt_pregnancy, ipt_pregnancy_vital_sign, labor), return { connected, databaseType, databaseVersion, tablesFound[] }; require ADMIN role in src/app/api/admin/hospitals/[hcode]/test-connection/route.ts
+- [x] T096 [US6] Create admin page: header "จัดการโรงพยาบาล", hospital management Table (HCODE, ชื่อ, ระดับ, Tunnel URL truncated, ConnectionStatus, Session Status badge, DB Type), edit Dialog (tunnel URL Input + บันทึก/ทดสอบการเชื่อมต่อ buttons), test results display (DB version, tables found), require admin auth in src/app/admin/page.tsx
 
 **Checkpoint**: Admin panel complete — manage BMS configs, test connections, monitor hospital status
 
