@@ -1,0 +1,34 @@
+// T050: GET /api/hospitals/[hcode]/patients — patient list per hospital
+import { NextResponse, type NextRequest } from 'next/server';
+import { getDatabase } from '@/db/connection';
+import { getHospitalPatientList } from '@/services/dashboard';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ hcode: string }> },
+) {
+  try {
+    const { hcode } = await params;
+    const searchParams = request.nextUrl.searchParams;
+    const status = searchParams.get('status') ?? 'active';
+    const riskLevel = searchParams.get('risk_level') ?? undefined;
+    const page = parseInt(searchParams.get('page') ?? '1', 10);
+    const perPage = parseInt(searchParams.get('per_page') ?? '20', 10);
+
+    const db = await getDatabase();
+    const result = await getHospitalPatientList(db, hcode, {
+      status,
+      riskLevel,
+      page,
+      perPage,
+    });
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('Patients API error:', error);
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'เกิดข้อผิดพลาด กรุณาลองใหม่', details: null } },
+      { status: 500 },
+    );
+  }
+}
