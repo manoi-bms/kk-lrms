@@ -397,6 +397,24 @@ After Foundational phase completes together:
 
 ---
 
+## Phase 10: Coverage Gaps (Post-Analysis Remediation)
+
+**Purpose**: Address specification gaps identified during cross-artifact analysis
+
+### Critical: Patient Identity Key Fix
+
+- [ ] T104 Refactor patient identity to use CID (national ID) as cross-hospital unique key instead of HN (which is unique only within a single hospital). Update cached_patients table to add unique index on cid, update sync service to match/merge patient records by CID across hospitals, update patient lookup in API routes to resolve by CID when cross-hospital context is needed in src/db/tables/cached-patients.ts, src/services/sync.ts, src/services/dashboard.ts
+
+### Coverage Gap Tasks
+
+- [ ] T105 [P] Add date range filtering (date_from, date_to query params) to GET /api/hospitals/[hcode]/patients route and dashboard service query in src/app/api/hospitals/[hcode]/patients/route.ts and src/services/dashboard.ts
+- [ ] T106 [P] Add row highlight CSS animation to HospitalTable when risk counts change via SSE — track previous counts, apply pulse animation class on delta in src/components/dashboard/HospitalTable.tsx
+- [ ] T107 Add patient transfer detection: when same CID appears across multiple hospitals, link records and maintain partogram/vital sign continuity in src/services/sync.ts
+- [ ] T108 [P] Add security headers middleware: HSTS, X-Content-Type-Options, X-Frame-Options, CSP headers; document HTTPS/TLS as deployment requirement in src/middleware.ts
+- [ ] T109 [P] Create GET /api/health endpoint: return { status, database, uptime, hospitalConnections } for monitoring/alerting per SC-010 in src/app/api/health/route.ts
+
+---
+
 ## Notes
 
 - [P] tasks = different files, no dependencies on incomplete tasks
@@ -405,5 +423,6 @@ After Foundational phase completes together:
 - Commit after every task (Version Control Discipline)
 - All UI text in Thai with English medical terminology
 - Patient name/cid MUST be encrypted (PDPA) — use encryption.ts from T036
+- CID (national ID, 13 digits) is the cross-hospital unique patient identifier — HN is unique only within a single hospital
 - SQL queries MUST handle both PostgreSQL and MySQL via hosxp-queries.ts templates
 - Risk colors (green/yellow/red) MUST be consistent across ALL screens — use risk-levels.ts

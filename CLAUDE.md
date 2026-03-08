@@ -76,10 +76,10 @@ Full constitution: `.specify/memory/constitution.md`
 
 ### VI. Performance & Real-Time Reliability
 - Dashboard updates within 30 seconds of HOSxP data change
-- API responses within 2 seconds; webhook processing within 5 seconds
+- BMS Session API SQL queries within 2 seconds; SSE broadcast within 5 seconds
 - Support 200 concurrent users
 - Offline: display cached data with "Offline — Last sync: [timestamp]"
-- SWR polling (30s) + SSE for instant webhook-triggered updates
+- Server-side polling (30s per hospital) via BMS Session API + SSE broadcast to clients
 
 ### Version Control Discipline
 - Commit after every completed task to prevent loss of work

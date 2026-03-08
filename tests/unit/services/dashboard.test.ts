@@ -4,7 +4,7 @@ import { SqliteAdapter } from '@/db/sqlite-adapter';
 import { SchemaSync } from '@/db/schema-sync';
 import { ALL_TABLES } from '@/db/tables/index';
 import { SeedOrchestrator } from '@/db/seeds/index';
-import { getProvinceDashboard, getSummaryTotals } from '@/services/dashboard';
+import { getProvinceDashboard, getSummaryTotals, getHospitalPatientList } from '@/services/dashboard';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('Dashboard Service', () => {
@@ -89,6 +89,115 @@ describe('Dashboard Service', () => {
       expect(summary.totalMedium).toBe(3);
       expect(summary.totalHigh).toBe(1);
       expect(summary.totalActive).toBe(5);
+    });
+  });
+
+  // T105: Date range filtering tests
+  describe('getHospitalPatientList — date range filtering', () => {
+    let hospitalId: string;
+    const hcode = '10670';
+
+    beforeEach(async () => {
+      // Get hospital ID for test data
+      const hospitals = await db.query<{ id: string }>(
+        "SELECT id FROM hospitals WHERE hcode = ?",
+        [hcode],
+      );
+      hospitalId = hospitals[0].id;
+
+      // Insert patients with different admit_date values
+      const patients = [
+        { id: uuidv4(), hn: 'HN-D01', an: 'AN-D01', admitDate: '2026-03-01T08:00:00.000Z' },
+        { id: uuidv4(), hn: 'HN-D02', an: 'AN-D02', admitDate: '2026-03-05T10:00:00.000Z' },
+        { id: uuidv4(), hn: 'HN-D03', an: 'AN-D03', admitDate: '2026-03-08T14:00:00.000Z' },
+        { id: uuidv4(), hn: 'HN-D04', an: 'AN-D04', admitDate: '2026-03-10T06:00:00.000Z' },
+        { id: uuidv4(), hn: 'HN-D05', an: 'AN-D05', admitDate: '2026-03-15T12:00:00.000Z' },
+      ];
+      const now = new Date().toISOString();
+      for (const p of patients) {
+        await db.execute(
+          'INSERT INTO cached_patients (id, hospital_id, hn, an, name, age, admit_date, labor_status, synced_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [p.id, hospitalId, p.hn, p.an, 'enc-test', 30, p.admitDate, 'ACTIVE', now, now, now],
+        );
+      }
+    });
+
+    it('should return all patients when no date filter is provided', async () => {
+      const result = await getHospitalPatientList(db, hcode, { status: 'active' });
+      expect(result.patients).toHaveLength(5);
+      expect(result.pagination.total).toBe(5);
+    });
+
+    it('should filter patients by dateFrom only', async () => {
+      const result = await getHospitalPatientList(db, hcode, {
+        status: 'active',
+        dateFrom: '2026-03-08',
+      });
+      // Should return patients admitted on or after 2026-03-08 (3 patients: 08, 10, 15)
+      expect(result.patients).toHaveLength(3);
+      expect(result.pagination.total).toBe(3);
+    });
+
+    it('should filter patients by dateTo only', async () => {
+      const result = await getHospitalPatientList(db, hcode, {
+        status: 'active',
+        dateTo: '2026-03-05',
+      });
+      // Should return patients admitted on or before 2026-03-05 (2 patients: 01, 05)
+      expect(result.patients).toHaveLength(2);
+      expect(result.pagination.total).toBe(2);
+    });
+
+    it('should filter patients by both dateFrom and dateTo', async () => {
+      const result = await getHospitalPatientList(db, hcode, {
+        status: 'active',
+        dateFrom: '2026-03-05',
+        dateTo: '2026-03-10',
+      });
+      // Should return patients admitted between 2026-03-05 and 2026-03-10 (3 patients: 05, 08, 10)
+      expect(result.patients).toHaveLength(3);
+      expect(result.pagination.total).toBe(3);
+    });
+
+    it('should return empty when date range matches no patients', async () => {
+      const result = await getHospitalPatientList(db, hcode, {
+        status: 'active',
+        dateFrom: '2026-04-01',
+        dateTo: '2026-04-30',
+      });
+      expect(result.patients).toHaveLength(0);
+      expect(result.pagination.total).toBe(0);
+    });
+
+    it('should correctly paginate with date filters', async () => {
+      const result = await getHospitalPatientList(db, hcode, {
+        status: 'active',
+        dateFrom: '2026-03-01',
+        dateTo: '2026-03-15',
+        perPage: 2,
+        page: 1,
+      });
+      expect(result.patients).toHaveLength(2);
+      expect(result.pagination.total).toBe(5);
+      expect(result.pagination.totalPages).toBe(3);
+
+      const page2 = await getHospitalPatientList(db, hcode, {
+        status: 'active',
+        dateFrom: '2026-03-01',
+        dateTo: '2026-03-15',
+        perPage: 2,
+        page: 2,
+      });
+      expect(page2.patients).toHaveLength(2);
+
+      const page3 = await getHospitalPatientList(db, hcode, {
+        status: 'active',
+        dateFrom: '2026-03-01',
+        dateTo: '2026-03-15',
+        perPage: 2,
+        page: 3,
+      });
+      expect(page3.patients).toHaveLength(1);
     });
   });
 });

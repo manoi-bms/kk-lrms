@@ -8,8 +8,8 @@
 ## Assumptions
 
 - The system is a **Next.js web application with PostgreSQL** as the application database for caching, session management, and configuration storage.
-- Patient data originates from HOSxP HIS systems at community hospitals and is accessed via the existing BMS Central API (data gateway). KK-LRMS does not own patient data — it caches and presents it.
-- The BMS Central API already exists and provides REST endpoints with JWT authentication. KK-LRMS consumes this API.
+- Patient data originates from HOSxP HIS systems at community hospitals and is accessed via per-hospital BMS Session API tunnel URLs with SQL query access. KK-LRMS does not own patient data — it caches and presents it.
+- Each hospital exposes a BMS tunnel URL (e.g., `https://XXXXX.tunnel.hosxp.net`). KK-LRMS obtains a session ID, validates it via hosxp.net to get a JWT Bearer token, then executes SQL queries against HOSxP databases via `/api/sql`.
 - The system serves Khon Kaen province (Health Region 7) covering ~26 community hospitals of various levels (A/S, M1, M2, F1, F2, F3).
 - Primary language is Thai with English medical terminology.
 - Target devices are desktop monitors and tablets (iPad) used in labor rooms.
@@ -112,16 +112,16 @@ As an IT administrator, I need the system to authenticate users via the BMS Sess
 
 ### User Story 6 - System Administration & Hospital Management (Priority: P6)
 
-As an IT administrator, I need to manage hospital connections, API keys, and monitor system health, so that the data pipeline from community hospitals remains operational and issues can be diagnosed quickly.
+As an IT administrator, I need to manage hospital BMS tunnel connections and monitor system health, so that the data pipeline from community hospitals remains operational and issues can be diagnosed quickly.
 
 **Why this priority**: Administrative functions are essential for operations but serve a small user group (IT admins) and are not part of the primary clinical workflow.
 
-**Independent Test**: Can be tested by accessing the admin panel, adding/removing hospital configurations, and verifying connection status indicators work correctly.
+**Independent Test**: Can be tested by accessing the admin panel, configuring BMS tunnel URLs, testing connections, and verifying connection status indicators work correctly.
 
 **Acceptance Scenarios**:
 
-1. **Given** an admin is on the settings page, **When** they view the hospital list, **Then** each hospital shows its HCODE (5-digit code), name, level (A/M1/M2/F1/F2/F3), API key status, and current connection status.
-2. **Given** an admin is managing a hospital, **When** they generate a new API key, **Then** the old key is revoked and the new key is displayed once for copying.
+1. **Given** an admin is on the settings page, **When** they view the hospital list, **Then** each hospital shows its HCODE (5-digit code), name, level (A/M1/M2/F1/F2/F3), BMS tunnel status, database type, and current connection status.
+2. **Given** an admin is managing a hospital, **When** they save a BMS tunnel URL, **Then** the system validates the URL by attempting to connect, retrieves the database type, and displays the connection result.
 3. **Given** the connection status page is open, **When** a hospital's HOSxP goes offline, **Then** the status indicator changes to "Offline" with the last successful sync timestamp within 60 seconds.
 4. **Given** a hospital's HOSxP has been offline, **When** it comes back online, **Then** the system automatically resumes data synchronization and updates the status to "Online."
 
@@ -129,31 +129,31 @@ As an IT administrator, I need to manage hospital connections, API keys, and mon
 
 ### Edge Cases
 
-- What happens when a patient is transferred between community hospitals during active labor? The system MUST handle AN changes and maintain continuity of the partogram and vital sign history.
+- What happens when a patient is transferred between community hospitals during active labor? The system MUST use CID (national ID) to identify the same patient across hospitals, link records from both hospitals, and maintain continuity of the partogram and vital sign history.
 - What happens when HOSxP sends incomplete data (e.g., missing ultrasound weight for CPD calculation)? The system MUST calculate a partial CPD score from available factors and clearly indicate which factors are missing.
 - What happens when multiple obstetricians view the same patient simultaneously? The system MUST support concurrent read access without data conflicts.
-- What happens when the BMS Central API is completely unreachable? The system MUST display cached data with a clear system-wide banner indicating data may be stale.
+- What happens when all hospital BMS tunnel connections are unreachable? The system MUST display cached data with a clear system-wide banner indicating data may be stale.
 - What happens when a patient's CPD risk level changes from medium to high while an obstetrician is viewing the dashboard? The system MUST update the dashboard in real-time and display a visual indicator (animation or highlight) on the changed row.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: System MUST pull patient data from BMS Central API via REST endpoints using JWT authentication, caching results locally.
+- **FR-001**: System MUST pull patient data from each hospital's HOSxP database via BMS Session API (per-hospital tunnel URL + SQL queries with JWT authentication), caching results locally in PostgreSQL.
 - **FR-002**: System MUST calculate CPD Risk Score automatically from 8 factors: gravida, ANC count, gestational age, maternal height, weight gain, fundal height, ultrasound weight, and hematocrit.
 - **FR-003**: System MUST classify CPD risk into three levels: low (< 5, green), medium (5-9.5, yellow), high (>= 10, red) with consistent color coding across all views.
 - **FR-004**: System MUST display a province-wide dashboard showing all community hospitals with patient counts grouped by risk level.
 - **FR-005**: System MUST render digital partogram graphs with cervix dilation, alert line, and action line plotted over time.
 - **FR-006**: System MUST display vital sign trend graphs for HR, FHR, BP (SBP/DBP), and PPH with circular gauge badges showing latest values.
 - **FR-007**: System MUST display uterine contraction monitoring table with time, interval, duration, and intensity columns.
-- **FR-008**: System MUST receive webhook events from HOSxP (new admission, vital update, delivered) and process them within 5 seconds.
-- **FR-009**: System MUST poll BMS Central API every 30 seconds as a fallback when webhooks are unavailable.
+- **FR-008**: System MUST poll each hospital's HOSxP database via BMS Session API every 30 seconds, detect new admissions, vital sign updates, and delivery events, and update the local cache accordingly.
+- **FR-009**: System MUST broadcast detected changes to connected dashboard clients via Server-Sent Events (SSE) within 5 seconds of detection.
 - **FR-010**: System MUST authenticate users via BMS Session API with JWT tokens and enforce role-based access control (obstetrician, nurse, admin).
 - **FR-011**: System MUST maintain an audit log of all patient data access events.
 - **FR-012**: System MUST support printing a symptom change recording form (date/time, V/S, UC, FHS, Cervix, examiner, SOS, Med, notes) pre-filled with HOSxP data.
 - **FR-013**: System MUST display HOSxP connection status per hospital (Online/Offline/Last Sync).
 - **FR-014**: System MUST display cached data when a hospital's HOSxP is offline, with a clear "Offline" indicator and last sync timestamp.
-- **FR-015**: System MUST allow administrators to manage API keys per hospital (generate, revoke) and configure webhook URLs.
+- **FR-015**: System MUST allow administrators to manage BMS tunnel URL configurations per hospital (save, validate, test connection) and monitor connection health status.
 - **FR-016**: System MUST update the dashboard within 30 seconds when patient data changes.
 - **FR-017**: System MUST display a prominent alert with referral recommendation when a patient's CPD score reaches >= 10.
 - **FR-018**: System MUST support pagination and filtering (by hospital, status, risk level, date range) on patient lists.
@@ -165,7 +165,7 @@ As an IT administrator, I need to manage hospital connections, API keys, and mon
 ### Key Entities
 
 - **Hospital**: Community hospital in Khon Kaen province. Identified by HCODE (5-digit code). Has a name, level classification (A/S, M1, M2, F1, F2, F3), API connection configuration, and connection status.
-- **Patient**: A pregnant woman admitted for labor. Identified by HN (Hospital Number) and AN (Admission Number). Has demographics (name, age, national ID) and pregnancy data (gravida, GA, ANC count).
+- **Patient**: A pregnant woman admitted for labor. Uniquely identified across hospitals by CID (13-digit national ID). HN (Hospital Number) is unique only within a single hospital; AN (Admission Number) identifies a specific admission. Has demographics (name, age, CID) and pregnancy data (gravida, GA, ANC count). When a patient transfers between hospitals, CID is used to link records and maintain continuity.
 - **Labor Record**: The active labor episode for a patient. Contains admission date, labor status (active/delivered), and links to all clinical measurements.
 - **CPD Risk Score**: Calculated risk assessment from 8 clinical factors. Has a numeric score, risk level classification, contributing factors breakdown, and calculation timestamp.
 - **Vital Signs**: Time-series measurements including maternal HR, fetal HR, blood pressure (SBP/DBP), and PPH amount. Each entry has a measurement timestamp.

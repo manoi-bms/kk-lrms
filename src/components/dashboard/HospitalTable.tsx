@@ -1,7 +1,8 @@
 // T055: HospitalTable — sortable table of hospitals with risk counts
+// T106: Row highlight animation when risk counts change
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
@@ -20,6 +21,13 @@ interface HospitalTableProps {
   hospitals: DashboardHospital[];
 }
 
+interface HospitalCounts {
+  low: number;
+  medium: number;
+  high: number;
+  total: number;
+}
+
 type SortKey = 'name' | 'level' | 'low' | 'medium' | 'high' | 'total';
 type SortDir = 'asc' | 'desc';
 
@@ -27,6 +35,51 @@ export function HospitalTable({ hospitals }: HospitalTableProps) {
   const router = useRouter();
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const prevCountsRef = useRef<Map<string, HospitalCounts>>(new Map());
+  const [changedRows, setChangedRows] = useState<Set<string>>(new Set());
+
+  // T106: Detect changed rows by comparing current counts with previous
+  useEffect(() => {
+    const prevCounts = prevCountsRef.current;
+    const newChanged = new Set<string>();
+
+    for (const h of hospitals) {
+      const prev = prevCounts.get(h.hcode);
+      if (prev && (
+        prev.low !== h.counts.low ||
+        prev.medium !== h.counts.medium ||
+        prev.high !== h.counts.high ||
+        prev.total !== h.counts.total
+      )) {
+        newChanged.add(h.hcode);
+      }
+    }
+
+    if (newChanged.size > 0) {
+      setChangedRows(newChanged);
+      // Clear animation after 2 seconds
+      const timer = setTimeout(() => setChangedRows(new Set()), 2000);
+      return () => clearTimeout(timer);
+    }
+
+    // Update previous counts ref after comparison
+    const nextCounts = new Map<string, HospitalCounts>();
+    for (const h of hospitals) {
+      nextCounts.set(h.hcode, { ...h.counts });
+    }
+    prevCountsRef.current = nextCounts;
+  }, [hospitals]);
+
+  // Also update ref when changed rows are cleared
+  useEffect(() => {
+    if (changedRows.size === 0) {
+      const nextCounts = new Map<string, HospitalCounts>();
+      for (const h of hospitals) {
+        nextCounts.set(h.hcode, { ...h.counts });
+      }
+      prevCountsRef.current = nextCounts;
+    }
+  }, [changedRows, hospitals]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -84,7 +137,7 @@ export function HospitalTable({ hospitals }: HospitalTableProps) {
           {sorted.map((h) => (
             <TableRow
               key={h.hcode}
-              className="cursor-pointer hover:bg-muted/50"
+              className={`cursor-pointer hover:bg-muted/50 ${changedRows.has(h.hcode) ? 'animate-highlight' : ''}`}
               onClick={() => router.push(`/hospitals/${h.hcode}`)}
             >
               <TableCell className="font-medium">{h.name}</TableCell>

@@ -144,8 +144,7 @@ src/
 │   ├── ui/                    # shadcn/ui base components
 │   ├── dashboard/             # Dashboard-specific
 │   │   ├── HospitalTable.tsx
-│   │   ├── SummaryCards.tsx
-│   │   └── ConnectionBadge.tsx
+│   │   └── SummaryCards.tsx
 │   ├── patient/               # Patient detail
 │   │   ├── PatientHeader.tsx
 │   │   ├── ClinicalData.tsx
@@ -223,13 +222,8 @@ tests/
 │   └── components/
 │       ├── CpdBadge.test.tsx
 │       └── PartogramChart.test.tsx
-├── integration/
-│   ├── dashboard-api.test.ts
-│   ├── patient-api.test.ts
-│   └── sync-flow.test.ts
 └── e2e/
     ├── dashboard.spec.ts
-    ├── patient-detail.spec.ts
     └── admin.spec.ts
 
 docker-compose.yml             # PostgreSQL + app

@@ -14,6 +14,8 @@ export async function GET(
     const riskLevel = searchParams.get('risk_level') ?? undefined;
     const page = parseInt(searchParams.get('page') ?? '1', 10);
     const perPage = parseInt(searchParams.get('per_page') ?? '20', 10);
+    const dateFrom = searchParams.get('date_from') ?? undefined;
+    const dateTo = searchParams.get('date_to') ?? undefined;
 
     const db = await getDatabase();
     const result = await getHospitalPatientList(db, hcode, {
@@ -21,6 +23,8 @@ export async function GET(
       riskLevel,
       page,
       perPage,
+      dateFrom,
+      dateTo,
     });
 
     return NextResponse.json(result);

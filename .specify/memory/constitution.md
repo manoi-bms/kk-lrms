@@ -127,15 +127,16 @@ KK-LRMS is a real-time clinical monitoring system. Latency directly
 impacts patient safety.
 
 - Dashboard MUST update within 30 seconds of new data from HOSxP.
-- BMS Central API responses MUST complete within 2 seconds per
-  request.
-- Webhook events from HOSxP MUST be processed within 5 seconds.
+- BMS Session API SQL query responses MUST complete within 2 seconds
+  per request.
+- Detected data changes MUST be broadcast to clients via SSE within
+  5 seconds.
 - The system MUST support at least 200 concurrent users per
   province.
 - When HOSxP is offline, cached data MUST be displayed with a
   clear "Offline — Last sync: [timestamp]" indicator.
-- Polling fallback (every 30 seconds) MUST activate automatically
-  when webhooks fail.
+- Server-side polling (every 30 seconds per hospital) is the primary
+  data ingestion mechanism via BMS Session API.
 
 ## Version Control Discipline
 
@@ -197,4 +198,4 @@ when conflicts arise.
   principle — start simple, add complexity only when proven
   necessary.
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-08 | **Last Amended**: 2026-03-08
+**Version**: 1.0.1 | **Ratified**: 2026-03-08 | **Last Amended**: 2026-03-09

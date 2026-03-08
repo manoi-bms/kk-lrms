@@ -142,3 +142,13 @@
     @apply font-sans;
   }
 }
+
+/* T106: Row highlight animation when risk counts change */
+@keyframes highlight-row {
+  0% { background-color: rgb(254 249 195); }
+  100% { background-color: transparent; }
+}
+
+.animate-highlight {
+  animation: highlight-row 2s ease-out;
+}

@@ -105,9 +105,11 @@ export async function getHospitalPatientList(
     riskLevel?: string;
     page?: number;
     perPage?: number;
+    dateFrom?: string;
+    dateTo?: string;
   } = {},
 ) {
-  const { status = 'active', riskLevel, page = 1, perPage = 20 } = filters;
+  const { status = 'active', riskLevel, page = 1, perPage = 20, dateFrom, dateTo } = filters;
   const offset = (page - 1) * perPage;
 
   // Get hospital ID
@@ -125,6 +127,18 @@ export async function getHospitalPatientList(
   if (status !== 'all') {
     whereClause += ' AND cp.labor_status = ?';
     params.push(status.toUpperCase());
+  }
+
+  if (dateFrom) {
+    whereClause += ' AND cp.admit_date >= ?';
+    params.push(dateFrom);
+  }
+
+  if (dateTo) {
+    // Append T23:59:59.999Z to include the entire day when only a date string is provided
+    const dateToValue = dateTo.length === 10 ? `${dateTo}T23:59:59.999Z` : dateTo;
+    whereClause += ' AND cp.admit_date <= ?';
+    params.push(dateToValue);
   }
 
   // Count total
