@@ -1,21 +1,13 @@
-// T057: Hospital patient list page
 'use client';
 
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { CpdBadge } from '@/components/shared/CpdBadge';
+import { PatientCard } from '@/components/patient/PatientCard';
+import { ConnectionStatus } from '@/components/shared/ConnectionStatus';
 import { LoadingState } from '@/components/shared/LoadingState';
-import type { RiskLevel } from '@/types/domain';
+import { Building2, ArrowLeft } from 'lucide-react';
+import { ConnectionStatus as ConnectionStatusEnum } from '@/types/domain';
 
 interface PatientRow {
   id: string;
@@ -25,10 +17,25 @@ interface PatientRow {
   age: number;
   gravida: number | null;
   ga_weeks: number | null;
+  anc_count: number | null;
   admit_date: string;
   labor_status: string;
   cpd_score: number | null;
   cpd_risk_level: string | null;
+  latest_vitals?: {
+    maternal_hr: number | null;
+    fetal_hr: string | null;
+    sbp: number | null;
+    dbp: number | null;
+  } | null;
+  latest_cervix_cm?: number | null;
+}
+
+interface HospitalInfo {
+  name: string;
+  level: string;
+  connectionStatus: string;
+  lastSyncAt: string | null;
 }
 
 export default function HospitalPatientListPage({
@@ -48,83 +55,82 @@ export default function HospitalPatientListPage({
   }
 
   const patients: PatientRow[] = data?.patients ?? [];
+  const hospital: HospitalInfo | undefined = data?.hospital;
+
+  const riskOrder: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+  const sortedPatients = [...patients].sort(
+    (a, b) => (riskOrder[a.cpd_risk_level ?? 'LOW'] ?? 3) - (riskOrder[b.cpd_risk_level ?? 'LOW'] ?? 3),
+  );
 
   return (
-    <div className="space-y-4 p-4 md:p-6">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          ← กลับ
-        </button>
-        <h1 className="text-xl font-bold">รายชื่อผู้คลอด — รหัส {hcode}</h1>
+    <div className="space-y-5">
+      <button
+        onClick={() => router.push('/')}
+        className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-teal-600"
+      >
+        <ArrowLeft size={16} /> กลับแดชบอร์ด
+      </button>
+
+      <div className="rounded-xl bg-white p-5 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50 text-teal-600">
+            <Building2 size={20} />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold text-slate-800">
+              {hospital?.name ?? `รหัส ${hcode}`}
+            </h1>
+            <div className="flex items-center gap-3 text-sm text-slate-500">
+              {hospital?.level && (
+                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium">
+                  {hospital.level}
+                </span>
+              )}
+              {hospital?.connectionStatus && (
+                <ConnectionStatus
+                  status={hospital.connectionStatus as ConnectionStatusEnum}
+                  lastSyncAt={hospital.lastSyncAt ?? null}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="mt-3 text-sm text-slate-600">
+          ผู้คลอด <span className="font-semibold">{patients.length}</span> ราย
+        </div>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>AN</TableHead>
-              <TableHead>HN</TableHead>
-              <TableHead>อายุ</TableHead>
-              <TableHead>ครรภ์ที่</TableHead>
-              <TableHead>GA</TableHead>
-              <TableHead>CPD</TableHead>
-              <TableHead>สถานะ</TableHead>
-              <TableHead>วันที่ Admit</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {patients.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
-                  ไม่มีผู้คลอดในขณะนี้
-                </TableCell>
-              </TableRow>
-            ) : (
-              patients.map((p) => (
-                <TableRow
-                  key={p.id || p.an}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => router.push(`/patients/${p.an}`)}
-                >
-                  <TableCell className="font-medium">{p.an}</TableCell>
-                  <TableCell>{p.hn}</TableCell>
-                  <TableCell>{p.age} ปี</TableCell>
-                  <TableCell>{p.gravida ?? '-'}</TableCell>
-                  <TableCell>{p.ga_weeks ? `${p.ga_weeks} สัปดาห์` : '-'}</TableCell>
-                  <TableCell>
-                    {p.cpd_score != null && p.cpd_risk_level ? (
-                      <CpdBadge
-                        score={p.cpd_score}
-                        riskLevel={p.cpd_risk_level as RiskLevel}
-                        size="sm"
-                      />
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={p.labor_status === 'ACTIVE' ? 'default' : 'secondary'}>
-                      {p.labor_status === 'ACTIVE' ? 'คลอดอยู่' : 'คลอดแล้ว'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {p.admit_date
-                      ? new Date(p.admit_date).toLocaleDateString('th-TH', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })
-                      : '-'}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {sortedPatients.length === 0 ? (
+        <div className="rounded-xl bg-white p-8 text-center text-slate-400 shadow-sm">
+          ไม่มีผู้คลอดในขณะนี้
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {sortedPatients.map((p) => (
+            <PatientCard
+              key={p.id || p.an}
+              an={p.an}
+              hn={p.hn}
+              name={p.name}
+              age={p.age}
+              gravida={p.gravida}
+              gaWeeks={p.ga_weeks}
+              ancCount={p.anc_count}
+              admitDate={p.admit_date}
+              laborStatus={p.labor_status}
+              cpdScore={p.cpd_score}
+              cpdRiskLevel={p.cpd_risk_level}
+              latestVitals={p.latest_vitals ? {
+                maternalHr: p.latest_vitals.maternal_hr,
+                fetalHr: p.latest_vitals.fetal_hr,
+                sbp: p.latest_vitals.sbp,
+                dbp: p.latest_vitals.dbp,
+              } : null}
+              latestCervixCm={p.latest_cervix_cm}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
