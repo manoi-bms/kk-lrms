@@ -106,7 +106,7 @@ function MaternalHrChart({ vitals }: { vitals: VitalSignEntry[] }) {
           <YAxis domain={[40, 180]} fontSize={11} tick={{ fill: '#94a3b8' }} />
           <Tooltip
             content={({ active, payload, label }) => (
-              <CustomTooltip active={active} payload={payload as never} label={label} unit="bpm" />
+              <CustomTooltip active={active} payload={payload as never} label={label as string} unit="bpm" />
             )}
           />
           <ReferenceLine y={100} stroke="#22c55e" strokeDasharray="4 4" strokeOpacity={0.6} />
@@ -164,7 +164,7 @@ function FetalHrChart({ vitals }: { vitals: VitalSignEntry[] }) {
           <YAxis domain={[80, 200]} fontSize={11} tick={{ fill: '#94a3b8' }} />
           <Tooltip
             content={({ active, payload, label }) => (
-              <CustomTooltip active={active} payload={payload as never} label={label} unit="bpm" />
+              <CustomTooltip active={active} payload={payload as never} label={label as string} unit="bpm" />
             )}
           />
           <ReferenceLine y={160} stroke="#22c55e" strokeDasharray="4 4" strokeOpacity={0.6} />
@@ -224,7 +224,7 @@ function BpTrendChart({ vitals }: { vitals: VitalSignEntry[] }) {
           <YAxis domain={[40, 200]} fontSize={11} tick={{ fill: '#94a3b8' }} />
           <Tooltip
             content={({ active, payload, label }) => (
-              <CustomTooltip active={active} payload={payload as never} label={label} unit="mmHg" />
+              <CustomTooltip active={active} payload={payload as never} label={label as string} unit="mmHg" />
             )}
           />
           <ReferenceLine y={140} stroke="#ef4444" strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: 'SBP 140', position: 'right', fill: '#ef4444', fontSize: 10 }} />
@@ -289,7 +289,7 @@ function PphTrendChart({ vitals }: { vitals: VitalSignEntry[] }) {
           <YAxis domain={[0, 1000]} fontSize={11} tick={{ fill: '#94a3b8' }} />
           <Tooltip
             content={({ active, payload, label }) => (
-              <CustomTooltip active={active} payload={payload as never} label={label} unit="ml" />
+              <CustomTooltip active={active} payload={payload as never} label={label as string} unit="ml" />
             )}
           />
           <ReferenceLine y={500} stroke="#ef4444" strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: '500 ml', position: 'right', fill: '#ef4444', fontSize: 10 }} />
