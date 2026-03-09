@@ -14,6 +14,8 @@ interface PatientHeaderProps {
   age: number;
   admitDate: string;
   laborStatus: string;
+  weightKg?: number | null;
+  weightDiffKg?: number | null;
   hospital: {
     name: string;
     level: string;
@@ -26,6 +28,12 @@ interface PatientHeaderProps {
   } | null;
 }
 
+function getWeightDiffColor(diff: number): string {
+  if (diff > 20) return 'text-red-600';
+  if (diff > 15) return 'text-amber-600';
+  return 'text-emerald-600';
+}
+
 export function PatientHeader({
   hn,
   an,
@@ -33,9 +41,13 @@ export function PatientHeader({
   age,
   admitDate,
   laborStatus,
+  weightKg,
+  weightDiffKg,
   hospital,
   cpdScore,
 }: PatientHeaderProps) {
+  const showWeight = weightKg != null && weightDiffKg != null && weightKg > 0 && weightDiffKg > 0;
+  const preWeight = showWeight ? weightKg - weightDiffKg : null;
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
       <div className="space-y-2">
@@ -57,6 +69,9 @@ export function PatientHeader({
           <span>AN: <span className="font-mono font-semibold text-slate-700">{an}</span></span>
           <span>อายุ: <span className="font-mono font-semibold text-slate-700">{age} ปี</span></span>
           <span>Admit: <span className="font-mono font-semibold text-slate-700">{formatThaiDate(new Date(admitDate))}</span></span>
+          {showWeight && preWeight !== null && weightDiffKg !== null && (
+            <span>น.น. <span className="font-mono font-semibold text-slate-700">{preWeight}</span> → <span className="font-mono font-semibold text-slate-700">{weightKg}</span> = <span className={`font-mono font-semibold ${getWeightDiffColor(weightDiffKg)}`}>{weightDiffKg} กก.</span></span>
+          )}
         </div>
 
         <div className="flex items-center gap-2 text-sm">

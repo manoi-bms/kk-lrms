@@ -108,4 +108,42 @@ describe('ClinicalData', () => {
     const dashes = screen.getAllByText('-');
     expect(dashes.length).toBe(4);
   });
+
+  it('shows full weight context when both weightKg and weightDiffKg are provided', () => {
+    render(<ClinicalData {...completeData} weightKg={70} />);
+    // preWeight = 70 - 12 = 58, diff = 12
+    expect(screen.getByText('58')).toBeTruthy();
+    expect(screen.getByText('70')).toBeTruthy();
+    expect(screen.getByText('+12')).toBeTruthy();
+  });
+
+  it('shows only weightDiffKg when weightKg is not provided', () => {
+    render(<ClinicalData {...completeData} />);
+    expect(screen.getByText('12')).toBeTruthy();
+  });
+
+  it('colors weight diff green when gain <= 15', () => {
+    const { container } = render(<ClinicalData {...completeData} weightKg={70} />);
+    const greenDiff = container.querySelector('.text-emerald-600');
+    expect(greenDiff).toBeTruthy();
+    expect(greenDiff?.textContent).toBe('+12');
+  });
+
+  it('colors weight diff amber when gain > 15 and <= 20', () => {
+    const { container } = render(
+      <ClinicalData {...completeData} weightKg={75} weightDiffKg={18} />
+    );
+    const amberDiff = container.querySelector('.text-amber-600');
+    expect(amberDiff).toBeTruthy();
+    expect(amberDiff?.textContent).toBe('+18');
+  });
+
+  it('colors weight diff red when gain > 20', () => {
+    const { container } = render(
+      <ClinicalData {...completeData} weightKg={75} weightDiffKg={25} />
+    );
+    const redDiff = container.querySelector('.text-red-600');
+    expect(redDiff).toBeTruthy();
+    expect(redDiff?.textContent).toBe('+25');
+  });
 });

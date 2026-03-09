@@ -92,4 +92,48 @@ describe('PatientHeader', () => {
     render(<PatientHeader {...propsWithConnection} />);
     expect(screen.getByText('ออนไลน์')).toBeTruthy();
   });
+
+  it('shows weight change display when weightKg and weightDiffKg are provided', () => {
+    render(<PatientHeader {...baseProps} weightKg={70} weightDiffKg={23} />);
+    // preWeight = 70 - 23 = 47
+    expect(screen.getByText('47')).toBeTruthy();
+    expect(screen.getByText('70')).toBeTruthy();
+    expect(screen.getByText('23 กก.')).toBeTruthy();
+  });
+
+  it('does not show weight change when weightKg is null', () => {
+    render(<PatientHeader {...baseProps} weightKg={null} weightDiffKg={10} />);
+    expect(screen.queryByText('น.น.')).toBeNull();
+  });
+
+  it('does not show weight change when weightDiffKg is null', () => {
+    render(<PatientHeader {...baseProps} weightKg={70} weightDiffKg={null} />);
+    expect(screen.queryByText('น.น.')).toBeNull();
+  });
+
+  it('does not show weight change when weightDiffKg is 0', () => {
+    render(<PatientHeader {...baseProps} weightKg={70} weightDiffKg={0} />);
+    expect(screen.queryByText('น.น.')).toBeNull();
+  });
+
+  it('colors weight diff green when gain <= 15', () => {
+    const { container } = render(<PatientHeader {...baseProps} weightKg={60} weightDiffKg={10} />);
+    const diffSpan = container.querySelector('.text-emerald-600');
+    expect(diffSpan).toBeTruthy();
+    expect(diffSpan?.textContent).toBe('10 กก.');
+  });
+
+  it('colors weight diff amber when gain > 15 and <= 20', () => {
+    const { container } = render(<PatientHeader {...baseProps} weightKg={65} weightDiffKg={18} />);
+    const diffSpan = container.querySelector('.text-amber-600');
+    expect(diffSpan).toBeTruthy();
+    expect(diffSpan?.textContent).toBe('18 กก.');
+  });
+
+  it('colors weight diff red when gain > 20', () => {
+    const { container } = render(<PatientHeader {...baseProps} weightKg={75} weightDiffKg={25} />);
+    const diffSpan = container.querySelector('.text-red-600');
+    expect(diffSpan).toBeTruthy();
+    expect(diffSpan?.textContent).toBe('25 กก.');
+  });
 });
