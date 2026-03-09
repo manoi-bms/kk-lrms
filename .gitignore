@@ -45,6 +45,12 @@ next-env.d.ts
 # Debug
 .vercel
 
+# Dev SQLite database
+dev.sqlite
+
+# Screenshots
+screenshots/
+
 # Misc
 *.tmp
 *.bak

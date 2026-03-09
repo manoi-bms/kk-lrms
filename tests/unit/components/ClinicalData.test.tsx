@@ -17,17 +17,22 @@ const completeData = {
 describe('ClinicalData', () => {
   it('renders all 8 clinical measurements when data is complete', () => {
     render(<ClinicalData {...completeData} />);
+    // Values are rendered in separate elements from units
     expect(screen.getByText('2')).toBeTruthy();
-    expect(screen.getByText('38 สัปดาห์')).toBeTruthy();
-    expect(screen.getByText('6 ครั้ง')).toBeTruthy();
-    expect(screen.getByText('155 ซม.')).toBeTruthy();
-    expect(screen.getByText('12 กก.')).toBeTruthy();
-    expect(screen.getByText('34 ซม.', { exact: false })).toBeTruthy();
-    expect(screen.getByText('3200 กรัม')).toBeTruthy();
-    expect(screen.getByText('36 %')).toBeTruthy();
+    expect(screen.getByText('38')).toBeTruthy();
+    expect(screen.getByText('สัปดาห์')).toBeTruthy();
+    expect(screen.getByText('6')).toBeTruthy();
+    expect(screen.getByText('ครั้ง')).toBeTruthy();
+    expect(screen.getByText('155')).toBeTruthy();
+    expect(screen.getByText('12')).toBeTruthy();
+    expect(screen.getByText('34')).toBeTruthy();
+    expect(screen.getByText('3200')).toBeTruthy();
+    expect(screen.getByText('กรัม')).toBeTruthy();
+    expect(screen.getByText('36')).toBeTruthy();
+    expect(screen.getByText('%')).toBeTruthy();
   });
 
-  it('shows "ไม่มีข้อมูล" for missing/null values', () => {
+  it('shows dash "-" for missing/null values', () => {
     const nullData = {
       gravida: null,
       gaWeeks: null,
@@ -39,8 +44,8 @@ describe('ClinicalData', () => {
       hematocritPct: null,
     };
     render(<ClinicalData {...nullData} />);
-    const missingTexts = screen.getAllByText('ไม่มีข้อมูล');
-    expect(missingTexts.length).toBe(8);
+    const dashes = screen.getAllByText('-');
+    expect(dashes.length).toBe(8);
   });
 
   it('renders label ครรภ์ที่', () => {
@@ -88,7 +93,7 @@ describe('ClinicalData', () => {
     expect(screen.getByText('ข้อมูลทางคลินิก')).toBeTruthy();
   });
 
-  it('shows ไม่มีข้อมูล only for null fields, not for present ones', () => {
+  it('shows dash only for null fields, not for present ones', () => {
     const partialData = {
       gravida: 1,
       gaWeeks: null,
@@ -100,7 +105,7 @@ describe('ClinicalData', () => {
       hematocritPct: null,
     };
     render(<ClinicalData {...partialData} />);
-    const missingTexts = screen.getAllByText('ไม่มีข้อมูล');
-    expect(missingTexts.length).toBe(4);
+    const dashes = screen.getAllByText('-');
+    expect(dashes.length).toBe(4);
   });
 });

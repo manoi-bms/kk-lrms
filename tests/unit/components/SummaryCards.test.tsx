@@ -1,5 +1,5 @@
 // SummaryCards component tests
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { SummaryCards } from '@/components/dashboard/SummaryCards';
 import type { DashboardSummary } from '@/types/api';
@@ -12,17 +12,10 @@ const summary: DashboardSummary = {
 };
 
 describe('SummaryCards', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it('renders 4 summary cards', () => {
     const { container } = render(<SummaryCards summary={summary} />);
-    const cards = container.querySelectorAll('[data-slot="card"]');
+    // Cards are plain divs with border-t-4 inside the grid
+    const cards = container.querySelectorAll('.border-t-4');
     expect(cards.length).toBe(4);
   });
 
@@ -32,38 +25,37 @@ describe('SummaryCards', () => {
     expect(screen.getByText('25')).toBeTruthy();
   });
 
-  it('shows high-risk count with red background', () => {
+  it('shows high-risk count with red border', () => {
     const { container } = render(<SummaryCards summary={summary} />);
     expect(screen.getByText('เสี่ยงสูง')).toBeTruthy();
     expect(screen.getByText('5')).toBeTruthy();
-    // Find the card that contains "เสี่ยงสูง" and check it has bg-red-50
-    const redCard = Array.from(container.querySelectorAll('[data-slot="card"]')).find(
+    const redCard = Array.from(container.querySelectorAll('.border-t-4')).find(
       (card) => card.textContent?.includes('เสี่ยงสูง'),
     );
     expect(redCard).toBeTruthy();
-    expect(redCard!.className).toContain('bg-red-50');
+    expect(redCard!.className).toContain('border-t-red-500');
   });
 
-  it('shows medium-risk count with yellow background', () => {
+  it('shows medium-risk count with amber border', () => {
     const { container } = render(<SummaryCards summary={summary} />);
     expect(screen.getByText('เสี่ยงปานกลาง')).toBeTruthy();
     expect(screen.getByText('8')).toBeTruthy();
-    const yellowCard = Array.from(container.querySelectorAll('[data-slot="card"]')).find(
+    const amberCard = Array.from(container.querySelectorAll('.border-t-4')).find(
       (card) => card.textContent?.includes('เสี่ยงปานกลาง'),
     );
-    expect(yellowCard).toBeTruthy();
-    expect(yellowCard!.className).toContain('bg-yellow-50');
+    expect(amberCard).toBeTruthy();
+    expect(amberCard!.className).toContain('border-t-amber-500');
   });
 
-  it('shows low-risk count with green background', () => {
+  it('shows low-risk count with green border', () => {
     const { container } = render(<SummaryCards summary={summary} />);
     expect(screen.getByText('เสี่ยงต่ำ')).toBeTruthy();
     expect(screen.getByText('12')).toBeTruthy();
-    const greenCard = Array.from(container.querySelectorAll('[data-slot="card"]')).find(
+    const greenCard = Array.from(container.querySelectorAll('.border-t-4')).find(
       (card) => card.textContent?.includes('เสี่ยงต่ำ'),
     );
     expect(greenCard).toBeTruthy();
-    expect(greenCard!.className).toContain('bg-green-50');
+    expect(greenCard!.className).toContain('border-t-green-500');
   });
 
   it('displays all card titles', () => {
@@ -74,9 +66,12 @@ describe('SummaryCards', () => {
     expect(screen.getByText('เสี่ยงต่ำ')).toBeTruthy();
   });
 
-  it('displays current time label', () => {
+  it('displays subtitles for each card', () => {
     render(<SummaryCards summary={summary} />);
-    expect(screen.getByText(/เวลาปัจจุบัน:/)).toBeTruthy();
+    expect(screen.getByText('กำลังคลอด')).toBeTruthy();
+    expect(screen.getByText('ต้องเฝ้าระวัง')).toBeTruthy();
+    expect(screen.getByText('ติดตามต่อเนื่อง')).toBeTruthy();
+    expect(screen.getByText('ปกติ')).toBeTruthy();
   });
 
   it('renders with zero counts', () => {
