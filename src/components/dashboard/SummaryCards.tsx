@@ -1,77 +1,28 @@
-// T054: SummaryCards — 4 cards with risk counts + real-time Bangkok clock
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { DashboardSummary } from '@/types/api';
 
 interface SummaryCardsProps {
   summary: DashboardSummary;
 }
 
+const CARDS = [
+  { key: 'total', title: 'ผู้คลอดทั้งหมด', subtitle: 'กำลังคลอด', borderColor: 'border-t-teal-500', textColor: 'text-slate-800', getValue: (s: DashboardSummary) => s.totalActive },
+  { key: 'high', title: 'เสี่ยงสูง', subtitle: 'ต้องเฝ้าระวัง', borderColor: 'border-t-red-500', textColor: 'text-red-600', getValue: (s: DashboardSummary) => s.totalHigh },
+  { key: 'medium', title: 'เสี่ยงปานกลาง', subtitle: 'ติดตามต่อเนื่อง', borderColor: 'border-t-amber-500', textColor: 'text-amber-600', getValue: (s: DashboardSummary) => s.totalMedium },
+  { key: 'low', title: 'เสี่ยงต่ำ', subtitle: 'ปกติ', borderColor: 'border-t-green-500', textColor: 'text-green-600', getValue: (s: DashboardSummary) => s.totalLow },
+];
+
 export function SummaryCards({ summary }: SummaryCardsProps) {
-  const [clock, setClock] = useState('');
-
-  useEffect(() => {
-    const updateClock = () => {
-      setClock(
-        new Date().toLocaleTimeString('th-TH', {
-          timeZone: 'Asia/Bangkok',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        }),
-      );
-    };
-    updateClock();
-    const interval = setInterval(updateClock, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const cards = [
-    {
-      title: 'ผู้คลอดทั้งหมด',
-      value: summary.totalActive,
-      color: 'text-foreground',
-      bg: 'bg-card',
-    },
-    {
-      title: 'เสี่ยงสูง',
-      value: summary.totalHigh,
-      color: 'text-red-600',
-      bg: 'bg-red-50',
-    },
-    {
-      title: 'เสี่ยงปานกลาง',
-      value: summary.totalMedium,
-      color: 'text-yellow-600',
-      bg: 'bg-yellow-50',
-    },
-    {
-      title: 'เสี่ยงต่ำ',
-      value: summary.totalLow,
-      color: 'text-green-600',
-      bg: 'bg-green-50',
-    },
-  ];
-
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:gap-4">
-      {cards.map((card) => (
-        <Card key={card.title} className={card.bg}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {card.title}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className={`text-3xl font-bold ${card.color}`}>{card.value}</div>
-          </CardContent>
-        </Card>
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      {CARDS.map((card) => (
+        <div key={card.key} className={`rounded-xl border-t-4 bg-white p-5 shadow-sm ${card.borderColor}`}>
+          <div className="text-sm font-medium text-slate-500">{card.title}</div>
+          <div className={`mt-2 font-mono text-3xl font-bold ${card.textColor}`}>{card.getValue(summary)}</div>
+          <div className="mt-1 text-xs text-slate-400">{card.subtitle}</div>
+        </div>
       ))}
-      <div className="col-span-2 flex items-center justify-end text-sm text-muted-foreground md:col-span-4">
-        <span>เวลาปัจจุบัน: {clock}</span>
-      </div>
     </div>
   );
 }
