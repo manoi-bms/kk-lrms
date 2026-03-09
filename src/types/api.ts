@@ -159,6 +159,25 @@ export interface ContractionsResponse {
   contractions: ContractionEntry[];
 }
 
+// High-Risk Patients
+export interface HighRiskPatient {
+  an: string;
+  hn: string;
+  name: string;
+  age: number | null;
+  gaWeeks: number | null;
+  cpdScore: number;
+  riskLevel: string;
+  hospital: string;
+  hcode: string;
+  admitDate: string | null;
+  lastVitalAt: string | null;
+}
+
+export interface HighRiskPatientsResponse {
+  patients: HighRiskPatient[];
+}
+
 // Error
 export interface ErrorResponse {
   error: {

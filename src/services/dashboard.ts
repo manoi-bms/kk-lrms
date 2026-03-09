@@ -1,6 +1,6 @@
 // T048: Dashboard service — province dashboard data from local cache
 import type { DatabaseAdapter } from '@/db/adapter';
-import type { DashboardHospital, DashboardSummary } from '@/types/api';
+import type { DashboardHospital, DashboardSummary, HighRiskPatient } from '@/types/api';
 import type { ConnectionStatus, HospitalLevel } from '@/types/domain';
 
 interface DashboardRow {
@@ -95,6 +95,66 @@ export function getSummaryTotals(hospitals: DashboardHospital[]): DashboardSumma
   }
 
   return { totalLow, totalMedium, totalHigh, totalActive };
+}
+
+interface HighRiskRow {
+  an: string;
+  hn: string;
+  name: string;
+  age: number | null;
+  ga_weeks: number | null;
+  cpd_score: number;
+  risk_level: string;
+  hospital_name: string;
+  hcode: string;
+  admit_date: string | null;
+  last_vital_at: string | null;
+}
+
+export async function getHighRiskPatients(
+  db: DatabaseAdapter,
+  limit: number = 20,
+): Promise<HighRiskPatient[]> {
+  const rows = await db.query<HighRiskRow>(`
+    SELECT
+      cp.an,
+      cp.hn,
+      cp.name,
+      cp.age,
+      cp.ga_weeks,
+      cs.score AS cpd_score,
+      cs.risk_level,
+      h.name AS hospital_name,
+      h.hcode,
+      cp.admit_date,
+      (SELECT MAX(cv.measured_at) FROM cached_vital_signs cv WHERE cv.patient_id = cp.id) AS last_vital_at
+    FROM cached_patients cp
+    INNER JOIN cpd_scores cs ON cs.patient_id = cp.id
+      AND cs.id = (
+        SELECT cs2.id FROM cpd_scores cs2
+        WHERE cs2.patient_id = cp.id
+        ORDER BY cs2.calculated_at DESC LIMIT 1
+      )
+    INNER JOIN hospitals h ON h.id = cp.hospital_id
+    WHERE cp.labor_status = 'ACTIVE'
+      AND cs.risk_level IN ('HIGH', 'MEDIUM')
+    ORDER BY cs.score DESC
+    LIMIT ?
+  `, [limit]);
+
+  return rows.map((row) => ({
+    an: row.an,
+    hn: row.hn,
+    name: row.name,
+    age: row.age,
+    gaWeeks: row.ga_weeks,
+    cpdScore: row.cpd_score,
+    riskLevel: row.risk_level,
+    hospital: row.hospital_name,
+    hcode: row.hcode,
+    admitDate: row.admit_date,
+    lastVitalAt: row.last_vital_at,
+  }));
 }
 
 export async function getHospitalPatientList(
