@@ -58,3 +58,14 @@ export function truncateName(name: string, maxLen: number = 30): string {
   if (name.length <= maxLen) return name;
   return name.slice(0, maxLen) + '...';
 }
+
+export function formatRelativeTime(isoString: string | null): string {
+  if (!isoString) return '-';
+  const diff = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'เมื่อสักครู่';
+  if (mins < 60) return `${mins} นาทีที่แล้ว`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} ชม.ที่แล้ว`;
+  return new Date(isoString).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+}

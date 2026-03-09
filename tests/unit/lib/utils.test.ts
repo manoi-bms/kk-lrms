@@ -10,6 +10,7 @@ import {
   riskLevelToThaiLabel,
   formatHospitalLevel,
   truncateName,
+  formatRelativeTime,
 } from '@/lib/utils';
 import { RiskLevel, HospitalLevel } from '@/types/domain';
 
@@ -225,6 +226,50 @@ describe('utils', () => {
 
     it('handles empty string', () => {
       expect(truncateName('')).toBe('');
+    });
+  });
+
+  describe('formatRelativeTime', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('returns dash for null input', () => {
+      expect(formatRelativeTime(null)).toBe('-');
+    });
+
+    it('returns "เมื่อสักครู่" for less than 1 minute ago', () => {
+      vi.useFakeTimers();
+      const now = new Date(2026, 2, 9, 12, 0, 0);
+      vi.setSystemTime(now);
+      const thirtySecsAgo = new Date(now.getTime() - 30000).toISOString();
+      expect(formatRelativeTime(thirtySecsAgo)).toBe('เมื่อสักครู่');
+    });
+
+    it('returns Thai minutes for less than 60 minutes ago', () => {
+      vi.useFakeTimers();
+      const now = new Date(2026, 2, 9, 12, 0, 0);
+      vi.setSystemTime(now);
+      const fiveMinsAgo = new Date(now.getTime() - 5 * 60000).toISOString();
+      expect(formatRelativeTime(fiveMinsAgo)).toBe('5 นาทีที่แล้ว');
+    });
+
+    it('returns Thai hours for less than 24 hours ago', () => {
+      vi.useFakeTimers();
+      const now = new Date(2026, 2, 9, 12, 0, 0);
+      vi.setSystemTime(now);
+      const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60000).toISOString();
+      expect(formatRelativeTime(twoHoursAgo)).toBe('2 ชม.ที่แล้ว');
+    });
+
+    it('returns Thai date for more than 24 hours ago', () => {
+      vi.useFakeTimers();
+      const now = new Date(2026, 2, 9, 12, 0, 0);
+      vi.setSystemTime(now);
+      const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60000).toISOString();
+      const result = formatRelativeTime(twoDaysAgo);
+      // Should be a Thai date format with day and month
+      expect(result).toMatch(/\d+/);
     });
   });
 });
