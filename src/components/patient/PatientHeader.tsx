@@ -37,16 +37,16 @@ export function PatientHeader({
   cpdScore,
 }: PatientHeaderProps) {
   return (
-    <div className="flex flex-col gap-4 rounded-lg border p-4 md:flex-row md:items-start md:justify-between">
+    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
       <div className="space-y-2">
         <div className="flex items-center gap-3">
-          <h1 className="text-lg font-bold">{name}</h1>
+          <h1 className="text-lg font-semibold text-slate-800">{name}</h1>
           <Badge variant={laborStatus === 'ACTIVE' ? 'default' : 'secondary'}>
             {laborStatus === 'ACTIVE' ? 'คลอดอยู่' : 'คลอดแล้ว'}
           </Badge>
         </div>
 
-        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-wrap gap-4 text-sm text-slate-500">
           <span>HN: <strong>{hn}</strong></span>
           <span>AN: <strong>{an}</strong></span>
           <span>อายุ: <strong>{age} ปี</strong></span>
