@@ -12,12 +12,12 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, breadcrumbs }: DashboardLayoutProps) {
   return (
     <SessionProvider>
-      <div className="flex h-screen overflow-hidden bg-slate-50">
+      <div className="flex h-screen overflow-hidden bg-slate-50/50">
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <TopBar breadcrumbs={breadcrumbs} />
           <main className="flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-[1400px] px-4 py-5 md:px-6">
+            <div className="mx-auto max-w-[1400px] p-6 lg:p-8">
               {children}
             </div>
           </main>

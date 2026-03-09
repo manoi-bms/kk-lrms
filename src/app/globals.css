@@ -162,3 +162,22 @@
 .animate-highlight {
   animation: highlight-row 2s ease-out;
 }
+
+/* Clinical Command Center — refined shadow system */
+.shadow-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.shadow-card-hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+/* Live status pulse animation */
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-live {
+  animation: pulse-live 2s ease-in-out infinite;
+}

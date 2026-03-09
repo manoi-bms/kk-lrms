@@ -1,4 +1,4 @@
-// Sidebar navigation — teal-700, collapsible, mobile overlay, role-based nav
+// Sidebar navigation — dark slate command center, collapsible, mobile overlay, role-based nav
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -64,15 +64,20 @@ export function Sidebar() {
     (item) => !item.adminOnly || userRole === 'ADMIN'
   );
 
+  // Get user initial for avatar
+  const userInitial = userName.charAt(0).toUpperCase();
+
   const sidebarContent = (
     <div className="flex h-full flex-col">
       {/* Logo area */}
-      <div className="flex items-center gap-3 border-b border-white/10 px-4 py-4">
-        <Building2 className="h-7 w-7 shrink-0 text-white" />
+      <div className="flex items-center gap-3 border-b border-white/5 px-4 py-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10">
+          <Building2 className="h-5 w-5 text-white" />
+        </div>
         {!collapsed && (
           <div className="min-w-0">
-            <div className="text-base font-semibold text-white">KK-LRMS</div>
-            <div className="truncate text-xs text-teal-200">
+            <div className="text-lg font-bold tracking-tight text-white">KK-LRMS</div>
+            <div className="truncate text-xs text-slate-400">
               ระบบติดตามการคลอด
             </div>
           </div>
@@ -93,8 +98,8 @@ export function Sidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 active
-                  ? 'bg-white/15 text-white'
-                  : 'text-teal-100 hover:bg-white/10 hover:text-white'
+                  ? 'border-l-2 border-emerald-400 bg-white/10 text-white'
+                  : 'text-slate-400 hover:bg-white/5 hover:text-white'
               )}
               title={collapsed ? item.label : undefined}
             >
@@ -108,7 +113,7 @@ export function Sidebar() {
       {/* Collapse toggle (desktop only) */}
       <button
         onClick={toggleCollapse}
-        className="mx-2 mb-2 hidden items-center justify-center rounded-lg p-2 text-teal-200 transition-colors hover:bg-white/10 hover:text-white md:flex"
+        className="mx-2 mb-2 hidden items-center justify-center rounded-lg p-2 text-slate-500 transition-colors hover:bg-white/5 hover:text-slate-300 md:flex"
         aria-label={collapsed ? 'ขยายเมนู' : 'ย่อเมนู'}
       >
         {collapsed ? (
@@ -119,14 +124,26 @@ export function Sidebar() {
       </button>
 
       {/* User info + Logout */}
-      <div className="border-t border-white/10 px-3 py-3">
+      <div className="border-t border-white/5 px-3 py-3">
         {!collapsed && (
-          <div className="mb-2 truncate text-sm text-teal-100">{userName}</div>
+          <div className="mb-2 flex items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500">
+              <span className="text-xs font-bold text-white">{userInitial}</span>
+            </div>
+            <span className="truncate text-sm text-slate-300">{userName}</span>
+          </div>
+        )}
+        {collapsed && (
+          <div className="mb-2 flex justify-center">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500">
+              <span className="text-xs font-bold text-white">{userInitial}</span>
+            </div>
+          </div>
         )}
         <button
           onClick={handleLogout}
           className={cn(
-            'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-teal-100 transition-colors hover:bg-white/10 hover:text-white',
+            'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-white/5 hover:text-white',
             collapsed && 'justify-center'
           )}
           title={collapsed ? 'ออกจากระบบ' : undefined}
@@ -143,7 +160,7 @@ export function Sidebar() {
       {/* Mobile hamburger button */}
       <button
         onClick={toggleMobile}
-        className="fixed left-3 top-3 z-50 rounded-lg bg-teal-700 p-2 text-white shadow-lg md:hidden"
+        className="fixed left-3 top-3 z-50 rounded-lg bg-slate-800 p-2 text-white shadow-lg md:hidden"
         aria-label="เปิดเมนู"
       >
         <Menu className="h-5 w-5" />
@@ -154,15 +171,15 @@ export function Sidebar() {
         <div className="fixed inset-0 z-40 md:hidden">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={closeMobile}
             aria-hidden="true"
           />
           {/* Sidebar drawer */}
-          <aside className="relative z-50 h-full w-60 bg-teal-700">
+          <aside className="relative z-50 h-full w-60 bg-gradient-to-b from-slate-900 to-slate-800">
             <button
               onClick={closeMobile}
-              className="absolute right-3 top-3 rounded-lg p-1 text-teal-200 hover:bg-white/10 hover:text-white"
+              className="absolute right-3 top-3 rounded-lg p-1 text-slate-500 hover:bg-white/5 hover:text-slate-300"
               aria-label="ปิดเมนู"
             >
               <X className="h-5 w-5" />
@@ -175,7 +192,7 @@ export function Sidebar() {
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          'sticky top-0 hidden h-screen shrink-0 bg-teal-700 transition-[width] duration-200 md:block',
+          'sticky top-0 hidden h-screen shrink-0 bg-gradient-to-b from-slate-900 to-slate-800 transition-[width] duration-200 md:block',
           collapsed ? 'w-16' : 'w-60'
         )}
       >

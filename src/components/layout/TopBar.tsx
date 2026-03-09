@@ -1,10 +1,10 @@
-// TopBar — breadcrumbs, real-time Bangkok clock, user info, logout
+// TopBar — breadcrumbs, real-time Bangkok clock, user info, logout — Clinical Command Center style
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
-import { Clock, LogOut, User } from 'lucide-react';
+import { Clock, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Breadcrumb {
@@ -53,11 +53,12 @@ export function TopBar({ breadcrumbs = [], className }: TopBarProps) {
   const userName = session?.user?.name ?? 'ผู้ใช้';
   const userRole = (session?.user as unknown as { role?: string })?.role;
   const roleLabel = userRole ? ROLE_LABELS[userRole] ?? userRole : '';
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <header
       className={cn(
-        'sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6',
+        'sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200/60 bg-white/80 px-4 backdrop-blur-sm md:px-6',
         className
       )}
     >
@@ -71,7 +72,7 @@ export function TopBar({ breadcrumbs = [], className }: TopBarProps) {
             {crumb.href ? (
               <Link
                 href={crumb.href}
-                className="text-slate-500 transition-colors hover:text-teal-700"
+                className="text-slate-500 transition-colors hover:text-slate-700"
               >
                 {crumb.label}
               </Link>
@@ -85,32 +86,40 @@ export function TopBar({ breadcrumbs = [], className }: TopBarProps) {
       </nav>
 
       {/* Right: Clock + User info + Logout */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-1">
         {/* Real-time clock */}
-        <div className="hidden items-center gap-1.5 text-sm text-slate-500 sm:flex">
-          <Clock className="h-4 w-4" />
-          <span className="tabular-nums">{clock}</span>
+        <div className="hidden items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-1.5 sm:flex">
+          <Clock className="h-3.5 w-3.5 text-slate-400" />
+          <span className="font-mono text-sm font-medium tabular-nums text-slate-600">
+            {clock}
+          </span>
         </div>
+
+        {/* Divider */}
+        <div className="mx-2 hidden h-6 border-l border-slate-200 sm:block" />
 
         {/* User info */}
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-100">
-            <User className="h-4 w-4 text-teal-700" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500">
+            <span className="text-xs font-bold text-white">{userInitial}</span>
           </div>
           <div className="hidden flex-col sm:flex">
             <span className="text-sm font-medium text-slate-700">
               {userName}
             </span>
             {roleLabel && (
-              <span className="text-xs text-slate-500">{roleLabel}</span>
+              <span className="text-xs text-slate-400">{roleLabel}</span>
             )}
           </div>
         </div>
 
+        {/* Divider */}
+        <div className="mx-2 h-6 border-l border-slate-200" />
+
         {/* Logout button */}
         <button
           onClick={() => signOut({ callbackUrl: '/login' })}
-          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          className="rounded-lg p-2 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-500"
           aria-label="ออกจากระบบ"
           title="ออกจากระบบ"
         >
