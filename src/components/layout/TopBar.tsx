@@ -24,9 +24,10 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 function useBangkokClock(): string {
-  const [time, setTime] = useState(() => formatBangkokTime());
+  const [time, setTime] = useState('--:--:--');
 
   useEffect(() => {
+    setTime(formatBangkokTime());
     const interval = setInterval(() => {
       setTime(formatBangkokTime());
     }, 1_000);
