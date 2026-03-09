@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { usePatient } from '@/hooks/usePatient';
 import { usePartogram } from '@/hooks/usePartogram';
 import { useSSE } from '@/hooks/useSSE';
+import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { PatientHeader } from '@/components/patient/PatientHeader';
+import { ReferralBanner } from '@/components/patient/ReferralBanner';
 import { StickyPatientHeader } from '@/components/patient/StickyPatientHeader';
 import { ClinicalData } from '@/components/patient/ClinicalData';
 import { ContractionTable } from '@/components/patient/ContractionTable';
@@ -14,11 +16,13 @@ import { HighRiskAlert } from '@/components/shared/HighRiskAlert';
 import { LoadingState } from '@/components/shared/LoadingState';
 import { VitalSignGauge } from '@/components/charts/VitalSignGauge';
 import { BpBarChart } from '@/components/charts/BpBarChart';
+import { VitalTrendCharts } from '@/components/charts/VitalTrendCharts';
 import { PartogramChart } from '@/components/charts/PartogramChart';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { ArrowLeft, Printer } from 'lucide-react';
-import type { RiskLevel } from '@/types/domain';
+import { RiskLevel } from '@/types/domain';
+import { RISK_LEVELS } from '@/config/risk-levels';
 
 export default function PatientDetailPage({
   params,
@@ -31,6 +35,11 @@ export default function PatientDetailPage({
 
   const { patient, cpdScore, vitals, contractions, isLoading, mutate } = usePatient(an);
   const { partogram } = usePartogram(an);
+
+  useSetBreadcrumbs([
+    { label: 'แดชบอร์ด', href: '/' },
+    { label: patient?.name ?? `AN ${an}` },
+  ]);
 
   useSSE({
     onPatientUpdate: () => mutate(),
@@ -95,6 +104,14 @@ export default function PatientDetailPage({
         </div>
       </div>
 
+      {cpdScore && cpdScore.riskLevel !== RiskLevel.LOW && (
+        <ReferralBanner
+          score={cpdScore.score}
+          riskLevel={cpdScore.riskLevel as RiskLevel}
+          recommendation={cpdScore.recommendation ?? RISK_LEVELS[cpdScore.riskLevel as RiskLevel].action}
+        />
+      )}
+
       <ClinicalData
         gravida={patient.gravida}
         gaWeeks={patient.gaWeeks}
@@ -115,6 +132,13 @@ export default function PatientDetailPage({
           <VitalSignGauge label="PPH" value={latestVital?.pphAmountMl ?? null} unit="ml" min={0} max={1000} normalMin={0} normalMax={500} />
         </div>
       </div>
+
+      {vitals.length > 0 && (
+        <div>
+          <h3 className="mb-3 text-base font-medium text-slate-700">แนวโน้มสัญญาณชีพ</h3>
+          <VitalTrendCharts vitals={vitals} />
+        </div>
+      )}
 
       {partogram && (
         <div className="rounded-xl bg-white p-5 shadow-sm">
