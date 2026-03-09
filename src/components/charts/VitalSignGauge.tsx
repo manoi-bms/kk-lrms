@@ -1,4 +1,4 @@
-// T076: VitalSignGauge — radial gauge for HR/FHR/BP/PPH with sparkline trend
+// VitalSignGauge — radial gauge for HR/FHR/BP/PPH with sparkline trend + Thai status
 'use client';
 
 import {
@@ -25,6 +25,12 @@ function getGaugeColor(value: number, normalMin: number, normalMax: number): str
   return '#eab308'; // yellow
 }
 
+function getStatusText(value: number, normalMin: number, normalMax: number): string {
+  if (value >= normalMin && value <= normalMax) return 'ปกติ';
+  if (value < normalMin * 0.8 || value > normalMax * 1.2) return 'ผิดปกติ';
+  return 'เฝ้าระวัง';
+}
+
 export function VitalSignGauge({
   label,
   value,
@@ -37,9 +43,10 @@ export function VitalSignGauge({
 }: VitalSignGaugeProps) {
   if (value === null || value === undefined) {
     return (
-      <div className="flex flex-col items-center gap-1 rounded-lg border p-3">
-        <span className="text-xs text-muted-foreground">{label}</span>
-        <span className="text-lg text-muted-foreground">-</span>
+      <div className="flex flex-col items-center gap-1 rounded-xl bg-white p-3 shadow-sm">
+        <span className="text-xs text-slate-400">{label}</span>
+        <span className="text-lg text-slate-300">-</span>
+        <span className="text-xs text-slate-300">{unit}</span>
       </div>
     );
   }
@@ -49,8 +56,8 @@ export function VitalSignGauge({
   const data = [{ value: percentage, fill: color }];
 
   return (
-    <div className="flex flex-col items-center gap-1 rounded-lg border p-3">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+    <div className="flex flex-col items-center gap-1 rounded-xl bg-slate-50 p-3">
+      <span className="text-xs font-medium text-slate-500">{label}</span>
 
       <div className="relative h-24 w-24">
         <ResponsiveContainer width="100%" height="100%">
@@ -65,17 +72,22 @@ export function VitalSignGauge({
             endAngle={0}
           >
             <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-            <RadialBar dataKey="value" cornerRadius={4} background={{ fill: '#f1f5f9' }} />
+            <RadialBar dataKey="value" cornerRadius={4} background={{ fill: '#e2e8f0' }} />
           </RadialBarChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex items-center justify-center pt-2">
-          <span className="text-xl font-bold" style={{ color }}>
+          <span className="font-mono text-xl font-bold" style={{ color }}>
             {value}
           </span>
         </div>
       </div>
 
-      <span className="text-xs text-muted-foreground">{unit}</span>
+      <span className="text-xs text-slate-400">{unit}</span>
+
+      {/* Thai status text */}
+      <span className="text-xs font-medium" style={{ color }}>
+        {getStatusText(value, normalMin, normalMax)}
+      </span>
 
       {/* Mini sparkline trend */}
       {history.length > 1 && (
