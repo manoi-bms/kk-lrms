@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import useSWR from 'swr';
+import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { Settings, Wifi, WifiOff, Pencil, FlaskConical, Save, Database } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,11 @@ interface TestResult {
 }
 
 export default function AdminPage() {
+  useSetBreadcrumbs([
+    { label: 'แดชบอร์ด', href: '/' },
+    { label: 'ตั้งค่า' },
+  ]);
+
   const { data, isLoading, mutate } = useSWR<{ hospitals: AdminHospital[] }>('/api/admin/hospitals');
   const [editHospital, setEditHospital] = useState<AdminHospital | null>(null);
   const [tunnelUrl, setTunnelUrl] = useState('');

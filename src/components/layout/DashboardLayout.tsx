@@ -3,26 +3,28 @@
 import { SessionProvider } from 'next-auth/react';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
+import { BreadcrumbProvider } from './BreadcrumbContext';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  breadcrumbs?: { label: string; href?: string }[];
 }
 
-export function DashboardLayout({ children, breadcrumbs }: DashboardLayoutProps) {
+export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <SessionProvider>
-      <div className="flex h-screen overflow-hidden bg-slate-50/50">
-        <Sidebar />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <TopBar breadcrumbs={breadcrumbs} />
-          <main className="flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-[1400px] p-6 lg:p-8">
-              {children}
-            </div>
-          </main>
+      <BreadcrumbProvider>
+        <div className="flex h-screen overflow-hidden bg-slate-50/50">
+          <Sidebar />
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <TopBar />
+            <main className="flex-1 overflow-y-auto">
+              <div className="mx-auto max-w-[1400px] p-6 lg:p-8">
+                {children}
+              </div>
+            </main>
+          </div>
         </div>
-      </div>
+      </BreadcrumbProvider>
     </SessionProvider>
   );
 }

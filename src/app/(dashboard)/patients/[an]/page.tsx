@@ -98,6 +98,8 @@ export default function PatientDetailPage({
             age={patient.age}
             admitDate={patient.admitDate}
             laborStatus={patient.laborStatus}
+            weightKg={patient.weightKg}
+            weightDiffKg={patient.weightDiffKg}
             hospital={patient.hospital}
             cpdScore={cpdScore ? { score: cpdScore.score, riskLevel: cpdScore.riskLevel as RiskLevel } : null}
           />
@@ -117,6 +119,7 @@ export default function PatientDetailPage({
         gaWeeks={patient.gaWeeks}
         ancCount={patient.ancCount}
         heightCm={patient.heightCm}
+        weightKg={patient.weightKg}
         weightDiffKg={patient.weightDiffKg}
         fundalHeightCm={patient.fundalHeightCm}
         usWeightG={patient.usWeightG}

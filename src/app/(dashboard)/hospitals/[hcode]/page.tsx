@@ -3,6 +3,7 @@
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
+import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { PatientCard } from '@/components/patient/PatientCard';
 import { ConnectionStatus } from '@/components/shared/ConnectionStatus';
 import { LoadingState } from '@/components/shared/LoadingState';
@@ -49,6 +50,13 @@ export default function HospitalPatientListPage({
   const { data, isLoading } = useSWR(`/api/hospitals/${hcode}/patients`, {
     refreshInterval: 30000,
   });
+
+  const hospitalName = data?.hospital?.name ?? `รหัส ${hcode}`;
+  useSetBreadcrumbs([
+    { label: 'แดชบอร์ด', href: '/' },
+    { label: 'โรงพยาบาล', href: '/hospitals' },
+    { label: hospitalName },
+  ]);
 
   if (isLoading) {
     return <LoadingState message="กำลังโหลดรายชื่อผู้คลอด..." />;

@@ -2,12 +2,14 @@
 
 import { useDashboard } from '@/hooks/useDashboard';
 import { useSSE } from '@/hooks/useSSE';
+import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { SummaryCards } from '@/components/dashboard/SummaryCards';
 import { ActiveHospitalCard } from '@/components/dashboard/ActiveHospitalCard';
 import { InactiveHospitalList } from '@/components/dashboard/InactiveHospitalList';
 import { LoadingState } from '@/components/shared/LoadingState';
 
 export default function DashboardPage() {
+  useSetBreadcrumbs([{ label: 'แดชบอร์ด' }]);
   const { hospitals, summary, updatedAt, isLoading, mutate } = useDashboard();
 
   useSSE({

@@ -1,11 +1,16 @@
 'use client';
 
 import { useDashboard } from '@/hooks/useDashboard';
+import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { ActiveHospitalCard } from '@/components/dashboard/ActiveHospitalCard';
 import { InactiveHospitalList } from '@/components/dashboard/InactiveHospitalList';
 import { LoadingState } from '@/components/shared/LoadingState';
 
 export default function HospitalsPage() {
+  useSetBreadcrumbs([
+    { label: 'แดชบอร์ด', href: '/' },
+    { label: 'โรงพยาบาล' },
+  ]);
   const { hospitals, isLoading } = useDashboard();
 
   if (isLoading) {

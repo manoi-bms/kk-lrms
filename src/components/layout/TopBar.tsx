@@ -6,14 +6,9 @@ import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { Clock, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface Breadcrumb {
-  label: string;
-  href?: string;
-}
+import { useBreadcrumbs } from './BreadcrumbContext';
 
 interface TopBarProps {
-  breadcrumbs?: Breadcrumb[];
   className?: string;
 }
 
@@ -46,7 +41,8 @@ function formatBangkokTime(): string {
   });
 }
 
-export function TopBar({ breadcrumbs = [], className }: TopBarProps) {
+export function TopBar({ className }: TopBarProps) {
+  const { breadcrumbs } = useBreadcrumbs();
   const { data: session } = useSession();
   const clock = useBangkokClock();
 
