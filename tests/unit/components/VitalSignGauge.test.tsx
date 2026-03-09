@@ -85,7 +85,7 @@ describe('VitalSignGauge', () => {
     const sparklineContainer = container.querySelector('.flex.h-4.items-end');
     expect(sparklineContainer).toBeTruthy();
     // Should have 4 bars (one per history point)
-    const bars = sparklineContainer!.querySelectorAll('.w-1\\.5');
+    const bars = sparklineContainer!.querySelectorAll('.w-2');
     expect(bars.length).toBe(4);
   });
 });

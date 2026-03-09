@@ -14,11 +14,11 @@ interface ClinicalDataProps {
 
 function DataItem({ label, value, unit }: { label: string; value: number | null; unit?: string }) {
   return (
-    <div className="rounded-lg bg-slate-50 px-3 py-2.5">
-      <div className="text-xs text-slate-400">{label}</div>
-      <div className="mt-1 font-mono text-sm font-semibold text-slate-700">
+    <div className="bg-slate-50/80 rounded-xl px-4 py-3 border border-slate-100">
+      <div className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">{label}</div>
+      <div className="mt-1 font-mono text-lg font-bold text-slate-800">
         {value !== null && value !== undefined ? (
-          <>{value}{unit ? <span className="font-normal text-slate-400"> {unit}</span> : ''}</>
+          <>{value}{unit ? <span className="text-xs text-slate-400 font-normal ml-1">{unit}</span> : ''}</>
         ) : (
           <span className="text-slate-300">-</span>
         )}
@@ -38,8 +38,8 @@ export function ClinicalData({
   hematocritPct,
 }: ClinicalDataProps) {
   return (
-    <div className="rounded-xl bg-white p-5 shadow-sm">
-      <h3 className="mb-4 text-base font-medium text-slate-700">ข้อมูลทางคลินิก</h3>
+    <div className="rounded-2xl bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]">
+      <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-400">ข้อมูลทางคลินิก</h3>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <DataItem label="ครรภ์ที่ (Gravida)" value={gravida} />
         <DataItem label="อายุครรภ์ (GA)" value={gaWeeks} unit="สัปดาห์" />

@@ -59,12 +59,12 @@ export function StickyPatientHeader({
 
   return (
     <div
-      className="fixed top-14 right-0 left-0 z-40 border-b bg-white/95 shadow-sm backdrop-blur-sm print:hidden md:left-60"
+      className="fixed top-14 right-0 left-0 z-40 border-b border-slate-200/60 bg-white/95 backdrop-blur-md shadow-[0_4px_12px_rgba(0,0,0,0.05)] print:hidden md:left-60"
       role="banner"
       aria-label="Sticky patient header"
     >
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2">
-        <span className="font-semibold truncate">{name}</span>
+        <span className="text-sm font-bold text-slate-800 truncate">{name}</span>
         <span className="text-xs text-slate-500 shrink-0">AN: {an}</span>
         <Badge variant={laborStatus === 'ACTIVE' ? 'default' : 'secondary'}>
           {laborLabel}

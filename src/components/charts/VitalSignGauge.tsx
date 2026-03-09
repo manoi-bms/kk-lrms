@@ -43,10 +43,10 @@ export function VitalSignGauge({
 }: VitalSignGaugeProps) {
   if (value === null || value === undefined) {
     return (
-      <div className="flex flex-col items-center gap-1 rounded-xl bg-white p-3 shadow-sm">
-        <span className="text-xs text-slate-400">{label}</span>
-        <span className="text-lg text-slate-300">-</span>
-        <span className="text-xs text-slate-300">{unit}</span>
+      <div className="flex flex-col items-center gap-1 rounded-2xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]">
+        <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">{label}</span>
+        <span className="font-mono text-2xl font-bold text-slate-300">-</span>
+        <span className="text-[11px] text-slate-400 uppercase tracking-wider">{unit}</span>
       </div>
     );
   }
@@ -56,8 +56,8 @@ export function VitalSignGauge({
   const data = [{ value: percentage, fill: color }];
 
   return (
-    <div className="flex flex-col items-center gap-1 rounded-xl bg-slate-50 p-3">
-      <span className="text-xs font-medium text-slate-500">{label}</span>
+    <div className="flex flex-col items-center gap-1 rounded-2xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]">
+      <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">{label}</span>
 
       <div className="relative h-24 w-24">
         <ResponsiveContainer width="100%" height="100%">
@@ -72,20 +72,20 @@ export function VitalSignGauge({
             endAngle={0}
           >
             <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-            <RadialBar dataKey="value" cornerRadius={4} background={{ fill: '#e2e8f0' }} />
+            <RadialBar dataKey="value" cornerRadius={4} background={{ fill: '#f1f5f9' }} />
           </RadialBarChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex items-center justify-center pt-2">
-          <span className="font-mono text-xl font-bold" style={{ color }}>
+          <span className="font-mono text-2xl font-bold" style={{ color }}>
             {value}
           </span>
         </div>
       </div>
 
-      <span className="text-xs text-slate-400">{unit}</span>
+      <span className="text-[11px] text-slate-400 uppercase tracking-wider">{unit}</span>
 
       {/* Thai status text */}
-      <span className="text-xs font-medium" style={{ color }}>
+      <span className="text-xs font-semibold" style={{ color }}>
         {getStatusText(value, normalMin, normalMax)}
       </span>
 
@@ -97,7 +97,7 @@ export function VitalSignGauge({
             return (
               <div
                 key={i}
-                className="w-1.5 rounded-sm"
+                className="w-2 rounded-full"
                 style={{
                   height: `${h}px`,
                   backgroundColor: getGaugeColor(v, normalMin, normalMax),
