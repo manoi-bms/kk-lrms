@@ -8,76 +8,82 @@ interface ActiveHospitalCardProps {
   hospital: DashboardHospital;
 }
 
-function getHighestRiskBorderColor(counts: DashboardHospital['counts']): string {
-  if (counts.high > 0) return 'border-l-red-500';
-  if (counts.medium > 0) return 'border-l-amber-500';
-  return 'border-l-green-500';
+function getAccentGradient(counts: DashboardHospital['counts']): string {
+  if (counts.high > 0) return 'bg-gradient-to-r from-red-400 to-red-500';
+  if (counts.medium > 0) return 'bg-gradient-to-r from-amber-400 to-amber-500';
+  if (counts.low > 0) return 'bg-gradient-to-r from-emerald-400 to-emerald-500';
+  return 'bg-slate-200';
 }
 
-interface RiskPill {
+interface RiskDot {
   key: string;
   count: number;
   label: string;
-  bgClass: string;
-  textClass: string;
+  dotClass: string;
 }
 
-function getRiskPills(counts: DashboardHospital['counts']): RiskPill[] {
-  const pills: RiskPill[] = [];
+function getRiskDots(counts: DashboardHospital['counts']): RiskDot[] {
+  const dots: RiskDot[] = [];
   if (counts.high > 0) {
-    pills.push({ key: 'high', count: counts.high, label: 'สูง', bgClass: 'bg-red-50', textClass: 'text-red-700' });
+    dots.push({ key: 'high', count: counts.high, label: 'สูง', dotClass: 'bg-red-500' });
   }
   if (counts.medium > 0) {
-    pills.push({ key: 'medium', count: counts.medium, label: 'ปานกลาง', bgClass: 'bg-amber-50', textClass: 'text-amber-700' });
+    dots.push({ key: 'medium', count: counts.medium, label: 'ปานกลาง', dotClass: 'bg-amber-500' });
   }
   if (counts.low > 0) {
-    pills.push({ key: 'low', count: counts.low, label: 'ต่ำ', bgClass: 'bg-green-50', textClass: 'text-green-700' });
+    dots.push({ key: 'low', count: counts.low, label: 'ต่ำ', dotClass: 'bg-emerald-500' });
   }
-  return pills;
+  return dots;
 }
 
 export function ActiveHospitalCard({ hospital }: ActiveHospitalCardProps) {
   const router = useRouter();
-  const borderColor = getHighestRiskBorderColor(hospital.counts);
-  const pills = getRiskPills(hospital.counts);
+  const accentGradient = getAccentGradient(hospital.counts);
+  const dots = getRiskDots(hospital.counts);
 
   return (
     <button
       type="button"
       onClick={() => router.push(`/hospitals/${hospital.hcode}`)}
-      className={`w-full cursor-pointer rounded-xl border-l-4 bg-white p-5 text-left shadow-sm transition-shadow hover:shadow-md ${borderColor}`}
+      className="w-full cursor-pointer overflow-hidden rounded-2xl bg-white text-left shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)] transition-all hover:-translate-y-0.5 hover:shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.05)]"
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="font-semibold text-slate-800">{hospital.name}</div>
-          <span className="mt-1 inline-block rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-            {hospital.level}
-          </span>
-        </div>
-        <div className="font-mono text-3xl font-bold text-slate-800">
-          {hospital.counts.total}
-        </div>
-      </div>
+      {/* Top accent bar */}
+      <div className={`h-0.5 ${accentGradient}`} />
 
-      {pills.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {pills.map((pill) => (
-            <span
-              key={pill.key}
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${pill.bgClass} ${pill.textClass}`}
-            >
-              {pill.count} {pill.label}
+      <div className="p-5">
+        {/* Top row: name + level badge + patient count */}
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="font-semibold text-slate-800">{hospital.name}</div>
+            <span className="mt-1 inline-block rounded bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-600">
+              {hospital.level}
             </span>
-          ))}
+          </div>
+          <div className="font-mono text-2xl font-bold text-slate-900">
+            {hospital.counts.total}
+          </div>
         </div>
-      )}
 
-      <div className="mt-3 border-t border-slate-100 pt-2">
-        <ConnectionStatus
-          status={hospital.connectionStatus}
-          lastSyncAt={hospital.lastSyncAt}
-          className="text-xs"
-        />
+        {/* Risk dots row */}
+        {dots.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            {dots.map((dot) => (
+              <span key={dot.key} className="inline-flex items-center gap-1.5 text-xs text-slate-500">
+                <span className={`inline-block h-2 w-2 rounded-full ${dot.dotClass}`} aria-hidden="true" />
+                {dot.count} {dot.label}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Bottom row: connection status + last sync */}
+        <div className="mt-3 border-t border-slate-100 pt-2">
+          <ConnectionStatus
+            status={hospital.connectionStatus}
+            lastSyncAt={hospital.lastSyncAt}
+            className="text-xs"
+          />
+        </div>
       </div>
     </button>
   );

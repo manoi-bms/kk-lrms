@@ -26,9 +26,10 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-800">แดชบอร์ดจังหวัดขอนแก่น</h1>
+        <h1 className="text-2xl font-bold text-slate-900">แดชบอร์ดจังหวัดขอนแก่น</h1>
         {updatedAt && (
-          <span className="text-sm text-slate-400">
+          <span className="inline-flex items-center gap-1.5 font-mono text-xs text-slate-400">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse-live" aria-hidden="true" />
             อัปเดตล่าสุด: {new Date(updatedAt).toLocaleTimeString('th-TH')}
           </span>
         )}
@@ -38,7 +39,7 @@ export default function DashboardPage() {
 
       {activeHospitals.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-base font-medium text-slate-700">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
             โรงพยาบาลที่มีผู้คลอด ({activeHospitals.length} แห่ง)
           </h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
