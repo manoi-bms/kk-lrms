@@ -6,6 +6,12 @@
 
 :root {
 
+  /* Primary — Teal Medical */
+  --primary-teal: #0d9488;
+  --primary-teal-dark: #0f766e;
+  --primary-teal-light: #ccfbf1;
+  --primary-teal-50: #f0fdfa;
+
   /* KK-LRMS Risk Colors */
   --risk-low: #22c55e;
   --risk-medium: #eab308;
@@ -58,7 +64,11 @@
   --color-status-online: var(--status-online);
   --color-status-offline: var(--status-offline);
   --color-status-unknown: var(--status-unknown);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-sarabun);
+  --color-primary-teal: var(--primary-teal);
+  --color-primary-teal-dark: var(--primary-teal-dark);
+  --color-primary-teal-light: var(--primary-teal-light);
+  --color-primary-teal-50: var(--primary-teal-50);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

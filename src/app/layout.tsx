@@ -1,13 +1,14 @@
-// T044: Root layout — Noto Sans Thai, SWR provider, Thai locale, TooltipProvider
+// Root layout — Sarabun font, SWR provider, Thai locale, TooltipProvider
 import type { Metadata, Viewport } from 'next';
-import { Noto_Sans_Thai } from 'next/font/google';
+import { Sarabun } from 'next/font/google';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SWRProvider } from './swr-provider';
 import './globals.css';
 
-const notoSansThai = Noto_Sans_Thai({
+const sarabun = Sarabun({
   subsets: ['thai', 'latin'],
-  variable: '--font-noto-sans-thai',
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-sarabun',
   display: 'swap',
 });
 
@@ -29,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
-      <body className={`${notoSansThai.variable} font-sans antialiased`}>
+      <body className={`${sarabun.variable} font-sans antialiased`}>
         <SWRProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </SWRProvider>
