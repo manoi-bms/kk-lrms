@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 // Public paths that don't require authentication
-const PUBLIC_PATHS = ['/login', '/api/auth', '/api/health'];
+const PUBLIC_PATHS = ['/login', '/about', '/api/auth', '/api/health', '/api/webhooks'];
 const STATIC_PATHS = ['/_next', '/favicon.ico'];
 
 // T108: Add security headers to all responses
@@ -38,6 +38,11 @@ export default auth((req) => {
   if (!session?.user) {
     const loginUrl = new URL('/login', req.url);
     loginUrl.searchParams.set('callbackUrl', pathname);
+    // Preserve bms-session-id for auto-login
+    const bmsSessionId = req.nextUrl.searchParams.get('bms-session-id');
+    if (bmsSessionId) {
+      loginUrl.searchParams.set('bms-session-id', bmsSessionId);
+    }
     return addSecurityHeaders(NextResponse.redirect(loginUrl));
   }
 

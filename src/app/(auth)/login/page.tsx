@@ -1,18 +1,55 @@
 // T089: Login page — BMS Session ID authentication (Dark Authority design)
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Building2, Activity, BarChart3, Shield, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [sessionId, setSessionId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const autoLoginAttempted = useRef(false);
+
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
+  const bmsSessionId = searchParams.get('bms-session-id');
+
+  // Auto-login when bms-session-id is in the URL
+  useEffect(() => {
+    if (bmsSessionId && !autoLoginAttempted.current) {
+      autoLoginAttempted.current = true;
+      setSessionId(bmsSessionId);
+      doLogin(bmsSessionId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bmsSessionId]);
+
+  async function doLogin(id: string) {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await signIn('credentials', {
+        sessionId: id.trim(),
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError('Session ID ไม่ถูกต้องหรือหมดอายุ');
+      } else {
+        router.push(callbackUrl);
+      }
+    } catch {
+      setError('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,26 +57,7 @@ export default function LoginPage() {
       setError('กรุณากรอก BMS Session ID');
       return;
     }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const result = await signIn('credentials', {
-        sessionId: sessionId.trim(),
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError('Session ID ไม่ถูกต้องหรือหมดอายุ');
-      } else {
-        router.push('/');
-      }
-    } catch {
-      setError('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่');
-    } finally {
-      setLoading(false);
-    }
+    doLogin(sessionId);
   };
 
   return (
@@ -191,11 +209,27 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <p className="text-center text-xs text-slate-400">
-            ระบบตรวจสอบสิทธิ์ผ่าน BMS Session ของ สสจ.ขอนแก่น
-          </p>
+          <div className="text-center space-y-2">
+            <p className="text-xs text-slate-400">
+              ระบบตรวจสอบสิทธิ์ผ่าน BMS Session ของ สสจ.ขอนแก่น
+            </p>
+            <a
+              href="/about"
+              className="inline-block text-sm text-slate-400 hover:text-teal-600 transition-colors"
+            >
+              เกี่ยวกับระบบ KK-LRMS
+            </a>
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
