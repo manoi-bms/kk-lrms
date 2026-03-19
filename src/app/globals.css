@@ -149,6 +149,7 @@
     @apply bg-background text-foreground;
   }
   html {
+    font-size: 18px;
     @apply font-sans;
   }
 }
@@ -180,4 +181,177 @@
 
 .animate-pulse-live {
   animation: pulse-live 2s ease-in-out infinite;
+}
+
+/* ─── Kiosk Mode ─── dark, large-format display for dedicated monitors */
+
+/* Text glow for important kiosk elements */
+.kiosk-text-glow {
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+/* Kiosk stat number glow — risk-colored variants */
+.kiosk-stat-glow {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 30px rgba(255, 255, 255, 0.08);
+}
+
+.kiosk-stat-glow-red {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 24px rgba(239, 68, 68, 0.25);
+}
+
+.kiosk-stat-glow-amber {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 24px rgba(234, 179, 8, 0.25);
+}
+
+.kiosk-stat-glow-green {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 24px rgba(34, 197, 94, 0.25);
+}
+
+/* When html has kiosk-mode class — hide layout chrome */
+html.kiosk-mode {
+  font-size: 20px;
+  background: #0f172a;
+}
+
+/* Hide sidebar */
+html.kiosk-mode aside {
+  display: none !important;
+}
+
+/* Hide topbar */
+html.kiosk-mode header.sticky {
+  display: none !important;
+}
+
+/* Hide mobile hamburger button */
+html.kiosk-mode button[aria-label="เปิดเมนู"] {
+  display: none !important;
+}
+
+/* Remove max-width constraint and change background */
+html.kiosk-mode main {
+  background: #0f172a;
+}
+
+html.kiosk-mode main > div {
+  max-width: none;
+}
+
+/* Override the layout flex container background */
+html.kiosk-mode .flex.h-screen {
+  background: #0f172a;
+}
+
+/* Dark-theme overrides for components inside kiosk wrapper */
+html.kiosk-mode .kiosk-wrap .bg-white {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Text color overrides in kiosk dark containers */
+html.kiosk-mode .kiosk-wrap .text-slate-900 {
+  color: #f1f5f9 !important;
+}
+
+html.kiosk-mode .kiosk-wrap .text-slate-800 {
+  color: #e2e8f0 !important;
+}
+
+html.kiosk-mode .kiosk-wrap .text-slate-700 {
+  color: #cbd5e1 !important;
+}
+
+html.kiosk-mode .kiosk-wrap .text-slate-600 {
+  color: #94a3b8 !important;
+}
+
+/* Kiosk table styling */
+html.kiosk-mode .kiosk-wrap table th {
+  color: #94a3b8;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+html.kiosk-mode .kiosk-wrap table td {
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+html.kiosk-mode .kiosk-wrap table tr:hover td {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Kiosk mode: HighRiskPatientList table row links */
+html.kiosk-mode .kiosk-wrap a[href*="/patients/"] {
+  color: #e2e8f0;
+}
+
+/* Skeleton loading in dark mode */
+html.kiosk-mode .kiosk-wrap .animate-pulse {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Risk badges keep their colors, just ensure readability */
+html.kiosk-mode .kiosk-wrap .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+}
+
+html.kiosk-mode .kiosk-wrap .bg-amber-50 {
+  background-color: rgba(234, 179, 8, 0.15) !important;
+}
+
+html.kiosk-mode .kiosk-wrap .bg-emerald-50,
+html.kiosk-mode .kiosk-wrap .bg-green-50 {
+  background-color: rgba(34, 197, 94, 0.15) !important;
+}
+
+html.kiosk-mode .kiosk-wrap .bg-slate-50 {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+html.kiosk-mode .kiosk-wrap .bg-slate-100 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Card borders in kiosk for separation */
+html.kiosk-mode .kiosk-wrap .border-slate-200 {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Recharts tooltip in dark mode */
+html.kiosk-mode .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: #1e293b !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #e2e8f0 !important;
+}
+
+/* Table border in kiosk */
+html.kiosk-mode .kiosk-wrap .rounded-md.border {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Risk count badges in kiosk dark table */
+html.kiosk-mode .kiosk-wrap .bg-green-100 {
+  background-color: rgba(34, 197, 94, 0.2) !important;
+  color: #4ade80 !important;
+}
+
+html.kiosk-mode .kiosk-wrap .bg-yellow-100 {
+  background-color: rgba(234, 179, 8, 0.2) !important;
+  color: #facc15 !important;
+}
+
+html.kiosk-mode .kiosk-wrap .bg-red-100 {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  color: #f87171 !important;
+}
+
+/* Muted foreground in kiosk */
+html.kiosk-mode .kiosk-wrap .text-muted-foreground {
+  color: #475569 !important;
+}
+
+/* Badge outline in kiosk */
+html.kiosk-mode .kiosk-wrap [data-slot="badge"] {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
 }
