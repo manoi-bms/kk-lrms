@@ -5,6 +5,7 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { useHighRiskPatients } from '@/hooks/useHighRiskPatients';
 import { useSSE } from '@/hooks/useSSE';
 import { useKioskMode } from '@/hooks/useKioskMode';
+import { useSyncTrigger } from '@/hooks/useSyncTrigger';
 import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { SummaryCards } from '@/components/dashboard/SummaryCards';
 import { RiskDistributionChart } from '@/components/dashboard/RiskDistributionChart';
@@ -21,10 +22,14 @@ export default function DashboardPage() {
   const { patients: highRiskPatients, isLoading: hrLoading, mutate: hrMutate } = useHighRiskPatients();
   const { isKiosk, toggleKiosk, exitKiosk } = useKioskMode();
 
+  // Trigger immediate data sync on first dashboard load
+  const refreshAll = () => { mutate(); hrMutate(); };
+  useSyncTrigger(refreshAll);
+
   useSSE({
-    onPatientUpdate: () => { mutate(); hrMutate(); },
+    onPatientUpdate: refreshAll,
     onConnectionStatus: () => mutate(),
-    onSyncComplete: () => { mutate(); hrMutate(); },
+    onSyncComplete: refreshAll,
   });
 
   if (isLoading) {

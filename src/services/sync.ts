@@ -202,6 +202,179 @@ import { RiskLevel } from '@/types/domain';
 
 const pollingIntervals: Map<string, ReturnType<typeof setInterval>> = new Map();
 
+// ─── Intelligent Sync Lock Manager ───
+// Prevents concurrent pulls for the same hospital and enforces cooldown periods.
+
+interface SyncState {
+  inProgress: boolean;
+  lastSyncAt: number; // epoch ms
+  lastJwtRefreshAt: number; // epoch ms
+}
+
+const syncStates: Map<string, SyncState> = new Map();
+const SYNC_COOLDOWN_MS = 10_000; // Don't re-sync if synced within 10 seconds
+
+function getSyncState(hospitalId: string): SyncState {
+  let state = syncStates.get(hospitalId);
+  if (!state) {
+    state = { inProgress: false, lastSyncAt: 0, lastJwtRefreshAt: 0 };
+    syncStates.set(hospitalId, state);
+  }
+  return state;
+}
+
+export interface ImmediateSyncResult {
+  synced: boolean;
+  reason: 'ok' | 'cooldown' | 'in_progress' | 'no_config' | 'error';
+  lastSyncAt: string | null;
+  patientsCount?: number;
+}
+
+/**
+ * Request an immediate sync for a hospital. Intelligent algorithm:
+ * 1. Check cooldown — skip if synced within SYNC_COOLDOWN_MS
+ * 2. Acquire lock — skip if another sync is already in progress
+ * 3. Check JWT expiry — refresh from user's session if expired
+ * 4. Execute poll — same pipeline as scheduled polling
+ * 5. Release lock
+ */
+export async function requestImmediateSync(
+  db: DatabaseAdapter,
+  hospitalId: string,
+  sseManager: SseManager,
+  _userSessionJwt?: string,
+): Promise<ImmediateSyncResult> {
+  const state = getSyncState(hospitalId);
+  const now = Date.now();
+
+  // 1. Cooldown check — recently synced
+  if (now - state.lastSyncAt < SYNC_COOLDOWN_MS) {
+    return {
+      synced: false,
+      reason: 'cooldown',
+      lastSyncAt: new Date(state.lastSyncAt).toISOString(),
+    };
+  }
+
+  // 2. Lock check — already syncing
+  if (state.inProgress) {
+    return {
+      synced: false,
+      reason: 'in_progress',
+      lastSyncAt: state.lastSyncAt ? new Date(state.lastSyncAt).toISOString() : null,
+    };
+  }
+
+  // 3. Get hospital BMS config
+  const configs = await db.query<{
+    tunnel_url: string;
+    session_jwt: string | null;
+    session_expires_at: string | null;
+    database_type: string | null;
+  }>(
+    'SELECT tunnel_url, session_jwt, session_expires_at, database_type FROM hospital_bms_config WHERE hospital_id = ?',
+    [hospitalId],
+  );
+
+  if (configs.length === 0) {
+    return { synced: false, reason: 'no_config', lastSyncAt: null };
+  }
+
+  const config = configs[0];
+
+  // Acquire lock
+  state.inProgress = true;
+
+  try {
+    const encryptionKey = process.env.ENCRYPTION_KEY ?? '';
+    const validateUrl = process.env.BMS_VALIDATE_URL ?? 'https://hosxp.net/phapi/PasteJSON';
+    let jwt = config.session_jwt;
+    let bmsUrl = config.tunnel_url;
+    let dbType = (config.database_type ?? 'postgresql') as DatabaseDialect;
+
+    // 4. JWT lifecycle — check expiry and refresh if needed
+    const jwtExpired = config.session_expires_at
+      ? new Date(config.session_expires_at).getTime() < now
+      : !jwt;
+
+    if (!jwt || jwtExpired) {
+      // Try to obtain a fresh JWT via BMS Session API
+      try {
+        const client = new BmsSessionClient(config.tunnel_url);
+        const sessionId = await client.getSessionId();
+        const sessionConfig = await client.validateSession(sessionId, validateUrl);
+        jwt = sessionConfig.jwt;
+        bmsUrl = sessionConfig.bmsUrl;
+        dbType = (await client.getDatabaseType(bmsUrl, jwt)) as DatabaseDialect;
+
+        // Cache refreshed session
+        await db.execute(
+          'UPDATE hospital_bms_config SET session_jwt = ?, database_type = ?, session_expires_at = ? WHERE hospital_id = ?',
+          [jwt, dbType, sessionConfig.expiresAt.toISOString(), hospitalId],
+        );
+        state.lastJwtRefreshAt = now;
+        console.log(`[SYNC] JWT refreshed for hospital ${hospitalId}`);
+      } catch {
+        // If BMS Session refresh fails and we have no JWT, we can't sync
+        if (!jwt) {
+          return { synced: false, reason: 'error', lastSyncAt: null };
+        }
+        // If we have an old JWT, try it anyway (might still work)
+      }
+    }
+
+    // 5. Execute poll
+    await pollHospital(db, hospitalId, config.tunnel_url, bmsUrl, jwt, dbType, encryptionKey, sseManager);
+
+    state.lastSyncAt = Date.now();
+
+    // Get patient count for response
+    const countResult = await db.query<{ cnt: number }>(
+      "SELECT COUNT(*) as cnt FROM cached_patients WHERE hospital_id = ? AND labor_status = 'ACTIVE'",
+      [hospitalId],
+    );
+
+    return {
+      synced: true,
+      reason: 'ok',
+      lastSyncAt: new Date(state.lastSyncAt).toISOString(),
+      patientsCount: countResult[0]?.cnt ?? 0,
+    };
+  } catch (error) {
+    console.error(`[SYNC] Immediate sync failed for hospital ${hospitalId}:`, error);
+    return { synced: false, reason: 'error', lastSyncAt: null };
+  } finally {
+    // Release lock
+    state.inProgress = false;
+  }
+}
+
+/**
+ * Request immediate sync for ALL hospitals with BMS config.
+ * Runs in parallel with per-hospital locking.
+ */
+export async function requestSyncAll(
+  db: DatabaseAdapter,
+  sseManager: SseManager,
+): Promise<{ total: number; synced: number; skipped: number }> {
+  const configs = await db.query<{ hospital_id: string }>(
+    'SELECT hospital_id FROM hospital_bms_config',
+  );
+
+  const results = await Promise.allSettled(
+    configs.map((c) => requestImmediateSync(db, c.hospital_id, sseManager)),
+  );
+
+  let synced = 0;
+  let skipped = 0;
+  for (const r of results) {
+    if (r.status === 'fulfilled' && r.value.synced) synced++;
+    else skipped++;
+  }
+
+  return { total: configs.length, synced, skipped };
+}
+
 // T063: Calculate CPD scores for patients after sync — shared by polling and webhook pipelines
 export async function calculateAndStoreCpdScores(
   db: DatabaseAdapter,
@@ -475,30 +648,57 @@ export async function startPolling(db: DatabaseAdapter, sseManager: SseManager):
 
     setTimeout(() => {
       const interval = setInterval(async () => {
+        // Use the sync lock to prevent overlap with on-demand syncs
+        const state = getSyncState(config.hospital_id);
+        if (state.inProgress) return; // Skip if an on-demand sync is running
+
         try {
-          // Refresh session if needed
+          state.inProgress = true;
+
+          // Refresh session if needed (check expiry)
           let jwt = config.session_jwt;
           let bmsUrl = config.tunnel_url;
           let dbType = (config.database_type ?? 'postgresql') as DatabaseDialect;
 
-          if (!jwt) {
-            const client = new BmsSessionClient(config.tunnel_url);
-            const sessionId = await client.getSessionId();
-            const sessionConfig = await client.validateSession(sessionId, validateUrl);
-            jwt = sessionConfig.jwt;
-            bmsUrl = sessionConfig.bmsUrl;
-            dbType = (await client.getDatabaseType(bmsUrl, jwt)) as DatabaseDialect;
+          // Read fresh config from DB (may have been updated by on-demand sync)
+          const freshConfig = await db.query<{
+            session_jwt: string | null;
+            session_expires_at: string | null;
+            database_type: string | null;
+          }>(
+            'SELECT session_jwt, session_expires_at, database_type FROM hospital_bms_config WHERE hospital_id = ?',
+            [config.hospital_id],
+          );
+          if (freshConfig.length > 0) {
+            jwt = freshConfig[0].session_jwt;
+            dbType = (freshConfig[0].database_type ?? 'postgresql') as DatabaseDialect;
 
-            // Cache session
-            await db.execute(
-              'UPDATE hospital_bms_config SET session_jwt = ?, database_type = ?, session_expires_at = ? WHERE hospital_id = ?',
-              [jwt, dbType, sessionConfig.expiresAt.toISOString(), config.hospital_id],
-            );
+            // Check JWT expiry
+            const expired = freshConfig[0].session_expires_at
+              ? new Date(freshConfig[0].session_expires_at).getTime() < Date.now()
+              : !jwt;
+
+            if (!jwt || expired) {
+              const client = new BmsSessionClient(config.tunnel_url);
+              const sessionId = await client.getSessionId();
+              const sessionConfig = await client.validateSession(sessionId, validateUrl);
+              jwt = sessionConfig.jwt;
+              bmsUrl = sessionConfig.bmsUrl;
+              dbType = (await client.getDatabaseType(bmsUrl, jwt)) as DatabaseDialect;
+
+              await db.execute(
+                'UPDATE hospital_bms_config SET session_jwt = ?, database_type = ?, session_expires_at = ? WHERE hospital_id = ?',
+                [jwt, dbType, sessionConfig.expiresAt.toISOString(), config.hospital_id],
+              );
+            }
           }
 
-          await pollHospital(db, config.hospital_id, config.tunnel_url, bmsUrl, jwt, dbType, encryptionKey, sseManager);
+          await pollHospital(db, config.hospital_id, config.tunnel_url, bmsUrl, jwt!, dbType, encryptionKey, sseManager);
+          state.lastSyncAt = Date.now();
         } catch (error) {
           console.error(`Poll cycle failed for hospital ${config.hospital_id}:`, error);
+        } finally {
+          state.inProgress = false;
         }
       }, POLLING_INTERVAL);
 
