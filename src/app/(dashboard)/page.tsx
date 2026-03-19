@@ -14,7 +14,7 @@ import { HighRiskPatientList } from '@/components/dashboard/HighRiskPatientList'
 import { HospitalTable } from '@/components/dashboard/HospitalTable';
 import { KioskHeader } from '@/components/dashboard/KioskHeader';
 import { LoadingState } from '@/components/shared/LoadingState';
-import { Monitor } from 'lucide-react';
+import { Monitor, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function DashboardPage() {
   useSetBreadcrumbs([{ label: 'แดชบอร์ด' }]);
@@ -24,7 +24,7 @@ export default function DashboardPage() {
 
   // Trigger immediate data sync on first dashboard load
   const refreshAll = () => { mutate(); hrMutate(); };
-  useSyncTrigger(refreshAll);
+  const { syncing, lastResult, triggerSync } = useSyncTrigger(refreshAll);
 
   useSSE({
     onPatientUpdate: refreshAll,
@@ -114,7 +114,27 @@ export default function DashboardPage() {
             ระบบติดตามห้องคลอด — ภาพรวมทั้งจังหวัด
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* Sync status indicator */}
+          {syncing && (
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs text-blue-600">
+              <RefreshCw className="h-3 w-3 animate-spin" />
+              กำลังดึงข้อมูล...
+            </span>
+          )}
+          {!syncing && lastResult && lastResult.synced && (
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs text-emerald-600">
+              <CheckCircle2 className="h-3 w-3" />
+              ดึงข้อมูลสำเร็จ
+              {lastResult.patientsCount !== undefined && ` (${lastResult.patientsCount} ราย)`}
+            </span>
+          )}
+          {!syncing && lastResult && !lastResult.synced && lastResult.reason !== 'cooldown' && lastResult.reason !== 'no_config' && lastResult.reason !== 'no_hospital_code' && (
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs text-amber-600">
+              <AlertCircle className="h-3 w-3" />
+              {lastResult.reason === 'in_progress' ? 'กำลังดึงข้อมูลอยู่' : 'ไม่สามารถดึงข้อมูลได้'}
+            </span>
+          )}
           {updatedAt && (
             <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-1.5 font-mono text-xs text-slate-400">
               <span
@@ -124,6 +144,15 @@ export default function DashboardPage() {
               อัปเดตล่าสุด: {new Date(updatedAt).toLocaleTimeString('th-TH')}
             </span>
           )}
+          <button
+            onClick={() => triggerSync()}
+            disabled={syncing}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700 disabled:opacity-50"
+            title="ดึงข้อมูลทันที"
+          >
+            <RefreshCw className={`h-3 w-3 ${syncing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">ดึงข้อมูล</span>
+          </button>
           <button
             onClick={toggleKiosk}
             className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
