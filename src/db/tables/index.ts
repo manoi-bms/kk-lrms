@@ -7,6 +7,7 @@ import { cachedVitalSignsTable } from './cached-vital-signs';
 import { cpdScoresTable } from './cpd-scores';
 import { usersTable } from './users';
 import { auditLogsTable } from './audit-logs';
+import { webhookApiKeysTable } from './webhook-api-keys';
 
 export {
   hospitalsTable,
@@ -16,6 +17,7 @@ export {
   cpdScoresTable,
   usersTable,
   auditLogsTable,
+  webhookApiKeysTable,
 };
 
 // All tables in creation order (respects foreign key dependencies)
@@ -27,4 +29,5 @@ export const ALL_TABLES: TableDefinition[] = [
   cachedVitalSignsTable,
   cpdScoresTable,
   auditLogsTable,
+  webhookApiKeysTable,
 ];
