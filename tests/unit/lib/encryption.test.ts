@@ -36,7 +36,7 @@ describe('PDPA Encryption', () => {
   });
 
   it('should handle CID (13-digit national ID)', () => {
-    const cid = '1400512345678';
+    const cid = '0000000000099';
     const encrypted = encrypt(cid, testKey);
     const decrypted = decrypt(encrypted, testKey);
     expect(decrypted).toBe(cid);

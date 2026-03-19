@@ -38,11 +38,11 @@ async function seedRealisticData(db: DatabaseAdapter): Promise<SeededData> {
   for (const h of hospitals) hospitalIds[h.hcode] = h.id;
 
   const patientIds: string[] = [];
-  const cidRaw1 = '1400500000001';
+  const cidRaw1 = '0000000000011';
   const cidHash1 = createHash('sha256').update(cidRaw1).digest('hex');
-  const cidRaw2 = '1400500000002';
+  const cidRaw2 = '0000000000012';
   const cidHash2 = createHash('sha256').update(cidRaw2).digest('hex');
-  const cidRaw3 = '1400500000003';
+  const cidRaw3 = '0000000000013';
   const cidHash3 = createHash('sha256').update(cidRaw3).digest('hex');
 
   // Patient 1: HIGH risk at hospital 10670 -- gravida 1, short height, high US weight, low HCT

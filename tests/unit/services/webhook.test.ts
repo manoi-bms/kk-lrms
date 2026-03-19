@@ -179,7 +179,7 @@ describe('Webhook Service', () => {
     it('accepts valid patient with all optional fields', () => {
       const result = validatePayload({
         patients: [{
-          hn: 'HN001', an: 'AN001', name: 'ทดสอบ ระบบ', cid: '1234567890123',
+          hn: 'HN001', an: 'AN001', name: 'ทดสอบ ระบบ', cid: '0000000000023',
           age: 25, gravida: 2, ga_weeks: 38, anc_count: 8,
           admit_date: '2026-03-08T10:00:00+07:00',
           height_cm: 155, weight_kg: 65, weight_diff_kg: 12,
@@ -188,7 +188,7 @@ describe('Webhook Service', () => {
         }],
       });
       expect(result.valid).toBe(true);
-      expect(result.payload!.patients[0].cid).toBe('1234567890123');
+      expect(result.payload!.patients[0].cid).toBe('0000000000023');
       expect(result.payload!.patients[0].gravida).toBe(2);
     });
 

@@ -68,7 +68,7 @@ describe('Sync Pipeline Integration', () => {
       pname: 'นาง',
       fname: 'ปราณี',
       lname: 'สุขใจ',
-      cid: '1400700012345',
+      cid: '0000000000002',
       birthday: '1997-06-20',
       sex: '2',
     };
@@ -84,7 +84,7 @@ describe('Sync Pipeline Integration', () => {
     // Name should be encrypted (not readable)
     expect(syncData.name).not.toContain('ปราณี');
     // CID hash should be SHA-256
-    const expectedCidHash = createHash('sha256').update('1400700012345').digest('hex');
+    const expectedCidHash = createHash('sha256').update('0000000000002').digest('hex');
     expect(syncData.cidHash).toBe(expectedCidHash);
 
     // Add clinical data that isn't in the HOSxP transform (filled by other sources)
@@ -251,7 +251,7 @@ describe('Sync Pipeline Integration', () => {
       pname: 'นาง',
       fname: 'วรรณา',
       lname: 'ไม่ครบ',
-      cid: '1400800099999',
+      cid: '0000000000003',
       birthday: '2000-01-10',
       sex: '2',
     };
@@ -376,7 +376,7 @@ describe('Sync Pipeline Integration', () => {
       pname: 'นาง',
       fname: 'คลอด',
       lname: 'แล้ว',
-      cid: '1400900011111',
+      cid: '0000000000004',
       birthday: '1995-08-20',
       sex: '2',
     };

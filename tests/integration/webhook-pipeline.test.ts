@@ -87,7 +87,7 @@ describe('Webhook Pipeline Integration', () => {
         patients: [
           {
             hn: 'WH-001', an: 'WAN-001', name: 'นาง ทดสอบ เว็บฮุค',
-            cid: '1100500012345', age: 28, gravida: 1, ga_weeks: 41,
+            cid: '0000000000021', age: 28, gravida: 1, ga_weeks: 41,
             anc_count: 3, admit_date: '2026-03-08T08:00:00+07:00',
             height_cm: 148, weight_kg: 75, weight_diff_kg: 20,
             fundal_height_cm: 37, us_weight_g: 4000, hematocrit_pct: 29,
@@ -225,7 +225,7 @@ describe('Webhook Pipeline Integration', () => {
       const payload: WebhookPayload = {
         patients: [{
           hn: 'WH-PDPA', an: 'WAN-PDPA', name: 'นาง มาลี สมบูรณ์',
-          cid: '1234567890123', age: 25, admit_date: '2026-03-08T08:00:00+07:00',
+          cid: '0000000000022', age: 25, admit_date: '2026-03-08T08:00:00+07:00',
         }],
       };
 
@@ -240,7 +240,7 @@ describe('Webhook Pipeline Integration', () => {
       expect(stored[0].name).not.toContain('มาลี');
       expect(stored[0].name).not.toContain('สมบูรณ์');
       // CID should be encrypted
-      expect(stored[0].cid).not.toBe('1234567890123');
+      expect(stored[0].cid).not.toBe('0000000000022');
       expect(stored[0].cid).not.toBeNull();
       // CID hash should be SHA-256 for cross-hospital matching
       expect(stored[0].cid_hash).not.toBeNull();
@@ -343,7 +343,7 @@ describe('Webhook Pipeline Integration', () => {
   describe('Scenario 5: Cross-hospital transfer detection via CID hash', () => {
     it('detects patient transfer when same CID appears at webhook hospital', async () => {
       const now = new Date().toISOString();
-      const sharedCid = '1400500099999';
+      const sharedCid = '0000000000099';
 
       // Seed existing patient at HOSxP hospital (10670)
       const hosxpHospital = await db.query<{ id: string }>(

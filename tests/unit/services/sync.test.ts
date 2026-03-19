@@ -55,7 +55,7 @@ describe('Sync Service', () => {
         pname: 'นาง',
         fname: 'สมหญิง',
         lname: 'ทดสอบ',
-        cid: '1400512345678',
+        cid: '0000000000001',
         birthday: '1998-05-15',
         sex: '2',
       };
@@ -277,14 +277,14 @@ describe('Sync Service', () => {
         pname: 'นาง',
         fname: 'สมหญิง',
         lname: 'ทดสอบ',
-        cid: '1400512345678',
+        cid: '0000000000001',
         birthday: '1998-05-15',
         sex: '2',
       };
 
       const result = transformHosxpPatient(ipt, pregnancy, patient, encryptionKey);
       // cidHash should be a SHA-256 hex string of the raw CID
-      const expectedHash = createHash('sha256').update('1400512345678').digest('hex');
+      const expectedHash = createHash('sha256').update('0000000000001').digest('hex');
       expect(result.cidHash).toBe(expectedHash);
     });
 
@@ -327,7 +327,7 @@ describe('Sync Service', () => {
         "SELECT id FROM hospitals WHERE hcode = '10670'",
       );
       const hospitalId = hospitals[0].id;
-      const cidHash = createHash('sha256').update('1400512345678').digest('hex');
+      const cidHash = createHash('sha256').update('0000000000001').digest('hex');
 
       const patients: SyncPatientData[] = [
         {
@@ -365,7 +365,7 @@ describe('Sync Service', () => {
       );
       const hospitalIdA = hospital10670[0].id;
       const hospitalIdB = hospital10671[0].id;
-      const cidHash = createHash('sha256').update('1400512345678').digest('hex');
+      const cidHash = createHash('sha256').update('0000000000001').digest('hex');
 
       // Insert same patient at two hospitals with same cid_hash but different HN/AN
       const patientA: SyncPatientData = {
@@ -422,7 +422,7 @@ describe('Sync Service', () => {
       );
       const hospitalIdA = hospital10670[0].id;
       const hospitalIdB = hospital10671[0].id;
-      const cidHash = createHash('sha256').update('1400512345678').digest('hex');
+      const cidHash = createHash('sha256').update('0000000000001').digest('hex');
 
       // Patient exists at hospital A (ACTIVE)
       const patientA: SyncPatientData = {
@@ -472,7 +472,7 @@ describe('Sync Service', () => {
         "SELECT id FROM hospitals WHERE hcode = '10670'",
       );
       const hospitalIdA = hospital10670[0].id;
-      const cidHash = createHash('sha256').update('1400512345678').digest('hex');
+      const cidHash = createHash('sha256').update('0000000000001').digest('hex');
 
       // Patient exists at hospital A (ACTIVE)
       const patient: SyncPatientData = {
@@ -532,7 +532,7 @@ describe('Sync Service', () => {
       );
       const hospitalIdA = hospital10670[0].id;
       const hospitalIdB = hospital10671[0].id;
-      const cidHash = createHash('sha256').update('1400512345678').digest('hex');
+      const cidHash = createHash('sha256').update('0000000000001').digest('hex');
 
       // Patient at hospital A is already DELIVERED
       const patientA: SyncPatientData = {
@@ -581,7 +581,7 @@ describe('Sync Service', () => {
       );
       const hospitalIdA = hospital10670[0].id;
       const hospitalIdB = hospital10671[0].id;
-      const cidHash = createHash('sha256').update('1400512345678').digest('hex');
+      const cidHash = createHash('sha256').update('0000000000001').digest('hex');
 
       // Patient at hospital A already marked as TRANSFERRED
       const patientA: SyncPatientData = {

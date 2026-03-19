@@ -47,9 +47,15 @@ next-env.d.ts
 
 # Dev SQLite database
 dev.sqlite
+dev.sqlite-shm
+dev.sqlite-wal
+*.sqlite-shm
+*.sqlite-wal
 
 # Screenshots
 screenshots/
+*-current.png
+*-clean.png
 
 # Misc
 *.tmp
