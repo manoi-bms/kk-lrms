@@ -2,7 +2,7 @@
 
 **Feature Branch**: `001-kk-lrms-app`
 **Created**: 2026-03-08
-**Status**: Draft
+**Status**: Implemented
 **Input**: User description: "create next.js + postgresql system that has spec in SPEC.md"
 
 ## Assumptions
@@ -14,7 +14,7 @@
 - Primary language is Thai with English medical terminology.
 - Target devices are desktop monitors and tablets (iPad) used in labor rooms.
 - All patient data handling MUST comply with Thailand's PDPA (Personal Data Protection Act).
-- CPD Risk Score calculation formula and factor weights are defined in the existing clinical protocol (referenced in SPEC.md section 4.1.3).
+- CPD Risk Score calculation formula and factor weights are defined in `src/config/risk-levels.ts` (8 factors with configurable weights and thresholds).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -51,7 +51,7 @@ As an obstetrician, I need the system to automatically calculate and display CPD
 3. **Given** a patient's CPD score is between 5 and 9.5, **When** displayed anywhere in the system, **Then** it shows a yellow badge with the score number.
 4. **Given** a patient's CPD score is 10 or above, **When** displayed anywhere in the system, **Then** it shows a red badge with the score number AND displays the recommendation: "ควรประสานส่งต่อทันที!" (Recommend immediate referral coordination).
 5. **Given** an obstetrician opens a high-risk patient's detail page, **When** the page loads, **Then** a prominent alert popup warns about the high CPD risk with the referral recommendation.
-6. **Given** a patient's vital signs are updated in HOSxP, **When** the system receives the update via webhook, **Then** the CPD score is automatically recalculated and the badge updates accordingly.
+6. **Given** a patient's vital signs are updated in HOSxP, **When** the system detects the update via polling (every 30 seconds), **Then** the CPD score is automatically recalculated and the badge updates accordingly.
 
 ---
 
@@ -105,7 +105,7 @@ As an IT administrator, I need the system to authenticate users via the BMS Sess
 3. **Given** invalid credentials are provided, **When** the user submits the login form, **Then** the system displays a clear error message in Thai without revealing which credential was wrong.
 4. **Given** a user is authenticated, **When** their session token expires, **Then** they are prompted to re-authenticate with a message explaining the session has expired.
 5. **Given** a user with "obstetrician" role is logged in, **When** they navigate the system, **Then** they can view all patient data and dashboards but cannot access admin settings.
-6. **Given** a user with "admin" role is logged in, **When** they navigate to admin settings, **Then** they can manage API keys for each hospital, configure webhook URLs, and manage hospital directory.
+6. **Given** a user with "admin" role is logged in, **When** they navigate to admin settings, **Then** they can manage BMS tunnel URLs for each hospital, test connections, and manage hospital directory.
 7. **Given** any user accesses patient data, **When** the data is retrieved, **Then** the access event is recorded in an audit log with user identity, timestamp, and data accessed.
 
 ---
@@ -127,6 +127,43 @@ As an IT administrator, I need to manage hospital BMS tunnel connections and mon
 
 ---
 
+### User Story 7 - Webhook API for External Hospitals (Priority: P7)
+
+As an IT administrator at a non-HOSxP hospital (e.g., private hospital or hospital using a different HIS), I need to send patient data to KK-LRMS via a REST API so that my hospital's labor patients appear on the province dashboard alongside HOSxP-polled hospitals.
+
+**Why this priority**: Expands the network beyond HOSxP hospitals, enabling private and other-HIS hospitals to participate in the centralized monitoring system. Built after core features are stable.
+
+**Independent Test**: Create API key → send patient data via webhook → verify patients appear on dashboard with CPD scores → send full_snapshot → verify discharged patients removed from active count.
+
+**Acceptance Scenarios**:
+
+1. **Given** an admin creates an API key for a hospital, **When** the key is returned, **Then** it is displayed only once (raw key shown once, stored as SHA-256 hash) and can be used as a Bearer token.
+2. **Given** a valid API key, **When** a POST request is sent to `/api/webhooks/patient-data` with patient data, **Then** patients are upserted, CPD scores calculated, and SSE events broadcast — identical processing to HOSxP-polled data.
+3. **Given** the webhook is called with `mode: "full_snapshot"`, **When** the payload contains only currently active patients, **Then** any previously active patients NOT in the payload are automatically marked as DELIVERED with a `delivered_at` timestamp.
+4. **Given** the webhook is called with `mode: "incremental"` (default), **When** the payload contains a subset of patients, **Then** existing active patients not in the payload retain their ACTIVE status.
+5. **Given** a patient's CID is provided via webhook, **When** the same CID exists at another hospital, **Then** the system detects a cross-hospital transfer and marks the source hospital's record as TRANSFERRED.
+6. **Given** patient name and CID are sent via webhook, **When** stored in the database, **Then** they are encrypted (AES-256-GCM) per PDPA requirements, identical to HOSxP-polled data.
+7. **Given** an API key is revoked by an admin, **When** a webhook request uses the revoked key, **Then** the system returns 401 Unauthorized.
+
+---
+
+### User Story 8 - Kiosk Monitor Mode (Priority: P8)
+
+As a labor room nurse at the central hospital, I need to display the dashboard in fullscreen kiosk mode on a dedicated wall monitor so that the team can see province-wide status at a glance without interacting with the computer.
+
+**Why this priority**: Enhances operational awareness in the physical labor room environment. Requires the dashboard (P1) to be fully functional.
+
+**Independent Test**: Click kiosk button → dashboard enters fullscreen → dark theme with large fonts → live clock visible → press ESC or click exit → returns to normal mode.
+
+**Acceptance Scenarios**:
+
+1. **Given** the dashboard is loaded, **When** the user clicks the "โหมดจอภาพ" (Monitor Mode) button, **Then** the dashboard enters fullscreen mode with a dark theme optimized for wall-mounted displays.
+2. **Given** kiosk mode is active, **When** viewing the dashboard, **Then** fonts are significantly larger, risk numbers have colored glow shadows, and the layout hides the sidebar and top navigation.
+3. **Given** kiosk mode is active, **When** viewing the header bar, **Then** a branded header displays a live Bangkok clock, current date, last sync timestamp, and an exit button.
+4. **Given** kiosk mode is active, **When** the user presses ESC or clicks the exit button, **Then** the dashboard returns to normal mode with standard layout.
+
+---
+
 ### Edge Cases
 
 - What happens when a patient is transferred between community hospitals during active labor? The system MUST use CID (national ID) to identify the same patient across hospitals, link records from both hospitals, and maintain continuity of the partogram and vital sign history.
@@ -134,6 +171,8 @@ As an IT administrator, I need to manage hospital BMS tunnel connections and mon
 - What happens when multiple obstetricians view the same patient simultaneously? The system MUST support concurrent read access without data conflicts.
 - What happens when all hospital BMS tunnel connections are unreachable? The system MUST display cached data with a clear system-wide banner indicating data may be stale.
 - What happens when a patient's CPD risk level changes from medium to high while an obstetrician is viewing the dashboard? The system MUST update the dashboard in real-time and display a visual indicator (animation or highlight) on the changed row.
+- What happens when a non-HOSxP hospital stops sending webhook data (e.g., system goes offline)? If using `full_snapshot` mode, missing patients are auto-discharged. If using `incremental` mode, patients remain ACTIVE until explicitly updated — the hospital connection status will reflect the last webhook timestamp.
+- What happens when a webhook sends a patient with the same AN but different clinical data? The system MUST upsert (update existing record), recalculate CPD score, and broadcast SSE events for any risk level changes.
 
 ## Requirements *(mandatory)*
 
@@ -161,6 +200,12 @@ As an IT administrator, I need to manage hospital BMS tunnel connections and mon
 - **FR-020**: System MUST display content primarily in Thai with English for medical terminology.
 - **FR-021**: System MUST support responsive layout for both desktop monitors and tablets (iPad).
 - **FR-022**: System MUST use HTTPS/TLS 1.2+ for all communications.
+- **FR-023**: System MUST support a Webhook API (`POST /api/webhooks/patient-data`) for non-HOSxP hospitals to submit patient data via Bearer token authentication (API key). Webhook data MUST receive identical processing to HOSxP-polled data (encryption, CPD scoring, transfer detection, SSE broadcast).
+- **FR-024**: System MUST support two webhook ingestion modes: `incremental` (default — add/update only) and `full_snapshot` (patients not in payload are auto-discharged as DELIVERED).
+- **FR-025**: System MUST provide admin endpoints for API key lifecycle management: create (returns raw key once), list (with hospital info), and revoke (immediate, irreversible). API keys MUST be stored as SHA-256 hashes.
+- **FR-026**: System MUST mark HOSxP-polled patients as DELIVERED when they disappear from the polling results (HOSxP `dchdate` set), setting `delivered_at` timestamp and broadcasting SSE discharge events.
+- **FR-027**: System MUST support a fullscreen kiosk mode for dedicated monitors with dark theme, enlarged fonts, colored risk glow shadows, branded header with live clock, and hidden navigation chrome.
+- **FR-028**: System MUST provide a public about page (`/about`) documenting system overview, CPD scoring methodology, hospital network structure, and webhook API specification including endpoint, authentication, payload format, modes, and response codes.
 
 ### Key Entities
 

@@ -31,10 +31,10 @@ Key technical decisions from research:
 **Target Platform**: Linux server (Docker), desktop browsers + iPad Safari
 **Project Type**: Web application (full-stack Next.js)
 **Performance Goals**: Dashboard update <30s, 200 concurrent users, <2s API
-  response, <5s webhook processing
+  response, <5s SSE broadcast latency
 **Constraints**: PDPA compliance for patient data, Thai language primary,
   BMS Session API rate limits, offline resilience for HOSxP downtime
-**Scale/Scope**: ~26 hospitals, ~200 concurrent users, 6 main screens
+**Scale/Scope**: ~26+ hospitals (HOSxP + webhook), ~200 concurrent users, 8 main screens (dashboard, hospital list, patient detail, login, admin, about, kiosk overlay)
 
 ## Constitution Check
 
@@ -138,13 +138,21 @@ src/
 │   │   │   └── contractions/route.ts    # Contraction data
 │   │   ├── sse/dashboard/route.ts       # SSE stream
 │   │   └── admin/                       # Admin endpoints
-│   │       └── hospitals/route.ts
+│   │       ├── hospitals/route.ts
+│   │       └── webhooks/          # Webhook API key admin
+│   │           ├── route.ts       # GET (list) / POST (create)
+│   │           └── [keyId]/route.ts # DELETE (revoke)
+│   ├── webhooks/
+│   │   └── patient-data/route.ts  # POST webhook data ingestion
+│   ├── about/
+│   │   └── page.tsx               # Public about page with API docs
 │   └── layout.tsx             # Root layout (Thai font, providers)
 ├── components/                # Reusable UI components
 │   ├── ui/                    # shadcn/ui base components
 │   ├── dashboard/             # Dashboard-specific
 │   │   ├── HospitalTable.tsx
-│   │   └── SummaryCards.tsx
+│   │   ├── SummaryCards.tsx
+│   │   └── KioskHeader.tsx    # Kiosk mode branded header
 │   ├── patient/               # Patient detail
 │   │   ├── PatientHeader.tsx
 │   │   ├── ClinicalData.tsx
@@ -174,7 +182,8 @@ src/
 │   │   ├── cached-vital-signs.ts
 │   │   ├── cpd-scores.ts
 │   │   ├── users.ts
-│   │   └── audit-logs.ts
+│   │   ├── audit-logs.ts
+│   │   └── webhook-api-keys.ts
 │   └── seeds/                 # Lookup data seeders
 │       ├── seeder.ts          # Abstract DataSeeder
 │       ├── hospital-seeder.ts
@@ -185,7 +194,8 @@ src/
 │   ├── partogram.ts           # Partogram alert/action lines
 │   ├── sync.ts                # Data sync from BMS Session
 │   ├── dashboard.ts           # Dashboard aggregation
-│   └── audit.ts               # Audit logging
+│   ├── audit.ts               # Audit logging
+│   └── webhook.ts             # Webhook API key management + payload processing
 ├── lib/                       # Shared utilities
 │   ├── auth.ts                # NextAuth.js config (BMS Session provider)
 │   ├── bms-session.ts         # BMS Session API client
@@ -196,7 +206,8 @@ src/
 │   ├── useDashboard.ts        # SWR hook for dashboard data
 │   ├── usePatient.ts          # SWR hook for patient detail
 │   ├── useSSE.ts              # SSE connection hook
-│   └── usePartogram.ts        # SWR hook for partogram
+│   ├── usePartogram.ts        # SWR hook for partogram
+│   └── useKioskMode.ts        # Fullscreen kiosk mode hook
 ├── types/                     # TypeScript type definitions
 │   ├── hosxp.ts               # HOSxP source types
 │   ├── domain.ts              # KK-LRMS domain types

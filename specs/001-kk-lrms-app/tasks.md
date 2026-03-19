@@ -403,15 +403,62 @@ After Foundational phase completes together:
 
 ### Critical: Patient Identity Key Fix
 
-- [ ] T104 Refactor patient identity to use CID (national ID) as cross-hospital unique key instead of HN (which is unique only within a single hospital). Update cached_patients table to add unique index on cid, update sync service to match/merge patient records by CID across hospitals, update patient lookup in API routes to resolve by CID when cross-hospital context is needed in src/db/tables/cached-patients.ts, src/services/sync.ts, src/services/dashboard.ts
+- [x] T104 Refactor patient identity to use CID (national ID) as cross-hospital unique key instead of HN (which is unique only within a single hospital). Update cached_patients table to add unique index on cid, update sync service to match/merge patient records by CID across hospitals, update patient lookup in API routes to resolve by CID when cross-hospital context is needed in src/db/tables/cached-patients.ts, src/services/sync.ts, src/services/dashboard.ts
 
 ### Coverage Gap Tasks
 
-- [ ] T105 [P] Add date range filtering (date_from, date_to query params) to GET /api/hospitals/[hcode]/patients route and dashboard service query in src/app/api/hospitals/[hcode]/patients/route.ts and src/services/dashboard.ts
-- [ ] T106 [P] Add row highlight CSS animation to HospitalTable when risk counts change via SSE — track previous counts, apply pulse animation class on delta in src/components/dashboard/HospitalTable.tsx
-- [ ] T107 Add patient transfer detection: when same CID appears across multiple hospitals, link records and maintain partogram/vital sign continuity in src/services/sync.ts
-- [ ] T108 [P] Add security headers middleware: HSTS, X-Content-Type-Options, X-Frame-Options, CSP headers; document HTTPS/TLS as deployment requirement in src/middleware.ts
-- [ ] T109 [P] Create GET /api/health endpoint: return { status, database, uptime, hospitalConnections } for monitoring/alerting per SC-010 in src/app/api/health/route.ts
+- [x] T105 [P] Add date range filtering (date_from, date_to query params) to GET /api/hospitals/[hcode]/patients route and dashboard service query in src/app/api/hospitals/[hcode]/patients/route.ts and src/services/dashboard.ts
+- [x] T106 [P] Add row highlight CSS animation to HospitalTable when risk counts change via SSE — track previous counts, apply pulse animation class on delta in src/components/dashboard/HospitalTable.tsx
+- [x] T107 Add patient transfer detection: when same CID appears across multiple hospitals, link records and maintain partogram/vital sign continuity in src/services/sync.ts
+- [x] T108 [P] Add security headers middleware: HSTS, X-Content-Type-Options, X-Frame-Options, CSP headers; document HTTPS/TLS as deployment requirement in src/middleware.ts
+- [x] T109 [P] Create GET /api/health endpoint: return { status, database, uptime, hospitalConnections } for monitoring/alerting per SC-010 in src/app/api/health/route.ts
+
+---
+
+## Phase 11: User Story 7 — Webhook API for External Hospitals (Priority: P7)
+
+**Goal**: REST API for non-HOSxP hospitals to submit patient data via authenticated webhook, with full processing pipeline (encryption, CPD scoring, transfer detection, SSE broadcast) and two ingestion modes (incremental/full_snapshot).
+
+### Table Definition
+
+- [x] T110 [US7] Define webhook_api_keys table: id uuid PK, hospital_id uuid FK→hospitals, key_hash varchar(64) UNIQUE, key_prefix varchar(8), label varchar(255), is_active boolean DEFAULT true, last_used_at datetime NULL, created_at, revoked_at datetime NULL; indexes on key_hash (unique), hospital_id, is_active in src/db/tables/webhook-api-keys.ts
+
+### Tests ⚠️
+
+- [x] T111 [P] [US7] Write unit tests for webhook service: generateApiKey format (kklrms_ prefix + 40 hex), hashApiKey SHA-256, validatePayload (required fields, empty array, max 100 items, mode validation), API key CRUD with real SQLite in-memory (createApiKey, validateApiKey, revokeApiKey, listApiKeys) in tests/unit/services/webhook.test.ts
+- [x] T112 [P] [US7] Write integration tests for webhook pipeline: full pipeline (key→validate→process→dashboard), upsert idempotency, PDPA encryption, CPD scoring from webhook data, cross-hospital transfer detection via CID hash, API key security (revocation, hospital binding), mixed HOSxP+webhook dashboard, delivered status lifecycle, full_snapshot auto-discharge, incremental mode preservation in tests/integration/webhook-pipeline.test.ts
+
+### Implementation
+
+- [x] T113 [US7] Implement webhook service: generateApiKey (kklrms_ + randomBytes), hashApiKey (SHA-256), createApiKey/validateApiKey/revokeApiKey/listApiKeys for DB operations, validatePayload (JSON structure + mode field), processWebhookPayload (encrypt→upsert→transfer detect→CPD score→SSE broadcast→discharge in full_snapshot mode) in src/services/webhook.ts
+- [x] T114 [US7] Create POST /api/webhooks/patient-data route: Bearer token auth from Authorization header, validate API key, parse+validate payload, process via webhook service, return { success, patientsProcessed, newAdmissions, discharges, transfers, timestamp } in src/app/api/webhooks/patient-data/route.ts
+- [x] T115 [P] [US7] Create admin webhook API routes: GET /api/admin/webhooks (list all keys with hospital info), POST /api/admin/webhooks (create key for hcode+label), DELETE /api/admin/webhooks/[keyId] (revoke key) in src/app/api/admin/webhooks/route.ts and src/app/api/admin/webhooks/[keyId]/route.ts
+- [x] T116 [US7] Add /api/webhooks to PUBLIC_PATHS in middleware (webhook uses own API key auth, not NextAuth session) in src/middleware.ts
+
+### Discharge Detection Fix
+
+- [x] T117 [US7] Fix polling discharge handling: export markPatientsDelivered() in sync.ts, process changes.discharges in pollHospital() (mark DELIVERED + set delivered_at + broadcast SSE patient_discharged event). Previously discharges were detected but never acted on. in src/services/sync.ts
+- [x] T118 [US7] Deduplicate CPD score storage: export calculateAndStoreCpdScores from sync.ts, call from webhook.ts instead of maintaining separate calculateAndStoreCpdScoresForWebhook (Constitution IV compliance) in src/services/sync.ts and src/services/webhook.ts
+
+---
+
+## Phase 12: User Story 8 — Kiosk Monitor Mode (Priority: P8)
+
+**Goal**: Fullscreen kiosk mode for dedicated wall monitors in labor rooms with dark theme, large fonts, risk-colored glow shadows, and branded header with live clock.
+
+- [x] T119 [US8] Create useKioskMode hook: manages Fullscreen API (requestFullscreen/exitFullscreen), adds/removes 'kiosk-mode' class on html element, listens for fullscreenchange event, returns { isKiosk, toggleKiosk, enterKiosk, exitKiosk } in src/hooks/useKioskMode.ts
+- [x] T120 [US8] Create KioskHeader component: branded header bar with hospital system name, live Bangkok clock (useLiveClock), Thai date (useLiveDate), last sync timestamp, exit button in src/components/dashboard/KioskHeader.tsx
+- [x] T121 [US8] Add kiosk mode to dashboard page: dual layout (normal + kiosk), kiosk layout with dark bg, 6xl font-mono KPI numbers, risk-colored glow shadows, kiosk-wrap class for CSS theme overrides, "โหมดจอภาพ" toggle button in src/app/(dashboard)/page.tsx
+- [x] T122 [US8] Add kiosk CSS styles: html.kiosk-mode rules (hide sidebar/topbar, dark bg), .kiosk-text-glow/.kiosk-stat-glow text shadows, .kiosk-wrap descendant selectors for dark-theme overrides (bg-white→transparent, text colors, table styling, risk badges, Recharts tooltips) in src/app/globals.css
+
+---
+
+## Phase 13: About Page & API Documentation
+
+**Goal**: Public about page documenting system overview, CPD methodology, hospital network, and webhook API specification.
+
+- [x] T123 [US7] Create public about page with system overview (KK-LRMS purpose, 26 hospitals, 30s updates), CPD risk scoring table (8 factors, thresholds, weights), risk level cards (low/medium/high), hospital network structure (Hub-and-Spoke, level hierarchy), system workflow (4 steps), user roles table, PDPA security section in src/app/about/page.tsx
+- [x] T124 [US7] Add webhook API documentation to about page: authentication (Bearer token), endpoint spec (POST /api/webhooks/patient-data), mode descriptions (incremental/full_snapshot), request/response JSON examples, fields table (required/optional with CPD factor labels), HTTP status codes, admin API endpoints (GET/POST/DELETE), cURL example, processing pipeline diagram in src/app/about/page.tsx
 
 ---
 

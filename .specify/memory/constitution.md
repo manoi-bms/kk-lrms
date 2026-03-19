@@ -62,7 +62,7 @@ failing test exists that defines the expected behavior.
 - Unit tests MUST cover each task before moving to the next.
 - Integration tests MUST cover critical data flows: HOSxP API
   integration, CPD score calculation, Partogram rendering, and
-  webhook event processing.
+  polling-based sync processing.
 - E2E tests MUST produce detailed debug logs for every step —
   network calls, console output, UI states, and error traces.
 - When multiple tests fail, logs MUST be reviewed to find the true
@@ -100,7 +100,7 @@ API route handlers.
 - Data transformation from HOSxP format to KK-LRMS domain models
   MUST happen in dedicated mapping/adapter modules.
 - Notification content generation MUST be in a service layer,
-  not in webhook handlers.
+  not in API route handlers.
 
 ### V. Informative User Experience & Progress Reporting
 

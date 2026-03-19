@@ -34,6 +34,9 @@ TypeScript 5.x / Node.js 20+ LTS: Follow standard conventions
 
 ## Recent Changes
 - 001-kk-lrms-app: BMS Session API architecture with per-hospital tunnel URLs, SQL query data access, polling-based sync
+- 001-kk-lrms-app: Webhook API for non-HOSxP hospitals (incremental/full_snapshot modes, API key auth, auto-discharge)
+- 001-kk-lrms-app: Kiosk monitor mode (fullscreen dark theme, large fonts, risk glow shadows)
+- 001-kk-lrms-app: Public about page with system overview and webhook API documentation
 
 <!-- MANUAL ADDITIONS START -->
 
