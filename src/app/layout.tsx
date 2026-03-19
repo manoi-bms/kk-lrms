@@ -1,0 +1,40 @@
+// Root layout — Sarabun font, SWR provider, Thai locale, TooltipProvider
+import type { Metadata, Viewport } from 'next';
+import { Sarabun } from 'next/font/google';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { SWRProvider } from './swr-provider';
+import './globals.css';
+
+const sarabun = Sarabun({
+  subsets: ['thai', 'latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-sarabun',
+  display: 'swap',
+});
+
+export const metadata: Metadata = {
+  title: 'KK-LRMS — ระบบติดตามการคลอดจังหวัดขอนแก่น',
+  description: 'ระบบติดตามการคลอดแบบรวมศูนย์ จังหวัดขอนแก่น (Khon Kaen Labor Room Monitoring System)',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="th">
+      <body className={`${sarabun.variable} font-sans antialiased`}>
+        <SWRProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </SWRProvider>
+      </body>
+    </html>
+  );
+}

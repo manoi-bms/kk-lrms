@@ -1,0 +1,43 @@
+// T026: cached_patients table definition
+import type { TableDefinition } from '../table-definition';
+
+export const cachedPatientsTable: TableDefinition = {
+  name: 'cached_patients',
+  fields: [
+    { name: 'id', type: 'uuid', primaryKey: true },
+    {
+      name: 'hospital_id',
+      type: 'uuid',
+      references: { table: 'hospitals', column: 'id' },
+    },
+    { name: 'hn', type: 'string', maxLength: 20 },
+    { name: 'an', type: 'string', maxLength: 20 },
+    { name: 'name', type: 'string', maxLength: 255 }, // Encrypted (PDPA)
+    { name: 'cid', type: 'string', maxLength: 255, nullable: true }, // Encrypted (PDPA)
+    { name: 'cid_hash', type: 'string', maxLength: 64, nullable: true }, // SHA-256 hash for cross-hospital matching
+    { name: 'age', type: 'integer' },
+    { name: 'gravida', type: 'integer', nullable: true },
+    { name: 'ga_weeks', type: 'integer', nullable: true },
+    { name: 'anc_count', type: 'integer', nullable: true },
+    { name: 'admit_date', type: 'datetime' },
+    { name: 'height_cm', type: 'decimal', nullable: true },
+    { name: 'weight_kg', type: 'decimal', nullable: true },
+    { name: 'weight_diff_kg', type: 'decimal', nullable: true },
+    { name: 'fundal_height_cm', type: 'decimal', nullable: true },
+    { name: 'us_weight_g', type: 'decimal', nullable: true },
+    { name: 'hematocrit_pct', type: 'decimal', nullable: true },
+    { name: 'labor_status', type: 'string', maxLength: 20, defaultValue: 'ACTIVE' },
+    { name: 'delivered_at', type: 'datetime', nullable: true },
+    { name: 'synced_at', type: 'datetime' },
+    { name: 'created_at', type: 'datetime' },
+    { name: 'updated_at', type: 'datetime' },
+  ],
+  indexes: [
+    { name: 'idx_cp_hospital_an', columns: ['hospital_id', 'an'], unique: true },
+    { name: 'idx_cp_hospital_id', columns: ['hospital_id'] },
+    { name: 'idx_cp_hn', columns: ['hn'] },
+    { name: 'idx_cp_labor_status', columns: ['labor_status'] },
+    { name: 'idx_cp_cid', columns: ['cid'] },
+    { name: 'idx_cp_cid_hash', columns: ['cid_hash'] },
+  ],
+};

@@ -1,0 +1,149 @@
+// ClinicalData component tests
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { ClinicalData } from '@/components/patient/ClinicalData';
+
+const completeData = {
+  gravida: 2,
+  gaWeeks: 38,
+  ancCount: 6,
+  heightCm: 155,
+  weightDiffKg: 12,
+  fundalHeightCm: 34,
+  usWeightG: 3200,
+  hematocritPct: 36,
+};
+
+describe('ClinicalData', () => {
+  it('renders all 8 clinical measurements when data is complete', () => {
+    render(<ClinicalData {...completeData} />);
+    // Values are rendered in separate elements from units
+    expect(screen.getByText('2')).toBeTruthy();
+    expect(screen.getByText('38')).toBeTruthy();
+    expect(screen.getByText('สัปดาห์')).toBeTruthy();
+    expect(screen.getByText('6')).toBeTruthy();
+    expect(screen.getByText('ครั้ง')).toBeTruthy();
+    expect(screen.getByText('155')).toBeTruthy();
+    expect(screen.getByText('12')).toBeTruthy();
+    expect(screen.getByText('34')).toBeTruthy();
+    expect(screen.getByText('3200')).toBeTruthy();
+    expect(screen.getByText('กรัม')).toBeTruthy();
+    expect(screen.getByText('36')).toBeTruthy();
+    expect(screen.getByText('%')).toBeTruthy();
+  });
+
+  it('shows dash "-" for missing/null values', () => {
+    const nullData = {
+      gravida: null,
+      gaWeeks: null,
+      ancCount: null,
+      heightCm: null,
+      weightDiffKg: null,
+      fundalHeightCm: null,
+      usWeightG: null,
+      hematocritPct: null,
+    };
+    render(<ClinicalData {...nullData} />);
+    const dashes = screen.getAllByText('-');
+    expect(dashes.length).toBe(8);
+  });
+
+  it('renders label ครรภ์ที่', () => {
+    render(<ClinicalData {...completeData} />);
+    expect(screen.getByText('ครรภ์ที่ (Gravida)')).toBeTruthy();
+  });
+
+  it('renders label อายุครรภ์', () => {
+    render(<ClinicalData {...completeData} />);
+    expect(screen.getByText('อายุครรภ์ (GA)')).toBeTruthy();
+  });
+
+  it('renders label ฝากครรภ์', () => {
+    render(<ClinicalData {...completeData} />);
+    expect(screen.getByText('ฝากครรภ์ (ANC)')).toBeTruthy();
+  });
+
+  it('renders label ส่วนสูง', () => {
+    render(<ClinicalData {...completeData} />);
+    expect(screen.getByText('ส่วนสูง')).toBeTruthy();
+  });
+
+  it('renders label ส่วนต่างน้ำหนัก', () => {
+    render(<ClinicalData {...completeData} />);
+    expect(screen.getByText('ส่วนต่างน้ำหนัก')).toBeTruthy();
+  });
+
+  it('renders label ยอดมดลูก', () => {
+    render(<ClinicalData {...completeData} />);
+    expect(screen.getByText('ยอดมดลูก')).toBeTruthy();
+  });
+
+  it('renders label น้ำหนักเด็ก U/S', () => {
+    render(<ClinicalData {...completeData} />);
+    expect(screen.getByText('น้ำหนักเด็ก U/S')).toBeTruthy();
+  });
+
+  it('renders label Hematocrit', () => {
+    render(<ClinicalData {...completeData} />);
+    expect(screen.getByText('Hematocrit')).toBeTruthy();
+  });
+
+  it('renders section header ข้อมูลทางคลินิก', () => {
+    render(<ClinicalData {...completeData} />);
+    expect(screen.getByText('ข้อมูลทางคลินิก')).toBeTruthy();
+  });
+
+  it('shows dash only for null fields, not for present ones', () => {
+    const partialData = {
+      gravida: 1,
+      gaWeeks: null,
+      ancCount: 4,
+      heightCm: null,
+      weightDiffKg: 10,
+      fundalHeightCm: null,
+      usWeightG: 2800,
+      hematocritPct: null,
+    };
+    render(<ClinicalData {...partialData} />);
+    const dashes = screen.getAllByText('-');
+    expect(dashes.length).toBe(4);
+  });
+
+  it('shows full weight context when both weightKg and weightDiffKg are provided', () => {
+    render(<ClinicalData {...completeData} weightKg={70} />);
+    // preWeight = 70 - 12 = 58, diff = 12
+    expect(screen.getByText('58')).toBeTruthy();
+    expect(screen.getByText('70')).toBeTruthy();
+    expect(screen.getByText('+12')).toBeTruthy();
+  });
+
+  it('shows only weightDiffKg when weightKg is not provided', () => {
+    render(<ClinicalData {...completeData} />);
+    expect(screen.getByText('12')).toBeTruthy();
+  });
+
+  it('colors weight diff green when gain <= 15', () => {
+    const { container } = render(<ClinicalData {...completeData} weightKg={70} />);
+    const greenDiff = container.querySelector('.text-emerald-600');
+    expect(greenDiff).toBeTruthy();
+    expect(greenDiff?.textContent).toBe('+12');
+  });
+
+  it('colors weight diff amber when gain > 15 and <= 20', () => {
+    const { container } = render(
+      <ClinicalData {...completeData} weightKg={75} weightDiffKg={18} />
+    );
+    const amberDiff = container.querySelector('.text-amber-600');
+    expect(amberDiff).toBeTruthy();
+    expect(amberDiff?.textContent).toBe('+18');
+  });
+
+  it('colors weight diff red when gain > 20', () => {
+    const { container } = render(
+      <ClinicalData {...completeData} weightKg={75} weightDiffKg={25} />
+    );
+    const redDiff = container.querySelector('.text-red-600');
+    expect(redDiff).toBeTruthy();
+    expect(redDiff?.textContent).toBe('+25');
+  });
+});
