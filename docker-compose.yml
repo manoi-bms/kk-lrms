@@ -21,7 +21,7 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://kklrms:kklrms@db:5432/kklrms?schema=public
-      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_URL: https://kk-lrms.bmscloud.in.th
       NEXTAUTH_SECRET: dev-secret-change-in-production
       BMS_VALIDATE_URL: https://hosxp.net/phapi/PasteJSON
       ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000

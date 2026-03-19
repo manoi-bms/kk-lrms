@@ -2,12 +2,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getDatabase } from '@/db/connection';
 import { getHospitalPatientList } from '@/services/dashboard';
+import { ensureInit } from '@/lib/ensure-init';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ hcode: string }> },
 ) {
   try {
+    await ensureInit();
     const { hcode } = await params;
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status') ?? 'active';

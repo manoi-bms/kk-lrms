@@ -2,10 +2,12 @@
 
 import { NextResponse } from 'next/server';
 import { getDatabase } from '@/db/connection';
+import { ensureInit } from '@/lib/ensure-init';
 import { getHealthStatus } from '@/services/health';
 
 export async function GET() {
   try {
+    await ensureInit();
     const db = await getDatabase();
     const health = await getHealthStatus(db);
     const statusCode = health.status === 'unhealthy' ? 503 : 200;

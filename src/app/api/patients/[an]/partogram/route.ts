@@ -1,6 +1,8 @@
 // T068: GET /api/patients/[an]/partogram — partogram data with alert/action lines
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/db/connection';
+import { ensureInit } from '@/lib/ensure-init';
+import { parsePatientId } from '@/lib/utils';
 import { generatePartogramEntries } from '@/services/partogram';
 import type { PartogramResponse } from '@/types/api';
 
@@ -9,13 +11,19 @@ export async function GET(
   { params }: { params: Promise<{ an: string }> },
 ) {
   try {
-    const { an } = await params;
+    await ensureInit();
+    const { an: patientId } = await params;
+    const parsed = parsePatientId(patientId);
+    if (!parsed) {
+      return NextResponse.json({ error: 'Invalid patient ID format', code: 'BAD_REQUEST' }, { status: 400 });
+    }
+    const { hcode, an } = parsed;
     const db = await getDatabase();
 
     // Get patient ID from AN
     const patients = await db.query<{ id: string; admit_date: string }>(
-      'SELECT id, admit_date FROM cached_patients WHERE an = ? LIMIT 1',
-      [an],
+      'SELECT cp.id, cp.admit_date FROM cached_patients cp JOIN hospitals h ON h.id = cp.hospital_id WHERE cp.an = ? AND h.hcode = ? LIMIT 1',
+      [an, hcode],
     );
 
     if (patients.length === 0) {

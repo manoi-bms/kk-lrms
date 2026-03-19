@@ -1,6 +1,7 @@
 // T095: POST /api/admin/hospitals/[hcode]/test-connection — test BMS connection
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/db/connection';
+import { ensureInit } from '@/lib/ensure-init';
 import { BmsSessionClient } from '@/lib/bms-session';
 import { getQuery, CHECK_TABLES, DATABASE_VERSION } from '@/config/hosxp-queries';
 import type { DatabaseDialect } from '@/config/hosxp-queries';
@@ -10,6 +11,7 @@ export async function POST(
   { params }: { params: Promise<{ hcode: string }> },
 ) {
   try {
+    await ensureInit();
     const { hcode } = await params;
     const db = await getDatabase();
 

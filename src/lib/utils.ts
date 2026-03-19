@@ -59,6 +59,21 @@ export function truncateName(name: string, maxLen: number = 30): string {
   return name.slice(0, maxLen) + '...';
 }
 
+/** Build a patient URL identifier: {hcode}-{an} */
+export function buildPatientId(hcode: string, an: string): string {
+  return `${hcode}-${an}`;
+}
+
+/** Parse a patient URL identifier back to { hcode, an } */
+export function parsePatientId(patientId: string): { hcode: string; an: string } | null {
+  const dashIdx = patientId.indexOf('-');
+  if (dashIdx === -1) return null;
+  return {
+    hcode: patientId.slice(0, dashIdx),
+    an: patientId.slice(dashIdx + 1),
+  };
+}
+
 export function formatRelativeTime(isoString: string | null): string {
   if (!isoString) return '-';
   const diff = Date.now() - new Date(isoString).getTime();

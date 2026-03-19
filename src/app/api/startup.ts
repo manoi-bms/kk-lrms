@@ -1,5 +1,5 @@
 // T059: Startup sequence — DB init, schema sync, seed, start polling
-import { getDatabase, closeDatabase } from '@/db/connection';
+import { getDatabase, closeDatabase, useSqlite } from '@/db/connection';
 import { SchemaSync } from '@/db/schema-sync';
 import { ALL_TABLES } from '@/db/tables/index';
 import { SeedOrchestrator } from '@/db/seeds/index';
@@ -12,33 +12,43 @@ export async function initializeApp(): Promise<void> {
   if (initialized) return;
 
   try {
+    const startTime = Date.now();
     console.log('[KK-LRMS] Starting initialization...');
 
     // 1. Connect to database
     const db = await getDatabase();
-    console.log('[KK-LRMS] Database connected');
+    const driver = useSqlite() ? 'sqlite' : 'postgresql';
+    console.log(`[KK-LRMS] Database connected (driver: ${driver})`);
 
     // 2. Sync schema
-    const driver = process.env.NODE_ENV === 'test' ? 'sqlite' : 'postgresql';
     await SchemaSync.sync(db, ALL_TABLES, driver as 'sqlite' | 'postgresql');
-    console.log('[KK-LRMS] Schema synced');
+    console.log(`[KK-LRMS] Schema synced — ${ALL_TABLES.length} tables`);
 
     // 3. Run seeders
     const seedOrchestrator = new SeedOrchestrator();
     await seedOrchestrator.run(db);
     console.log('[KK-LRMS] Seeders complete');
 
-    // 4. Start polling (if not in test mode)
-    if (process.env.NODE_ENV !== 'test') {
+    // 4. Seed demo data in dev mode with SQLite
+    if (useSqlite() && process.env.NODE_ENV !== 'test') {
+      const { seedDemoData } = await import('@/db/seeds/demo-seeder');
+      await seedDemoData(db);
+    }
+
+    // 5. Start polling (if not in test mode and not using SQLite)
+    if (process.env.NODE_ENV !== 'test' && !useSqlite()) {
       const sseManager = SseManager.getInstance();
       await startPolling(db, sseManager);
-      console.log('[KK-LRMS] Polling started');
+      console.log('[KK-LRMS] HOSxP polling started');
+    } else if (useSqlite() && process.env.NODE_ENV !== 'test') {
+      console.log('[KK-LRMS] SQLite dev mode — HOSxP polling SKIPPED (using demo data)');
     }
 
     initialized = true;
-    console.log('[KK-LRMS] Initialization complete');
+    const elapsed = Date.now() - startTime;
+    console.log(`[KK-LRMS] ✓ Initialization complete in ${elapsed}ms`);
   } catch (error) {
-    console.error('[KK-LRMS] Initialization failed:', error);
+    console.error('[KK-LRMS] ✗ Initialization failed:', error);
     throw error;
   }
 }

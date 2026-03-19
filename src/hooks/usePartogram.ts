@@ -4,9 +4,9 @@
 import useSWR from 'swr';
 import type { PartogramResponse } from '@/types/api';
 
-export function usePartogram(an: string | null) {
+export function usePartogram(patientId: string | null) {
   const { data, isLoading, error, mutate } = useSWR<PartogramResponse>(
-    an ? `/api/patients/${an}/partogram` : null,
+    patientId ? `/api/patients/${patientId}/partogram` : null,
     { refreshInterval: 30000 },
   );
 

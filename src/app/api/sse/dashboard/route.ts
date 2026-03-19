@@ -1,8 +1,10 @@
 // T051: GET /api/sse/dashboard — SSE stream for real-time dashboard updates
 import { v4 as uuidv4 } from 'uuid';
+import { ensureInit } from '@/lib/ensure-init';
 import { SseManager } from '@/lib/sse';
 
 export async function GET() {
+  await ensureInit();
   const clientId = uuidv4();
   const sseManager = SseManager.getInstance();
 

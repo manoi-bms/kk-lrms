@@ -4,14 +4,20 @@ import type { DatabaseAdapter } from './adapter';
 
 let instance: DatabaseAdapter | null = null;
 
+export function useSqlite(): boolean {
+  return process.env.NODE_ENV === 'test' || process.env.USE_SQLITE === 'true';
+}
+
 export async function getDatabase(): Promise<DatabaseAdapter> {
   if (instance) return instance;
 
-  const env = process.env.NODE_ENV ?? 'development';
-
-  if (env === 'test') {
+  if (useSqlite()) {
     const { SqliteAdapter } = await import('./sqlite-adapter');
-    instance = new SqliteAdapter(':memory:');
+    const path = process.env.NODE_ENV === 'test' ? ':memory:' : 'dev.sqlite';
+    instance = new SqliteAdapter(path);
+    if (process.env.NODE_ENV !== 'test') {
+      console.log(`[DB] SQLite connected: ${path}`);
+    }
   } else {
     const { PostgresAdapter } = await import('./postgres-adapter');
     const url = process.env.DATABASE_URL;

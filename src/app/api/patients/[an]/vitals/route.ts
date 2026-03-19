@@ -1,6 +1,8 @@
 // T073: GET /api/patients/[an]/vitals — vital signs time series
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/db/connection';
+import { ensureInit } from '@/lib/ensure-init';
+import { parsePatientId } from '@/lib/utils';
 import type { VitalSignsResponse } from '@/types/api';
 
 export async function GET(
@@ -8,13 +10,19 @@ export async function GET(
   { params }: { params: Promise<{ an: string }> },
 ) {
   try {
-    const { an } = await params;
+    await ensureInit();
+    const { an: patientId } = await params;
+    const parsed = parsePatientId(patientId);
+    if (!parsed) {
+      return NextResponse.json({ error: 'Invalid patient ID format', code: 'BAD_REQUEST' }, { status: 400 });
+    }
+    const { hcode, an } = parsed;
     const db = await getDatabase();
 
     // Get patient ID
     const patients = await db.query<{ id: string }>(
-      'SELECT id FROM cached_patients WHERE an = ? LIMIT 1',
-      [an],
+      'SELECT cp.id FROM cached_patients cp JOIN hospitals h ON h.id = cp.hospital_id WHERE cp.an = ? AND h.hcode = ? LIMIT 1',
+      [an, hcode],
     );
 
     if (patients.length === 0) {

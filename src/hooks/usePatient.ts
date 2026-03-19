@@ -4,19 +4,19 @@
 import useSWR from 'swr';
 import type { PatientDetailResponse, VitalSignsResponse, ContractionsResponse } from '@/types/api';
 
-export function usePatient(an: string | null) {
+export function usePatient(patientId: string | null) {
   const { data: detail, isLoading: loadingDetail, error: detailError, mutate } = useSWR<PatientDetailResponse>(
-    an ? `/api/patients/${an}` : null,
+    patientId ? `/api/patients/${patientId}` : null,
     { refreshInterval: 30000 },
   );
 
   const { data: vitalsData, isLoading: loadingVitals } = useSWR<VitalSignsResponse>(
-    an ? `/api/patients/${an}/vitals` : null,
+    patientId ? `/api/patients/${patientId}/vitals` : null,
     { refreshInterval: 30000 },
   );
 
   const { data: contractionsData, isLoading: loadingContractions } = useSWR<ContractionsResponse>(
-    an ? `/api/patients/${an}/contractions` : null,
+    patientId ? `/api/patients/${patientId}/contractions` : null,
     { refreshInterval: 30000 },
   );
 

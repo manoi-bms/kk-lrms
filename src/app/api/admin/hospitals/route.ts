@@ -1,9 +1,11 @@
 // T093: GET /api/admin/hospitals — admin hospital list with BMS config
 import { NextResponse } from 'next/server';
 import { getDatabase } from '@/db/connection';
+import { ensureInit } from '@/lib/ensure-init';
 
 export async function GET() {
   try {
+    await ensureInit();
     const db = await getDatabase();
 
     const hospitals = await db.query<{

@@ -1,6 +1,7 @@
 // T094: PUT /api/admin/hospitals/[hcode]/bms-config — save BMS tunnel config
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/db/connection';
+import { ensureInit } from '@/lib/ensure-init';
 import { BmsSessionClient } from '@/lib/bms-session';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -9,6 +10,7 @@ export async function PUT(
   { params }: { params: Promise<{ hcode: string }> },
 ) {
   try {
+    await ensureInit();
     const { hcode } = await params;
     const body = await request.json();
     const { tunnelUrl } = body;

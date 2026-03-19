@@ -24,6 +24,18 @@ export async function validateBmsSession(
   sessionId: string,
   tunnelUrl: string,
 ): Promise<BmsUserIdentity | null> {
+  // Dev auth bypass — accept any session ID as admin
+  if (process.env.DEV_AUTH_BYPASS === 'true') {
+    console.log(`[AUTH] Dev bypass: session "${sessionId}" → ADMIN`);
+    return {
+      name: 'Dev Admin (ผู้ดูแลระบบ)',
+      role: UserRole.ADMIN,
+      hospitalCode: '10670',
+      jwt: 'dev-jwt-token',
+      expiresAt: new Date(Date.now() + 8 * 3600_000).toISOString(),
+    };
+  }
+
   try {
     const validateUrl = process.env.BMS_VALIDATE_URL ?? 'https://hosxp.net/phapi/PasteJSON';
 

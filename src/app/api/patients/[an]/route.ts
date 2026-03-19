@@ -4,6 +4,8 @@ import { getDatabase } from '@/db/connection';
 import { decrypt, getEncryptionKey } from '@/lib/encryption';
 import { auth } from '@/lib/auth';
 import { logAccess } from '@/services/audit';
+import { ensureInit } from '@/lib/ensure-init';
+import { parsePatientId } from '@/lib/utils';
 import type { PatientDetailResponse } from '@/types/api';
 
 export async function GET(
@@ -11,7 +13,13 @@ export async function GET(
   { params }: { params: Promise<{ an: string }> },
 ) {
   try {
-    const { an } = await params;
+    await ensureInit();
+    const { an: patientId } = await params;
+    const parsed = parsePatientId(patientId);
+    if (!parsed) {
+      return NextResponse.json({ error: 'Invalid patient ID format', code: 'BAD_REQUEST' }, { status: 400 });
+    }
+    const { hcode, an } = parsed;
     const db = await getDatabase();
 
     // T091: Audit logging
@@ -57,9 +65,9 @@ export async function GET(
               h.hcode, h.name as hospital_name, h.level
        FROM cached_patients cp
        JOIN hospitals h ON h.id = cp.hospital_id
-       WHERE cp.an = ?
+       WHERE cp.an = ? AND h.hcode = ?
        LIMIT 1`,
-      [an],
+      [an, hcode],
     );
 
     if (patients.length === 0) {
