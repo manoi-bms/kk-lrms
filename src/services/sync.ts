@@ -349,32 +349,6 @@ export async function requestImmediateSync(
   }
 }
 
-/**
- * Request immediate sync for ALL hospitals with BMS config.
- * Runs in parallel with per-hospital locking.
- */
-export async function requestSyncAll(
-  db: DatabaseAdapter,
-  sseManager: SseManager,
-): Promise<{ total: number; synced: number; skipped: number }> {
-  const configs = await db.query<{ hospital_id: string }>(
-    'SELECT hospital_id FROM hospital_bms_config',
-  );
-
-  const results = await Promise.allSettled(
-    configs.map((c) => requestImmediateSync(db, c.hospital_id, sseManager)),
-  );
-
-  let synced = 0;
-  let skipped = 0;
-  for (const r of results) {
-    if (r.status === 'fulfilled' && r.value.synced) synced++;
-    else skipped++;
-  }
-
-  return { total: configs.length, synced, skipped };
-}
-
 // T063: Calculate CPD scores for patients after sync — shared by polling and webhook pipelines
 export async function calculateAndStoreCpdScores(
   db: DatabaseAdapter,
