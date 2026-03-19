@@ -29,8 +29,8 @@ export async function initializeApp(): Promise<void> {
     await seedOrchestrator.run(db);
     console.log('[KK-LRMS] Seeders complete');
 
-    // 4. Seed demo data in dev mode with SQLite
-    if (useSqlite() && process.env.NODE_ENV !== 'test') {
+    // 4. Seed demo data in dev mode with SQLite (opt-in via SEED_DEMO_DATA=true)
+    if (useSqlite() && process.env.NODE_ENV !== 'test' && process.env.SEED_DEMO_DATA === 'true') {
       const { seedDemoData } = await import('@/db/seeds/demo-seeder');
       await seedDemoData(db);
     }

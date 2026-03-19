@@ -1,0 +1,45 @@
+// POST /api/admin/clear-cache — clear all cached patient data (demo/stale)
+import { NextResponse } from 'next/server';
+import { getDatabase } from '@/db/connection';
+import { ensureInit } from '@/lib/ensure-init';
+import { auth } from '@/lib/auth';
+
+export async function POST() {
+  try {
+    await ensureInit();
+
+    const session = await auth();
+    const userRole = (session?.user as unknown as { role?: string })?.role;
+    if (userRole !== 'ADMIN') {
+      return NextResponse.json({ error: 'Admin role required' }, { status: 403 });
+    }
+
+    const db = await getDatabase();
+
+    // Clear in dependency order (foreign keys)
+    const cpdDeleted = await db.query<{ cnt: number }>('SELECT COUNT(*) as cnt FROM cpd_scores');
+    await db.execute('DELETE FROM cpd_scores');
+
+    const vitalsDeleted = await db.query<{ cnt: number }>('SELECT COUNT(*) as cnt FROM cached_vital_signs');
+    await db.execute('DELETE FROM cached_vital_signs');
+
+    const patientsDeleted = await db.query<{ cnt: number }>('SELECT COUNT(*) as cnt FROM cached_patients');
+    await db.execute('DELETE FROM cached_patients');
+
+    // Reset hospital connection statuses to UNKNOWN
+    await db.execute("UPDATE hospitals SET connection_status = 'UNKNOWN', last_sync_at = NULL");
+
+    return NextResponse.json({
+      success: true,
+      cleared: {
+        cpd_scores: cpdDeleted[0]?.cnt ?? 0,
+        cached_vital_signs: vitalsDeleted[0]?.cnt ?? 0,
+        cached_patients: patientsDeleted[0]?.cnt ?? 0,
+      },
+      message: 'All cached patient data cleared. Hospitals reset to UNKNOWN status.',
+    });
+  } catch (error) {
+    console.error('Clear cache error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
