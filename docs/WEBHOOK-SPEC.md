@@ -486,7 +486,7 @@ Response:
 
 ## Integration Guide
 
-### Recommended Setup for Periodic Systems
+### Recommended Setup for Periodic Systems (full_snapshot)
 
 If your HIS can export all active labor patients periodically:
 
@@ -499,9 +499,242 @@ If your HIS can export all active labor patients periodically:
 ```
 
 1. Query your database for all active labor patients (`WHERE discharge_date IS NULL`)
-2. Map each patient to the webhook payload format
+2. Map each patient row to the webhook payload format
 3. Send as `full_snapshot` — discharged patients are handled automatically
 4. Recommended interval: **every 5 minutes**
+
+#### Step 1: Query Active Labor Patients from Your Database
+
+**PostgreSQL / MySQL example:**
+
+```sql
+SELECT
+  p.hn,
+  a.an,
+  CONCAT(p.pname, p.fname, ' ', p.lname) AS name,
+  p.cid,
+  TIMESTAMPDIFF(YEAR, p.birthday, CURDATE()) AS age,
+  pr.preg_number AS gravida,
+  pr.ga AS ga_weeks,
+  (SELECT COUNT(*) FROM anc WHERE anc.hn = p.hn AND anc.preg_id = pr.id) AS anc_count,
+  a.regdate AS admit_date,
+  pr.height AS height_cm,
+  pr.weight AS weight_kg,
+  (pr.weight - pr.weight_before) AS weight_diff_kg,
+  pr.fundal_height AS fundal_height_cm,
+  pr.us_weight AS us_weight_g,
+  (SELECT v.hct FROM vital_sign v WHERE v.an = a.an ORDER BY v.vstdate DESC, v.vsttime DESC LIMIT 1) AS hematocrit_pct
+FROM admission a
+  JOIN patient p ON p.hn = a.hn
+  LEFT JOIN pregnancy pr ON pr.hn = a.hn AND pr.an = a.an
+WHERE a.dchdate IS NULL                    -- not discharged
+  AND a.ward IN ('LR', 'OB', 'LABOR')     -- labor room wards (adjust to your ward codes)
+  AND a.regdate >= CURDATE() - INTERVAL 7 DAY  -- recent admissions only
+ORDER BY a.regdate DESC;
+```
+
+> **Adjust column names** to match your HIS schema. The example above uses common Thai hospital HIS column names.
+
+#### Step 2: Map to Webhook Payload and Send
+
+**Python example (with `requests`):**
+
+```python
+import requests
+import json
+from datetime import datetime
+
+API_URL = "https://kk-lrms.bmscloud.in.th/api/webhooks/patient-data"
+API_KEY = "kklrms_your_api_key_here"  # keep in env var, not in code
+
+def sync_to_kklrms(db_connection):
+    """Query active labor patients and send full_snapshot to KK-LRMS."""
+    cursor = db_connection.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT hn, an, name, cid, age, gravida, ga_weeks, anc_count,
+               admit_date, height_cm, weight_kg, weight_diff_kg,
+               fundal_height_cm, us_weight_g, hematocrit_pct
+        FROM v_active_labor_patients  -- your view or query
+    """)
+    rows = cursor.fetchall()
+
+    if not rows:
+        print(f"[{datetime.now()}] No active patients — sending empty snapshot")
+        # Don't send empty payload; full_snapshot requires at least 1 patient.
+        # If truly zero patients, send one last snapshot before stopping,
+        # or switch to incremental mode for individual discharges.
+        return
+
+    patients = []
+    for row in rows:
+        patient = {
+            "hn": row["hn"],
+            "an": row["an"],
+            "name": row["name"],
+            "age": row["age"],
+            "admit_date": row["admit_date"].isoformat() if row["admit_date"] else None,
+        }
+        # Add optional fields only if not null
+        for field in ["cid", "gravida", "ga_weeks", "anc_count", "height_cm",
+                      "weight_kg", "weight_diff_kg", "fundal_height_cm",
+                      "us_weight_g", "hematocrit_pct"]:
+            if row.get(field) is not None:
+                patient[field] = row[field]
+        patients.append(patient)
+
+    payload = {
+        "mode": "full_snapshot",
+        "patients": patients
+    }
+
+    response = requests.post(
+        API_URL,
+        json=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {API_KEY}"
+        },
+        timeout=30
+    )
+
+    if response.status_code == 200:
+        result = response.json()
+        print(f"[{datetime.now()}] Synced: {result['patientsProcessed']} patients, "
+              f"{result['newAdmissions']} new, {result['discharges']} discharged, "
+              f"{result['transfers']} transfers")
+    else:
+        print(f"[{datetime.now()}] ERROR {response.status_code}: {response.text}")
+
+# Run sync
+sync_to_kklrms(db_connection)
+```
+
+**Node.js example:**
+
+```javascript
+const API_URL = "https://kk-lrms.bmscloud.in.th/api/webhooks/patient-data";
+const API_KEY = process.env.KKLRMS_API_KEY;
+
+async function syncToKKLRMS(dbPool) {
+  // Query your database for active labor patients
+  const { rows } = await dbPool.query(`
+    SELECT hn, an, name, cid, age, gravida, ga_weeks, anc_count,
+           admit_date, height_cm, weight_kg, weight_diff_kg,
+           fundal_height_cm, us_weight_g, hematocrit_pct
+    FROM v_active_labor_patients
+  `);
+
+  if (rows.length === 0) {
+    console.log(`[${new Date().toISOString()}] No active patients`);
+    return;
+  }
+
+  const payload = {
+    mode: "full_snapshot",
+    patients: rows.map(row => ({
+      hn: row.hn,
+      an: row.an,
+      name: row.name,
+      age: row.age,
+      admit_date: row.admit_date,
+      ...(row.cid && { cid: row.cid }),
+      ...(row.gravida != null && { gravida: row.gravida }),
+      ...(row.ga_weeks != null && { ga_weeks: row.ga_weeks }),
+      ...(row.anc_count != null && { anc_count: row.anc_count }),
+      ...(row.height_cm != null && { height_cm: row.height_cm }),
+      ...(row.weight_kg != null && { weight_kg: row.weight_kg }),
+      ...(row.weight_diff_kg != null && { weight_diff_kg: row.weight_diff_kg }),
+      ...(row.fundal_height_cm != null && { fundal_height_cm: row.fundal_height_cm }),
+      ...(row.us_weight_g != null && { us_weight_g: row.us_weight_g }),
+      ...(row.hematocrit_pct != null && { hematocrit_pct: row.hematocrit_pct }),
+    }))
+  };
+
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${API_KEY}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const result = await response.json();
+  if (response.ok) {
+    console.log(`[${new Date().toISOString()}] Synced: ${result.patientsProcessed} patients, ` +
+      `${result.newAdmissions} new, ${result.discharges} discharged, ${result.transfers} transfers`);
+  } else {
+    console.error(`[${new Date().toISOString()}] ERROR ${response.status}:`, result.error);
+  }
+}
+```
+
+#### Step 3: Schedule with Cron
+
+**Linux crontab (every 5 minutes):**
+
+```bash
+# Edit crontab: crontab -e
+*/5 * * * * /usr/bin/python3 /opt/kklrms-sync/sync.py >> /var/log/kklrms-sync.log 2>&1
+```
+
+**Windows Task Scheduler:**
+
+```
+Program: python.exe
+Arguments: C:\kklrms-sync\sync.py
+Trigger: Every 5 minutes
+```
+
+**systemd timer (recommended for Linux):**
+
+```ini
+# /etc/systemd/system/kklrms-sync.timer
+[Unit]
+Description=KK-LRMS patient sync every 5 minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=5min
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target
+```
+
+```ini
+# /etc/systemd/system/kklrms-sync.service
+[Unit]
+Description=KK-LRMS patient data sync
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/kklrms-sync/sync.py
+Environment=KKLRMS_API_KEY=kklrms_your_key_here
+```
+
+```bash
+sudo systemctl enable --now kklrms-sync.timer
+sudo journalctl -u kklrms-sync.service -f  # monitor logs
+```
+
+#### Edge Case: Zero Active Patients
+
+When all patients have been discharged and your query returns 0 rows:
+
+- **Do NOT send an empty `full_snapshot`** — the API rejects empty `patients` arrays (400 error).
+- **Option A:** Send one final `incremental` call with `labor_status: "DELIVERED"` for the last patient, then stop the cron until new patients are admitted.
+- **Option B:** Keep the cron running — when your query returns 0 rows, simply skip the API call. Previously active patients will remain ACTIVE in the dashboard until the next `full_snapshot` includes or excludes them.
+- **Option C (recommended):** Track whether you have sent at least one snapshot with patients. If so, and now there are 0 patients, send individual `incremental` discharge calls for each previously synced patient, then pause.
+
+#### Monitoring Your Sync
+
+After setting up the cron job, verify the integration:
+
+1. Check your hospital appears as **ONLINE** on the KK-LRMS dashboard
+2. Verify patient count matches your database
+3. Check `last_sync_at` timestamp updates every 5 minutes
+4. Test discharge: discharge a patient in your HIS → wait for next sync → verify patient disappears from active count
 
 ### Recommended Setup for Event-Driven Systems
 
