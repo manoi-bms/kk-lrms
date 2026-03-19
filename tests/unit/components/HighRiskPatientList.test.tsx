@@ -77,12 +77,12 @@ describe('HighRiskPatientList', () => {
     expect(screen.getByText(String(samplePatients.length))).toBeTruthy();
   });
 
-  it('renders all patient names (both desktop and mobile)', () => {
+  it('renders all patient AN numbers (both desktop and mobile)', () => {
     render(<HighRiskPatientList patients={samplePatients} />);
-    // Each name appears twice (desktop table + mobile cards)
-    expect(screen.getAllByText('สมศรี ใจดี').length).toBe(2);
-    expect(screen.getAllByText('สมหญิง รักดี').length).toBe(2);
-    expect(screen.getAllByText('วิภา สุขใจ').length).toBe(2);
+    // Each AN appears twice (desktop table + mobile cards)
+    expect(screen.getAllByText(/AN001/).length).toBe(2);
+    expect(screen.getAllByText(/AN002/).length).toBe(2);
+    expect(screen.getAllByText(/AN003/).length).toBe(2);
   });
 
   it('sorts patients by CPD score descending (highest first)', () => {
@@ -101,7 +101,7 @@ describe('HighRiskPatientList', () => {
     const rows = container.querySelectorAll('[data-testid="patient-row"]');
     // First row is AN003 (score 15, sorted first)
     fireEvent.click(rows[0]);
-    expect(mockPush).toHaveBeenCalledWith('/patients/AN003');
+    expect(mockPush).toHaveBeenCalledWith('/patients/H001-AN003');
   });
 
   it('displays CPD score with font-mono styling', () => {

@@ -14,8 +14,8 @@ const summary: DashboardSummary = {
 describe('SummaryCards', () => {
   it('renders 4 summary cards', () => {
     const { container } = render(<SummaryCards summary={summary} />);
-    // Cards are plain divs with border-t-4 inside the grid
-    const cards = container.querySelectorAll('.border-t-4');
+    // Cards are rounded-2xl divs inside the grid
+    const cards = container.querySelectorAll('.rounded-2xl');
     expect(cards.length).toBe(4);
   });
 
@@ -25,37 +25,37 @@ describe('SummaryCards', () => {
     expect(screen.getByText('25')).toBeTruthy();
   });
 
-  it('shows high-risk count with red border', () => {
+  it('shows high-risk count with red ring', () => {
     const { container } = render(<SummaryCards summary={summary} />);
     expect(screen.getByText('เสี่ยงสูง')).toBeTruthy();
     expect(screen.getByText('5')).toBeTruthy();
-    const redCard = Array.from(container.querySelectorAll('.border-t-4')).find(
+    const redCard = Array.from(container.querySelectorAll('.rounded-2xl')).find(
       (card) => card.textContent?.includes('เสี่ยงสูง'),
     );
     expect(redCard).toBeTruthy();
-    expect(redCard!.className).toContain('border-t-red-500');
+    expect(redCard!.className).toContain('ring-red-100');
   });
 
-  it('shows medium-risk count with amber border', () => {
+  it('shows medium-risk count with amber ring', () => {
     const { container } = render(<SummaryCards summary={summary} />);
     expect(screen.getByText('เสี่ยงปานกลาง')).toBeTruthy();
     expect(screen.getByText('8')).toBeTruthy();
-    const amberCard = Array.from(container.querySelectorAll('.border-t-4')).find(
+    const amberCard = Array.from(container.querySelectorAll('.rounded-2xl')).find(
       (card) => card.textContent?.includes('เสี่ยงปานกลาง'),
     );
     expect(amberCard).toBeTruthy();
-    expect(amberCard!.className).toContain('border-t-amber-500');
+    expect(amberCard!.className).toContain('ring-amber-100');
   });
 
-  it('shows low-risk count with green border', () => {
+  it('shows low-risk count with emerald ring', () => {
     const { container } = render(<SummaryCards summary={summary} />);
     expect(screen.getByText('เสี่ยงต่ำ')).toBeTruthy();
     expect(screen.getByText('12')).toBeTruthy();
-    const greenCard = Array.from(container.querySelectorAll('.border-t-4')).find(
+    const greenCard = Array.from(container.querySelectorAll('.rounded-2xl')).find(
       (card) => card.textContent?.includes('เสี่ยงต่ำ'),
     );
     expect(greenCard).toBeTruthy();
-    expect(greenCard!.className).toContain('border-t-green-500');
+    expect(greenCard!.className).toContain('ring-emerald-100');
   });
 
   it('displays all card titles', () => {

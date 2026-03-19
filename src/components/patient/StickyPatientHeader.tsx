@@ -8,6 +8,7 @@ import type { RiskLevel } from '@/types/domain';
 
 interface StickyPatientHeaderProps {
   name: string;
+  hn: string;
   an: string;
   laborStatus: string;
   hospitalName: string;
@@ -26,6 +27,7 @@ const LABOR_STATUS_LABELS: Record<string, string> = {
 
 export function StickyPatientHeader({
   name,
+  hn,
   an,
   laborStatus,
   hospitalName,
@@ -64,8 +66,8 @@ export function StickyPatientHeader({
       aria-label="Sticky patient header"
     >
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2">
-        <span className="text-sm font-bold text-slate-800 truncate">{name}</span>
-        <span className="text-xs text-slate-500 shrink-0">AN: {an}</span>
+        <span className="font-mono text-sm font-bold text-slate-800 truncate">AN {an}</span>
+        <span className="text-xs text-slate-500 shrink-0">HN: {hn}</span>
         <Badge variant={laborStatus === 'ACTIVE' ? 'default' : 'secondary'}>
           {laborLabel}
         </Badge>

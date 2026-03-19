@@ -13,7 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CpdBadge } from '@/components/shared/CpdBadge';
-import { cn, formatRelativeTime } from '@/lib/utils';
+import { cn, formatRelativeTime, buildPatientId } from '@/lib/utils';
 import { RiskLevel } from '@/types/domain';
 
 export interface HighRiskPatient {
@@ -116,8 +116,8 @@ export function HighRiskPatientList({ patients, isLoading = false }: HighRiskPat
     [patients],
   );
 
-  const handleRowClick = (an: string) => {
-    router.push(`/patients/${an}`);
+  const handleRowClick = (hcode: string, an: string) => {
+    router.push(`/patients/${buildPatientId(hcode, an)}`);
   };
 
   return (
@@ -202,12 +202,12 @@ export function HighRiskPatientList({ patients, isLoading = false }: HighRiskPat
                       patient.riskLevel === 'HIGH' && 'border-l-2 border-l-red-400',
                       patient.riskLevel === 'MEDIUM' && 'border-l-2 border-l-amber-400',
                     )}
-                    onClick={() => handleRowClick(patient.an)}
+                    onClick={() => handleRowClick(patient.hcode, patient.an)}
                   >
                     <TableCell>
                       <RiskDot riskLevel={patient.riskLevel} />
                     </TableCell>
-                    <TableCell className="font-medium">{patient.name}</TableCell>
+                    <TableCell className="font-mono font-medium">AN {patient.an}</TableCell>
                     <TableCell className="font-mono">
                       {patient.age != null ? patient.age : '-'}
                     </TableCell>
@@ -222,10 +222,10 @@ export function HighRiskPatientList({ patients, isLoading = false }: HighRiskPat
                       />
                     </TableCell>
                     <TableCell className="text-slate-600">{patient.hospital}</TableCell>
-                    <TableCell className="text-xs text-slate-500">
+                    <TableCell className="text-sm text-slate-500">
                       {formatRelativeTime(patient.admitDate)}
                     </TableCell>
-                    <TableCell className="text-xs text-slate-500">
+                    <TableCell className="text-sm text-slate-500">
                       {formatRelativeTime(patient.lastVitalAt)}
                     </TableCell>
                   </TableRow>
@@ -248,20 +248,20 @@ export function HighRiskPatientList({ patients, isLoading = false }: HighRiskPat
                 patient.riskLevel === 'HIGH' && 'border-l-4 border-l-red-400',
                 patient.riskLevel === 'MEDIUM' && 'border-l-4 border-l-amber-400',
               )}
-              onClick={() => handleRowClick(patient.an)}
+              onClick={() => handleRowClick(patient.hcode, patient.an)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  handleRowClick(patient.an);
+                  handleRowClick(patient.hcode, patient.an);
                 }
               }}
             >
               {/* Top row: risk dot + name + CPD badge */}
               <div className="flex items-center gap-2">
                 <RiskDot riskLevel={patient.riskLevel} />
-                <span className="flex-1 truncate font-medium text-sm">{patient.name}</span>
+                <span className="flex-1 truncate font-mono font-medium text-base">AN {patient.an}</span>
                 <CpdBadge
                   score={patient.cpdScore}
                   riskLevel={patient.riskLevel as RiskLevel}
@@ -270,7 +270,7 @@ export function HighRiskPatientList({ patients, isLoading = false }: HighRiskPat
               </div>
 
               {/* Details row */}
-              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
                 {patient.age != null && (
                   <span>อายุ <span className="font-mono font-medium text-slate-700">{patient.age}</span></span>
                 )}
@@ -281,7 +281,7 @@ export function HighRiskPatientList({ patients, isLoading = false }: HighRiskPat
               </div>
 
               {/* Time row */}
-              <div className="mt-1 text-xs text-slate-400">
+              <div className="mt-1 text-sm text-slate-400">
                 Vital: {formatRelativeTime(patient.lastVitalAt)}
               </div>
             </div>

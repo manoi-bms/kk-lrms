@@ -52,19 +52,19 @@ export function PatientHeader({
     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
       <div className="space-y-2">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-slate-900">{name}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">AN {an}</h1>
           {laborStatus === 'ACTIVE' ? (
-            <span className="bg-emerald-50 text-emerald-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+            <span className="bg-emerald-50 text-emerald-700 text-sm font-medium px-2.5 py-0.5 rounded-full">
               คลอดอยู่
             </span>
           ) : (
-            <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+            <span className="bg-slate-100 text-slate-600 text-sm font-medium px-2.5 py-0.5 rounded-full">
               คลอดแล้ว
             </span>
           )}
         </div>
 
-        <div className="flex flex-wrap gap-4 text-xs text-slate-400">
+        <div className="flex flex-wrap gap-4 text-sm text-slate-400">
           <span>HN: <span className="font-mono font-semibold text-slate-700">{hn}</span></span>
           <span>AN: <span className="font-mono font-semibold text-slate-700">{an}</span></span>
           <span>อายุ: <span className="font-mono font-semibold text-slate-700">{age} ปี</span></span>
@@ -75,7 +75,7 @@ export function PatientHeader({
         </div>
 
         <div className="flex items-center gap-2 text-sm">
-          <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+          <span className="bg-slate-100 text-slate-600 text-sm font-medium px-2.5 py-0.5 rounded-full">
             {hospital.name}
           </span>
           <Badge variant="outline">{hospital.level}</Badge>
@@ -90,7 +90,7 @@ export function PatientHeader({
 
       {cpdScore && (
         <div className="flex flex-col items-center gap-1">
-          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">CPD Score</span>
+          <span className="text-xs uppercase tracking-wider text-slate-400 font-medium">CPD Score</span>
           <CpdBadge
             score={cpdScore.score}
             riskLevel={cpdScore.riskLevel}

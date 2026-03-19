@@ -77,7 +77,7 @@ export function Sidebar() {
         {!collapsed && (
           <div className="min-w-0">
             <div className="text-lg font-bold tracking-tight text-white">KK-LRMS</div>
-            <div className="truncate text-xs text-slate-400">
+            <div className="truncate text-sm text-slate-400">
               ระบบติดตามการคลอด
             </div>
           </div>

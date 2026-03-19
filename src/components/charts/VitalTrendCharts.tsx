@@ -36,7 +36,7 @@ function ChartCard({
 }) {
   return (
     <div className="rounded-2xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]">
-      <h4 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+      <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
         {title}
       </h4>
       {children}

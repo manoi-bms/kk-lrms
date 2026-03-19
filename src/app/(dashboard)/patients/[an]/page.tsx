@@ -9,13 +9,15 @@ import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { PatientHeader } from '@/components/patient/PatientHeader';
 import { ReferralBanner } from '@/components/patient/ReferralBanner';
 import { StickyPatientHeader } from '@/components/patient/StickyPatientHeader';
+import { QuickStatsBar } from '@/components/patient/QuickStatsBar';
+import { CurrentVitalsPanel } from '@/components/patient/CurrentVitalsPanel';
+import { LaborProgressCard } from '@/components/patient/LaborProgressCard';
+import { CpdFactorBreakdown } from '@/components/patient/CpdFactorBreakdown';
 import { ClinicalData } from '@/components/patient/ClinicalData';
 import { ContractionTable } from '@/components/patient/ContractionTable';
 import { PrintForm } from '@/components/patient/PrintForm';
 import { HighRiskAlert } from '@/components/shared/HighRiskAlert';
 import { LoadingState } from '@/components/shared/LoadingState';
-import { VitalSignGauge } from '@/components/charts/VitalSignGauge';
-import { BpBarChart } from '@/components/charts/BpBarChart';
 import { VitalTrendCharts } from '@/components/charts/VitalTrendCharts';
 import { PartogramChart } from '@/components/charts/PartogramChart';
 import { Button } from '@/components/ui/button';
@@ -29,16 +31,16 @@ export default function PatientDetailPage({
 }: {
   params: Promise<{ an: string }>;
 }) {
-  const { an } = use(params);
+  const { an: patientId } = use(params);
   const router = useRouter();
   const mainHeaderRef = useRef<HTMLDivElement>(null);
 
-  const { patient, cpdScore, vitals, contractions, isLoading, mutate } = usePatient(an);
-  const { partogram } = usePartogram(an);
+  const { patient, cpdScore, vitals, contractions, isLoading, mutate } = usePatient(patientId);
+  const { partogram } = usePartogram(patientId);
 
   useSetBreadcrumbs([
     { label: 'แดชบอร์ด', href: '/' },
-    { label: patient?.name ?? `AN ${an}` },
+    { label: `AN ${patientId}` },
   ]);
 
   useSSE({
@@ -63,18 +65,27 @@ export default function PatientDetailPage({
     );
   }
 
-  const latestVital = vitals.length > 0 ? vitals[vitals.length - 1] : null;
-  const hrHistory = vitals.map((v) => v.maternalHr).filter((v): v is number => v !== null);
-  const fhrHistory = vitals.map((v) => (v.fetalHr ? parseInt(v.fetalHr) : null)).filter((v): v is number => v !== null);
+  // Derive current cervix dilation from partogram
+  const currentDilationCm = partogram?.entries?.length
+    ? [...partogram.entries].sort(
+        (a, b) => new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime()
+      )[0].dilationCm
+    : null;
+
+  // Latest vital timestamp for quick stats
+  const latestVitalAt = vitals.length > 0 ? vitals[vitals.length - 1].measuredAt : null;
 
   return (
     <div className="space-y-5">
+      {/* High Risk Alert Modal */}
       {cpdScore && cpdScore.score >= 10 && (
-        <HighRiskAlert score={cpdScore.score} an={patient.an} patientName={patient.name} />
+        <HighRiskAlert score={cpdScore.score} an={patient.an} />
       )}
 
+      {/* Sticky header on scroll */}
       <StickyPatientHeader
         name={patient.name}
+        hn={patient.hn}
         an={patient.an}
         laborStatus={patient.laborStatus}
         hospitalName={patient.hospital.name}
@@ -82,6 +93,7 @@ export default function PatientDetailPage({
         mainHeaderRef={mainHeaderRef}
       />
 
+      {/* Back navigation */}
       <button
         onClick={() => router.back()}
         className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-teal-600 print:hidden"
@@ -89,6 +101,7 @@ export default function PatientDetailPage({
         <ArrowLeft size={16} /> กลับ
       </button>
 
+      {/* Section 1: Patient Header */}
       <div ref={mainHeaderRef}>
         <div className="rounded-xl bg-white p-5 shadow-sm">
           <PatientHeader
@@ -106,6 +119,7 @@ export default function PatientDetailPage({
         </div>
       </div>
 
+      {/* Section 2: Referral Recommendation Banner */}
       {cpdScore && cpdScore.riskLevel !== RiskLevel.LOW && (
         <ReferralBanner
           score={cpdScore.score}
@@ -114,28 +128,57 @@ export default function PatientDetailPage({
         />
       )}
 
-      <ClinicalData
+      {/* Section 3: Quick Stats Bar — key metrics at a glance */}
+      <QuickStatsBar
+        age={patient.age}
         gravida={patient.gravida}
         gaWeeks={patient.gaWeeks}
         ancCount={patient.ancCount}
-        heightCm={patient.heightCm}
-        weightKg={patient.weightKg}
-        weightDiffKg={patient.weightDiffKg}
-        fundalHeightCm={patient.fundalHeightCm}
-        usWeightG={patient.usWeightG}
-        hematocritPct={patient.hematocritPct}
+        admitDate={patient.admitDate}
+        laborStatus={patient.laborStatus}
+        currentDilationCm={currentDilationCm}
+        latestVitalAt={latestVitalAt}
       />
 
-      <div className="rounded-xl bg-white p-5 shadow-sm">
-        <h3 className="mb-4 text-base font-medium text-slate-700">สัญญาณชีพล่าสุด</h3>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <VitalSignGauge label="Maternal HR" value={latestVital?.maternalHr ?? null} unit="bpm" min={40} max={160} normalMin={60} normalMax={100} history={hrHistory} />
-          <VitalSignGauge label="Fetal HR" value={latestVital?.fetalHr ? parseInt(latestVital.fetalHr) : null} unit="bpm" min={80} max={200} normalMin={110} normalMax={160} history={fhrHistory} />
-          <VitalSignGauge label="BP (SBP)" value={latestVital?.sbp ?? null} unit="mmHg" min={60} max={200} normalMin={90} normalMax={140} />
-          <VitalSignGauge label="PPH" value={latestVital?.pphAmountMl ?? null} unit="ml" min={0} max={1000} normalMin={0} normalMax={500} />
+      {/* Section 4: Two-column layout — Vitals & Labor Progress | CPD Analysis & Clinical Data */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Left column: Current vitals + Labor progress */}
+        <div className="space-y-5">
+          <CurrentVitalsPanel vitals={vitals} />
+          <LaborProgressCard
+            admitDate={patient.admitDate}
+            laborStatus={patient.laborStatus}
+            partogramEntries={partogram?.entries ?? null}
+            contractions={contractions}
+          />
+        </div>
+
+        {/* Right column: CPD Analysis + Clinical Data */}
+        <div className="space-y-5">
+          {cpdScore && (
+            <CpdFactorBreakdown
+              score={cpdScore.score}
+              riskLevel={cpdScore.riskLevel}
+              factors={cpdScore.factors}
+              missingFactors={cpdScore.missingFactors}
+              calculatedAt={cpdScore.calculatedAt}
+            />
+          )}
+          <ClinicalData
+            gravida={patient.gravida}
+            gaWeeks={patient.gaWeeks}
+            ancCount={patient.ancCount}
+            heightCm={patient.heightCm}
+            weightKg={patient.weightKg}
+            weightDiffKg={patient.weightDiffKg}
+            fundalHeightCm={patient.fundalHeightCm}
+            usWeightG={patient.usWeightG}
+            hematocritPct={patient.hematocritPct}
+          />
         </div>
       </div>
 
+      {/* Section 5: Vital Sign Trend Charts */}
       {vitals.length > 0 && (
         <div>
           <h3 className="mb-3 text-base font-medium text-slate-700">แนวโน้มสัญญาณชีพ</h3>
@@ -143,20 +186,19 @@ export default function PatientDetailPage({
         </div>
       )}
 
+      {/* Section 6: Partogram Chart */}
       {partogram && (
         <div className="rounded-xl bg-white p-5 shadow-sm">
           <PartogramChart entries={partogram.entries} startTime={partogram.startTime} />
         </div>
       )}
 
-      <div className="rounded-xl bg-white p-5 shadow-sm">
-        <BpBarChart vitals={vitals} />
-      </div>
-
+      {/* Section 7: Contraction Table */}
       <div className="rounded-xl bg-white p-5 shadow-sm">
         <ContractionTable contractions={contractions} />
       </div>
 
+      {/* Section 8: Print */}
       <div className="flex justify-end print:hidden">
         <Dialog>
           <DialogTrigger render={

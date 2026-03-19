@@ -44,9 +44,9 @@ export function VitalSignGauge({
   if (value === null || value === undefined) {
     return (
       <div className="flex flex-col items-center gap-1 rounded-2xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]">
-        <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">{label}</span>
+        <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold">{label}</span>
         <span className="font-mono text-2xl font-bold text-slate-300">-</span>
-        <span className="text-[11px] text-slate-400 uppercase tracking-wider">{unit}</span>
+        <span className="text-xs text-slate-400 uppercase tracking-wider">{unit}</span>
       </div>
     );
   }
@@ -57,7 +57,7 @@ export function VitalSignGauge({
 
   return (
     <div className="flex flex-col items-center gap-1 rounded-2xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]">
-      <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">{label}</span>
+      <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold">{label}</span>
 
       <div className="relative h-24 w-24">
         <ResponsiveContainer width="100%" height="100%">
@@ -82,7 +82,7 @@ export function VitalSignGauge({
         </div>
       </div>
 
-      <span className="text-[11px] text-slate-400 uppercase tracking-wider">{unit}</span>
+      <span className="text-xs text-slate-400 uppercase tracking-wider">{unit}</span>
 
       {/* Thai status text */}
       <span className="text-xs font-semibold" style={{ color }}>

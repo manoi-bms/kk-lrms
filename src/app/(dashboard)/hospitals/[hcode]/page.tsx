@@ -117,6 +117,7 @@ export default function HospitalPatientListPage({
           {sortedPatients.map((p) => (
             <PatientCard
               key={p.id || p.an}
+              hcode={hcode}
               an={p.an}
               hn={p.hn}
               name={p.name}

@@ -37,7 +37,6 @@ export function PrintForm({ patient, hospitalName, vitals }: PrintFormProps) {
       <div className="mb-4 grid grid-cols-3 gap-2 text-sm">
         <div>HN: <strong>{patient.hn}</strong></div>
         <div>AN: <strong>{patient.an}</strong></div>
-        <div>ชื่อ: <strong>{patient.name}</strong></div>
         <div>อายุ: <strong>{patient.age} ปี</strong></div>
         <div>ครรภ์ที่: <strong>{patient.gravida ?? '-'}</strong></div>
         <div>GA: <strong>{patient.gaWeeks ? `${patient.gaWeeks} สัปดาห์` : '-'}</strong></div>

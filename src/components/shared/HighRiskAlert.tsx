@@ -1,7 +1,7 @@
 // T064: HighRiskAlert dialog — auto-opens when CPD >= 10
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -23,23 +23,19 @@ interface HighRiskAlertProps {
 }
 
 export function HighRiskAlert({ score, an, patientName, onDismiss }: HighRiskAlertProps) {
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (score >= 10) {
-      setOpen(true);
-    }
-  }, [score]);
+  const [dismissed, setDismissed] = useState(false);
 
   const handleDismiss = () => {
-    setOpen(false);
+    setDismissed(true);
     onDismiss?.();
   };
 
   if (score < 10) return null;
 
+  const open = !dismissed;
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleDismiss(); }}>
       <DialogContent className="border-2 border-red-500 sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-lg text-red-600">
@@ -47,7 +43,6 @@ export function HighRiskAlert({ score, an, patientName, onDismiss }: HighRiskAle
           </DialogTitle>
           <DialogDescription className="text-center">
             AN: {an}
-            {patientName && ` — ${patientName}`}
           </DialogDescription>
         </DialogHeader>
 

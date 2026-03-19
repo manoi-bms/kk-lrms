@@ -3,10 +3,11 @@
 
 import Link from 'next/link';
 import { CpdBadge } from '@/components/shared/CpdBadge';
-import { formatThaiDate } from '@/lib/utils';
+import { formatThaiDate, buildPatientId } from '@/lib/utils';
 import { RiskLevel } from '@/types/domain';
 
 interface PatientCardProps {
+  hcode: string;
   an: string;
   hn: string;
   name: string;
@@ -89,7 +90,7 @@ function VitalPill({ label, value, unit }: VitalPillProps) {
   const valueColor = abnormal ? 'text-red-600' : 'text-slate-600';
 
   return (
-    <div className="flex flex-col items-center bg-slate-50 text-xs px-2 py-1 rounded-lg">
+    <div className="flex flex-col items-center bg-slate-50 text-sm px-2.5 py-1.5 rounded-lg">
       <span className="text-slate-400">{label}</span>
       <span className={`font-mono font-semibold ${valueColor}`}>{value}</span>
       <span className="text-slate-400">{unit}</span>
@@ -98,6 +99,7 @@ function VitalPill({ label, value, unit }: VitalPillProps) {
 }
 
 export function PatientCard({
+  hcode,
   an,
   hn,
   name,
@@ -126,7 +128,7 @@ export function PatientCard({
 
   return (
     <Link
-      href={`/patients/${an}`}
+      href={`/patients/${buildPatientId(hcode, an)}`}
       className="block transition-all hover:-translate-y-0.5"
     >
       <div
@@ -137,7 +139,7 @@ export function PatientCard({
 
         {/* Row 1: Name + CpdBadge + Labor status */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-base font-semibold text-slate-800">{name}</span>
+          <span className="font-mono text-lg font-semibold text-slate-800">AN {an}</span>
           {cpdScore != null && cpdRiskLevel && (
             <CpdBadge
               score={cpdScore}
@@ -146,18 +148,18 @@ export function PatientCard({
             />
           )}
           {laborStatus === 'ACTIVE' ? (
-            <span className="bg-emerald-50 text-emerald-700 text-xs font-medium px-2 py-0.5 rounded-full">
+            <span className="bg-emerald-50 text-emerald-700 text-sm font-medium px-2.5 py-0.5 rounded-full">
               {laborLabel}
             </span>
           ) : (
-            <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">
+            <span className="bg-slate-100 text-slate-600 text-sm font-medium px-2.5 py-0.5 rounded-full">
               {laborLabel}
             </span>
           )}
         </div>
 
         {/* Row 2: Demographics */}
-        <div className="mt-1.5 flex flex-wrap gap-x-3 text-xs text-slate-400">
+        <div className="mt-1.5 flex flex-wrap gap-x-3 text-sm text-slate-400">
           <span>AN: <span className="font-mono">{an}</span></span>
           <span>HN: <span className="font-mono">{hn}</span></span>
           <span>อายุ <span className="font-mono">{age}</span> ปี</span>
@@ -165,7 +167,7 @@ export function PatientCard({
         </div>
 
         {/* Row 3: GA + ANC count */}
-        <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-slate-400">
+        <div className="mt-1 flex flex-wrap gap-x-3 text-sm text-slate-400">
           {gaWeeks != null && <span>GA <span className="font-mono">{gaWeeks}</span> สัปดาห์</span>}
           {ancCount != null && <span>ANC <span className="font-mono">{ancCount}</span> ครั้ง</span>}
         </div>
@@ -205,7 +207,7 @@ export function PatientCard({
         )}
 
         {/* Row 5: Admit date + relative time */}
-        <div className="mt-3 text-xs text-slate-400">
+        <div className="mt-3 text-sm text-slate-400">
           Admit: {formatThaiDate(new Date(admitDate))}{' '}
           <span className="text-slate-300">|</span>{' '}
           {formatRelativeTimeThai(admitDate)}

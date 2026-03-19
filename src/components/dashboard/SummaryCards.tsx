@@ -81,14 +81,14 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
               <div className={`flex h-10 w-10 items-center justify-center rounded-full ${card.iconBg}`}>
                 <Icon className={`h-5 w-5 ${card.iconColor}`} />
               </div>
-              <span className="text-xs font-medium uppercase tracking-wider text-slate-400">
+              <span className="text-sm font-medium uppercase tracking-wider text-slate-400">
                 {card.title}
               </span>
             </div>
             <div className={`mt-4 font-mono text-4xl font-bold ${card.numberColor}`}>
               {card.getValue(summary)}
             </div>
-            <div className="mt-1 text-xs text-slate-400">{card.subtitle}</div>
+            <div className="mt-1 text-sm text-slate-400">{card.subtitle}</div>
           </div>
         );
       })}

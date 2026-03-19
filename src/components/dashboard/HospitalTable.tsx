@@ -2,7 +2,7 @@
 // T106: Row highlight animation when risk counts change
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
@@ -31,17 +31,39 @@ interface HospitalCounts {
 type SortKey = 'name' | 'level' | 'low' | 'medium' | 'high' | 'total';
 type SortDir = 'asc' | 'desc';
 
+function SortableHeader({
+  label,
+  sortKey: currentSortKey,
+  sortDir,
+  columnKey,
+  onSort,
+}: {
+  label: string;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  columnKey: SortKey;
+  onSort: (key: SortKey) => void;
+}) {
+  return (
+    <TableHead
+      className="cursor-pointer select-none hover:bg-muted/50"
+      onClick={() => onSort(columnKey)}
+    >
+      {label} {currentSortKey === columnKey ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+    </TableHead>
+  );
+}
+
 export function HospitalTable({ hospitals }: HospitalTableProps) {
   const router = useRouter();
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const prevCountsRef = useRef<Map<string, HospitalCounts>>(new Map());
-  const [changedRows, setChangedRows] = useState<Set<string>>(new Set());
+  const rowRefs = useRef<Map<string, HTMLTableRowElement>>(new Map());
 
   // T106: Detect changed rows by comparing current counts with previous
   useEffect(() => {
     const prevCounts = prevCountsRef.current;
-    const newChanged = new Set<string>();
 
     for (const h of hospitals) {
       const prev = prevCounts.get(h.hcode);
@@ -51,35 +73,21 @@ export function HospitalTable({ hospitals }: HospitalTableProps) {
         prev.high !== h.counts.high ||
         prev.total !== h.counts.total
       )) {
-        newChanged.add(h.hcode);
+        const el = rowRefs.current.get(h.hcode);
+        if (el) {
+          el.classList.add('animate-highlight');
+          setTimeout(() => el.classList.remove('animate-highlight'), 2000);
+        }
       }
     }
 
-    if (newChanged.size > 0) {
-      setChangedRows(newChanged);
-      // Clear animation after 2 seconds
-      const timer = setTimeout(() => setChangedRows(new Set()), 2000);
-      return () => clearTimeout(timer);
-    }
-
-    // Update previous counts ref after comparison
+    // Update previous counts ref
     const nextCounts = new Map<string, HospitalCounts>();
     for (const h of hospitals) {
       nextCounts.set(h.hcode, { ...h.counts });
     }
     prevCountsRef.current = nextCounts;
   }, [hospitals]);
-
-  // Also update ref when changed rows are cleared
-  useEffect(() => {
-    if (changedRows.size === 0) {
-      const nextCounts = new Map<string, HospitalCounts>();
-      for (const h of hospitals) {
-        nextCounts.set(h.hcode, { ...h.counts });
-      }
-      prevCountsRef.current = nextCounts;
-    }
-  }, [changedRows, hospitals]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -90,7 +98,7 @@ export function HospitalTable({ hospitals }: HospitalTableProps) {
     }
   };
 
-  const sorted = [...hospitals].sort((a, b) => {
+  const sorted = useMemo(() => [...hospitals].sort((a, b) => {
     const dir = sortDir === 'asc' ? 1 : -1;
     switch (sortKey) {
       case 'name':
@@ -108,28 +116,19 @@ export function HospitalTable({ hospitals }: HospitalTableProps) {
       default:
         return 0;
     }
-  });
-
-  const SortHeader = ({ label, k }: { label: string; k: SortKey }) => (
-    <TableHead
-      className="cursor-pointer select-none hover:bg-muted/50"
-      onClick={() => handleSort(k)}
-    >
-      {label} {sortKey === k ? (sortDir === 'asc' ? '↑' : '↓') : ''}
-    </TableHead>
-  );
+  }), [hospitals, sortKey, sortDir]);
 
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <SortHeader label="โรงพยาบาล" k="name" />
-            <SortHeader label="ระดับ" k="level" />
-            <SortHeader label="เสี่ยงต่ำ" k="low" />
-            <SortHeader label="เสี่ยงปานกลาง" k="medium" />
-            <SortHeader label="เสี่ยงสูง" k="high" />
-            <SortHeader label="รวม" k="total" />
+            <SortableHeader label="โรงพยาบาล" columnKey="name" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+            <SortableHeader label="ระดับ" columnKey="level" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+            <SortableHeader label="เสี่ยงต่ำ" columnKey="low" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+            <SortableHeader label="เสี่ยงปานกลาง" columnKey="medium" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+            <SortableHeader label="เสี่ยงสูง" columnKey="high" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+            <SortableHeader label="รวม" columnKey="total" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
             <TableHead>สถานะ</TableHead>
           </TableRow>
         </TableHeader>
@@ -137,7 +136,11 @@ export function HospitalTable({ hospitals }: HospitalTableProps) {
           {sorted.map((h) => (
             <TableRow
               key={h.hcode}
-              className={`cursor-pointer hover:bg-muted/50 ${changedRows.has(h.hcode) ? 'animate-highlight' : ''}`}
+              ref={(el) => {
+                if (el) rowRefs.current.set(h.hcode, el);
+                else rowRefs.current.delete(h.hcode);
+              }}
+              className="cursor-pointer hover:bg-muted/50"
               onClick={() => router.push(`/hospitals/${h.hcode}`)}
             >
               <TableCell className="font-medium">{h.name}</TableCell>

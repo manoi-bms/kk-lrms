@@ -20,9 +20,9 @@ describe('HighRiskAlert', () => {
     expect(screen.getByText(/AN: AN003/)).toBeTruthy();
   });
 
-  it('shows patient name when provided', () => {
-    render(<HighRiskAlert score={12} an="AN004" patientName="นางสาว ทดสอบ" />);
-    expect(screen.getByText(/นางสาว ทดสอบ/)).toBeTruthy();
+  it('shows AN number', () => {
+    render(<HighRiskAlert score={12} an="AN004" />);
+    expect(screen.getByText(/AN004/)).toBeTruthy();
   });
 
   it('shows CpdBadge with score', () => {

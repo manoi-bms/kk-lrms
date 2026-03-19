@@ -44,11 +44,10 @@ describe('PrintForm', () => {
     expect(screen.getByText('บันทึกการคลอด (Labor Record)')).toBeTruthy();
   });
 
-  it('renders patient info: HN, AN, name, age', () => {
+  it('renders patient info: HN, AN, age', () => {
     render(<PrintForm patient={basePatient} hospitalName="รพ.ขอนแก่น" vitals={[]} />);
     expect(screen.getByText('12345')).toBeTruthy();
     expect(screen.getByText('AN-001')).toBeTruthy();
-    expect(screen.getByText('นางสาวทดสอบ ใจดี')).toBeTruthy();
     expect(screen.getByText('28 ปี')).toBeTruthy();
   });
 

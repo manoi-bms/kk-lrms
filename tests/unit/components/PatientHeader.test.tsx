@@ -74,9 +74,9 @@ describe('PatientHeader', () => {
     expect(screen.queryByText('CPD Score')).toBeNull();
   });
 
-  it('renders patient name', () => {
+  it('renders patient AN as heading', () => {
     render(<PatientHeader {...baseProps} />);
-    expect(screen.getByText('นางสาวทดสอบ ใจดี')).toBeTruthy();
+    expect(screen.getAllByText(/AN-001/).length).toBeGreaterThan(0);
   });
 
   it('shows ConnectionStatus when hospital has connectionStatus', () => {

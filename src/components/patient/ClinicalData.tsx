@@ -25,7 +25,7 @@ function WeightDiffItem({ weightKg, weightDiffKg }: { weightKg?: number | null; 
 
   return (
     <div className="bg-slate-50/80 rounded-xl px-4 py-3 border border-slate-100">
-      <div className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">ส่วนต่างน้ำหนัก</div>
+      <div className="text-xs uppercase tracking-wider text-slate-400 font-medium">ส่วนต่างน้ำหนัก</div>
       <div className="mt-1 font-mono text-lg font-bold text-slate-800">
         {hasFullContext && preWeight !== null ? (
           <>
@@ -49,7 +49,7 @@ function WeightDiffItem({ weightKg, weightDiffKg }: { weightKg?: number | null; 
 function DataItem({ label, value, unit }: { label: string; value: number | null; unit?: string }) {
   return (
     <div className="bg-slate-50/80 rounded-xl px-4 py-3 border border-slate-100">
-      <div className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">{label}</div>
+      <div className="text-xs uppercase tracking-wider text-slate-400 font-medium">{label}</div>
       <div className="mt-1 font-mono text-lg font-bold text-slate-800">
         {value !== null && value !== undefined ? (
           <>{value}{unit ? <span className="text-xs text-slate-400 font-normal ml-1">{unit}</span> : ''}</>
