@@ -27,6 +27,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: identity.name,
           role: identity.role,
           hospitalCode: identity.hospitalCode,
+          hospitalName: identity.hospitalName,
+          tunnelUrl: identity.tunnelUrl,
+          databaseType: identity.databaseType,
         };
       },
     }),
@@ -34,15 +37,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     jwt({ token, user }) {
       if (user) {
-        token.role = (user as unknown as { role: UserRole }).role;
-        token.hospitalCode = (user as unknown as { hospitalCode: string }).hospitalCode;
+        const u = user as unknown as { role: UserRole; hospitalCode: string; hospitalName: string; tunnelUrl: string; databaseType: string };
+        token.role = u.role;
+        token.hospitalCode = u.hospitalCode;
+        token.hospitalName = u.hospitalName;
+        token.tunnelUrl = u.tunnelUrl;
+        token.databaseType = u.databaseType;
       }
       return token;
     },
     session({ session, token }) {
       if (session.user) {
-        (session.user as unknown as { role: UserRole }).role = token.role as UserRole;
-        (session.user as unknown as { hospitalCode: string }).hospitalCode = token.hospitalCode as string;
+        const s = session.user as unknown as { role: UserRole; hospitalCode: string; hospitalName: string; tunnelUrl: string; databaseType: string };
+        s.role = token.role as UserRole;
+        s.hospitalCode = token.hospitalCode as string;
+        s.hospitalName = token.hospitalName as string;
+        s.tunnelUrl = token.tunnelUrl as string;
+        s.databaseType = token.databaseType as string;
       }
       return session;
     },
