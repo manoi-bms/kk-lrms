@@ -177,6 +177,76 @@ describe('Sync Service', () => {
       expect(changes.newAdmissions).toHaveLength(1);
       expect(changes.newAdmissions[0]).toBe('6700099999');
     });
+
+    it('should detect discharges (patients missing from new data)', () => {
+      const newData = [
+        { an: 'AN-STILL-ACTIVE', laborStatus: 'ACTIVE' },
+      ];
+      const existingAns = ['AN-STILL-ACTIVE', 'AN-DISCHARGED'];
+      const changes = detectChanges(newData as any, existingAns);
+      expect(changes.discharges).toHaveLength(1);
+      expect(changes.discharges[0]).toBe('AN-DISCHARGED');
+    });
+  });
+
+  describe('markPatientsDelivered', () => {
+    it('marks ACTIVE patients as DELIVERED with delivered_at timestamp', async () => {
+      const hospitals = await db.query<{ id: string }>(
+        "SELECT id FROM hospitals WHERE hcode = '10670'",
+      );
+      const hospitalId = hospitals[0].id;
+      const now = new Date().toISOString();
+
+      // Insert an ACTIVE patient
+      const { v4: uuidv4 } = await import('uuid');
+      const patientId = uuidv4();
+      await db.execute(
+        `INSERT INTO cached_patients (id, hospital_id, hn, an, name, age, admit_date, labor_status, synced_at, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?)`,
+        [patientId, hospitalId, 'HN-DCH', 'AN-DCH', 'test', 25, '2026-03-08', now, now, now],
+      );
+
+      const { markPatientsDelivered } = await import('@/services/sync');
+      await markPatientsDelivered(db, hospitalId, ['AN-DCH']);
+
+      const result = await db.query<{ labor_status: string; delivered_at: string | null }>(
+        'SELECT labor_status, delivered_at FROM cached_patients WHERE id = ?',
+        [patientId],
+      );
+      expect(result[0].labor_status).toBe('DELIVERED');
+      expect(result[0].delivered_at).not.toBeNull();
+    });
+
+    it('does not affect already DELIVERED patients', async () => {
+      const hospitals = await db.query<{ id: string }>(
+        "SELECT id FROM hospitals WHERE hcode = '10670'",
+      );
+      const hospitalId = hospitals[0].id;
+      const now = new Date().toISOString();
+
+      const { v4: uuidv4 } = await import('uuid');
+      const patientId = uuidv4();
+      await db.execute(
+        `INSERT INTO cached_patients (id, hospital_id, hn, an, name, age, admit_date, labor_status, delivered_at, synced_at, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'DELIVERED', ?, ?, ?, ?)`,
+        [patientId, hospitalId, 'HN-ALREADY', 'AN-ALREADY', 'test', 25, '2026-03-08', '2026-03-07T12:00:00', now, now, now],
+      );
+
+      const { markPatientsDelivered } = await import('@/services/sync');
+      await markPatientsDelivered(db, hospitalId, ['AN-ALREADY']);
+
+      // delivered_at should not change
+      const result = await db.query<{ delivered_at: string }>(
+        'SELECT delivered_at FROM cached_patients WHERE id = ?',
+        [patientId],
+      );
+      expect(result[0].delivered_at).toBe('2026-03-07T12:00:00');
+    });
+
+    it('handles empty array without error', async () => {
+      const { markPatientsDelivered } = await import('@/services/sync');
+      await expect(markPatientsDelivered(db, 'any-id', [])).resolves.toBeUndefined();
+    });
   });
 
   describe('T104: CID hash and cross-hospital linking', () => {

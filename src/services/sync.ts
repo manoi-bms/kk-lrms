@@ -131,6 +131,23 @@ export function detectChanges(
   return { newAdmissions, discharges };
 }
 
+// Mark patients as DELIVERED — used by both HOSxP polling (discharge detection) and webhook full_snapshot mode
+export async function markPatientsDelivered(
+  db: DatabaseAdapter,
+  hospitalId: string,
+  ans: string[],
+): Promise<void> {
+  if (ans.length === 0) return;
+  const now = new Date().toISOString();
+  for (const an of ans) {
+    await db.execute(
+      `UPDATE cached_patients SET labor_status = 'DELIVERED', delivered_at = ?, updated_at = ?
+       WHERE hospital_id = ? AND an = ? AND labor_status = 'ACTIVE'`,
+      [now, now, hospitalId, an],
+    );
+  }
+}
+
 // T104/T107: Transfer detection — cross-hospital CID matching via cid_hash
 export interface TransferDetection {
   cidHash: string;
@@ -185,8 +202,8 @@ import { RiskLevel } from '@/types/domain';
 
 const pollingIntervals: Map<string, ReturnType<typeof setInterval>> = new Map();
 
-// T063: Calculate CPD scores for patients after sync
-async function calculateAndStoreCpdScores(
+// T063: Calculate CPD scores for patients after sync — shared by polling and webhook pipelines
+export async function calculateAndStoreCpdScores(
   db: DatabaseAdapter,
   hospitalId: string,
   sseManager: SseManager,
@@ -381,6 +398,18 @@ export async function pollHospital(
         hcode,
         an,
       });
+    }
+
+    // Mark discharged patients — HOSxP no longer returns them (dchdate set)
+    if (changes.discharges.length > 0) {
+      await markPatientsDelivered(db, hospitalId, changes.discharges);
+      for (const an of changes.discharges) {
+        sseManager.broadcast('patient-update', {
+          type: 'patient_discharged',
+          hcode,
+          an,
+        });
+      }
     }
 
     if (count > 0) {
