@@ -1,21 +1,4 @@
 services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-kklrms}
-      POSTGRES_USER: ${POSTGRES_USER:-kklrms}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kklrms}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   app:
     build: .
     restart: unless-stopped
@@ -23,16 +6,17 @@ services:
       - "${APP_PORT:-3000}:3000"
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:-kklrms}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-kklrms}?schema=public
+      USE_SQLITE: "true"
+      SQLITE_PATH: /app/data/kklrms.sqlite
+      AUTH_TRUST_HOST: "true"
       NEXTAUTH_URL: ${NEXTAUTH_URL:-https://kk-lrms.bmscloud.in.th}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?Set NEXTAUTH_SECRET in .env}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?Set ENCRYPTION_KEY in .env}
       BMS_VALIDATE_URL: ${BMS_VALIDATE_URL:-https://hosxp.net/phapi/PasteJSON}
       DEV_HOSPITAL_TUNNEL_URL: ${DEV_HOSPITAL_TUNNEL_URL:-}
       DEV_AUTH_BYPASS: ${DEV_AUTH_BYPASS:-false}
-    depends_on:
-      db:
-        condition: service_healthy
+    volumes:
+      - app-data:/app/data
 
 volumes:
-  pgdata:
+  app-data:

@@ -13,7 +13,7 @@ export async function getDatabase(): Promise<DatabaseAdapter> {
 
   if (useSqlite()) {
     const { SqliteAdapter } = await import('./sqlite-adapter');
-    const path = process.env.NODE_ENV === 'test' ? ':memory:' : 'dev.sqlite';
+    const path = process.env.NODE_ENV === 'test' ? ':memory:' : (process.env.SQLITE_PATH ?? 'dev.sqlite');
     instance = new SqliteAdapter(path);
     if (process.env.NODE_ENV !== 'test') {
       console.log(`[DB] SQLite connected: ${path}`);
