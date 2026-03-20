@@ -20,7 +20,7 @@ export const ACTIVE_LABOR_PATIENTS: SqlQueryTemplate = {
            p.pname, p.fname, p.lname, p.cid, p.birthday, p.sex,
            COALESCE(il.g, ip.preg_number) AS preg_number,
            COALESCE(il.ga, ip.ga) AS ga,
-           COALESCE(il.anc_count, ip.anc_complete::int) AS anc_count,
+           COALESCE(il.anc_count, NULLIF(ip.anc_complete,'')::int) AS anc_count,
            ip.labor_date
     FROM ipt i
     JOIN patient p ON p.hn = i.hn
@@ -33,7 +33,7 @@ export const ACTIVE_LABOR_PATIENTS: SqlQueryTemplate = {
            p.pname, p.fname, p.lname, p.cid, p.birthday, p.sex,
            COALESCE(il.g, ip.preg_number) AS preg_number,
            COALESCE(il.ga, ip.ga) AS ga,
-           COALESCE(il.anc_count, CAST(ip.anc_complete AS SIGNED)) AS anc_count,
+           COALESCE(il.anc_count, CAST(NULLIF(ip.anc_complete,'') AS SIGNED)) AS anc_count,
            ip.labor_date
     FROM ipt i
     JOIN patient p ON p.hn = i.hn

@@ -459,7 +459,7 @@ export async function pollHospital(
   try {
     const client = new BmsSessionClient(tunnelUrl);
 
-    // Query active labor patients
+    // Query active patients with pregnancy/labour data
     const sql = getQuery(ACTIVE_LABOR_PATIENTS, databaseType);
     const result = await client.executeQuery(sql, bmsUrl, jwt);
 
