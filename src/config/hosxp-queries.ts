@@ -12,20 +12,33 @@ export function getQuery(template: SqlQueryTemplate, dialect: DatabaseDialect): 
   return template[dialect];
 }
 
-// Active labor patients (admitted, not yet discharged)
+// Active patients (admitted, not yet discharged)
+// Uses ipt as main table with LEFT JOINs to enrich with pregnancy/labour/patient data
 export const ACTIVE_LABOR_PATIENTS: SqlQueryTemplate = {
   postgresql: `
     SELECT i.an, i.hn, i.regdate, i.regtime, i.ward,
-           ip.preg_number, ip.ga, ip.labor_date, ip.anc_complete
+           p.pname, p.fname, p.lname, p.cid, p.birthday, p.sex,
+           COALESCE(il.g, ip.preg_number) AS preg_number,
+           COALESCE(il.ga, ip.ga) AS ga,
+           COALESCE(il.anc_count, ip.anc_complete::int) AS anc_count,
+           ip.labor_date
     FROM ipt i
-    JOIN ipt_pregnancy ip ON i.an = ip.an
+    JOIN patient p ON p.hn = i.hn
+    LEFT JOIN ipt_pregnancy ip ON i.an = ip.an
+    LEFT JOIN ipt_labour il ON i.an = il.an
     WHERE i.dchdate IS NULL
     ORDER BY i.regdate DESC`,
   mysql: `
     SELECT i.an, i.hn, i.regdate, i.regtime, i.ward,
-           ip.preg_number, ip.ga, ip.labor_date, ip.anc_complete
+           p.pname, p.fname, p.lname, p.cid, p.birthday, p.sex,
+           COALESCE(il.g, ip.preg_number) AS preg_number,
+           COALESCE(il.ga, ip.ga) AS ga,
+           COALESCE(il.anc_count, CAST(ip.anc_complete AS SIGNED)) AS anc_count,
+           ip.labor_date
     FROM ipt i
-    JOIN ipt_pregnancy ip ON i.an = ip.an
+    JOIN patient p ON p.hn = i.hn
+    LEFT JOIN ipt_pregnancy ip ON i.an = ip.an
+    LEFT JOIN ipt_labour il ON i.an = il.an
     WHERE i.dchdate IS NULL
     ORDER BY i.regdate DESC`,
 };
@@ -132,10 +145,10 @@ export const CHECK_TABLES: SqlQueryTemplate = {
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = 'public'
-      AND table_name IN ('ipt', 'ipt_pregnancy', 'ipt_pregnancy_vital_sign', 'labor', 'patient')`,
+      AND table_name IN ('ipt', 'ipt_pregnancy', 'ipt_labour', 'ipt_pregnancy_vital_sign', 'labor', 'patient')`,
   mysql: `
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = DATABASE()
-      AND table_name IN ('ipt', 'ipt_pregnancy', 'ipt_pregnancy_vital_sign', 'labor', 'patient')`,
+      AND table_name IN ('ipt', 'ipt_pregnancy', 'ipt_labour', 'ipt_pregnancy_vital_sign', 'labor', 'patient')`,
 };

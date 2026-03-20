@@ -35,13 +35,11 @@ export async function initializeApp(): Promise<void> {
       await seedDemoData(db);
     }
 
-    // 5. Start polling (if not in test mode and not using SQLite)
-    if (process.env.NODE_ENV !== 'test' && !useSqlite()) {
+    // 5. Start polling (if not in test mode — works with both SQLite and PostgreSQL)
+    if (process.env.NODE_ENV !== 'test') {
       const sseManager = SseManager.getInstance();
       await startPolling(db, sseManager);
       console.log('[KK-LRMS] HOSxP polling started');
-    } else if (useSqlite() && process.env.NODE_ENV !== 'test') {
-      console.log('[KK-LRMS] SQLite dev mode — HOSxP polling SKIPPED (using demo data)');
     }
 
     initialized = true;

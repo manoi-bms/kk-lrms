@@ -478,19 +478,22 @@ export async function pollHospital(
     );
     const existingAns = existing.map((r) => r.an);
 
-    // Transform and upsert
+    // Transform and upsert — patient data now comes from single query with JOINs
     const patients: SyncPatientData[] = result.data.map((row) => {
-      const rawCid = row.cid ? String(row.cid) : null;
+      const rawCid = row.cid ? String(row.cid).trim() : null;
+      const fullName = [row.pname, row.fname, row.lname].filter(Boolean).join(' ').trim() || 'ไม่ระบุชื่อ';
+      const age = row.birthday ? calculateAge(String(row.birthday)) : 0;
+
       return {
         hn: String(row.hn ?? ''),
         an: String(row.an ?? ''),
-        name: encrypt(String(row.pname ?? '') + ' ' + String(row.fname ?? '') + ' ' + String(row.lname ?? ''), encryptionKey),
+        name: encrypt(fullName, encryptionKey),
         cid: rawCid ? encrypt(rawCid, encryptionKey) : null,
         cidHash: rawCid ? createHash('sha256').update(rawCid).digest('hex') : null,
-        age: 0,
+        age,
         gravida: row.preg_number != null ? Number(row.preg_number) : null,
         gaWeeks: row.ga != null ? Number(row.ga) : null,
-        ancCount: null,
+        ancCount: row.anc_count != null ? Number(row.anc_count) : null,
         admitDate: `${row.regdate}T${row.regtime || '00:00:00'}`,
         laborStatus: 'ACTIVE',
         syncedAt: new Date().toISOString(),
