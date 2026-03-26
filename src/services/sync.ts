@@ -493,6 +493,7 @@ export async function pollHospital(
         age,
         gravida: row.preg_number != null ? Number(row.preg_number) : null,
         gaWeeks: row.ga != null ? Number(row.ga) : null,
+        // anc_count from ipt_labour (numeric), anc_complete from ipt_pregnancy ('Y'/'N' flag)
         ancCount: row.anc_count != null ? Number(row.anc_count) : null,
         admitDate: `${row.regdate}T${row.regtime || '00:00:00'}`,
         laborStatus: 'ACTIVE',
