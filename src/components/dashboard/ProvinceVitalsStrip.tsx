@@ -13,6 +13,7 @@ import Link from 'next/link';
 import type { DashboardSummary, DashboardTrends, DashboardContinuum } from '@/types/api';
 import { RiskBar, StatCell, BarStrip } from './shared';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { ANC_REGISTRY_CRITERIA_TH, ANC_REGISTRY_LABEL_TH } from '@/config/anc-freshness';
 
 interface ProvinceVitalsStripProps {
   summary: DashboardSummary;
@@ -241,6 +242,7 @@ export function ProvinceVitalsStrip({ summary, trends, continuum }: ProvinceVita
         >
           <Link
             href="/pregnancies"
+            title={ANC_REGISTRY_CRITERIA_TH}
             className="border-r border-[var(--rule-strong)] px-5 py-3 transition-colors hover:bg-[var(--accent-navy-soft)]"
           >
             <div className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
@@ -250,8 +252,10 @@ export function ProvinceVitalsStrip({ summary, trends, continuum }: ProvinceVita
               <span className="font-mono text-[26px] font-semibold leading-none tabular-nums text-[var(--accent-navy)]">
                 {continuum.anc.total}
               </span>
+              {/* Was "หญิงตั้งครรภ์ทั้งจังหวัด" — it read as every pregnant woman in
+                the province, which is the one thing this number is not. */}
               <span className="font-mono text-[12px] text-[var(--ink-navy-muted)]">
-                หญิงตั้งครรภ์ทั้งจังหวัด
+                {ANC_REGISTRY_LABEL_TH}
               </span>
             </div>
           </Link>

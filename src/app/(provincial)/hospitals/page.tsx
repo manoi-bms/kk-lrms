@@ -25,6 +25,7 @@ import {
 import { cn, formatThaiTime } from '@/lib/utils';
 import { KpiTip } from '@/components/shared/KpiTip';
 import { SYNC_HEALTH } from '@/config/hospital-network';
+import { ANC_REGISTRY_CRITERIA_TH } from '@/config/anc-freshness';
 import { formatRelativeAge } from '@/lib/relative-time';
 import { Search, Building2, Globe, ChevronRight } from 'lucide-react';
 import type { DashboardHospital } from '@/types/api';
@@ -516,7 +517,7 @@ export default function HospitalsPage() {
 
         <KpiTip
           title="ทะเบียนฝากครรภ์ทั้งเครือข่าย"
-          body="ผลรวมหญิงตั้งครรภ์ในทะเบียน active ของทุก รพ.ในแท็บ พร้อมจำนวนครรภ์เสี่ยงสูงสุด (HR3) — ตัวเลขเดียวกับหน้า ฝากครรภ์"
+          body={`ผลรวมของทุก รพ.ในแท็บนี้ พร้อมจำนวนครรภ์เสี่ยงสูงสุด (HR3) — ${ANC_REGISTRY_CRITERIA_TH}`}
           trigger={
             <div
               className="cursor-help border-r border-[var(--rule-strong)] px-5 py-3"

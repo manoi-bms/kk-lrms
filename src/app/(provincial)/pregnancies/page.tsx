@@ -31,6 +31,7 @@ import {
   type AncFollowupClass,
   type EdcDueClass,
 } from '@/config/anc-ops';
+import { ANC_REGISTRY_CRITERIA_TH } from '@/config/anc-freshness';
 import { Baby, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import type { JourneyListItem, JourneyListResponse } from '@/types/api';
 
@@ -484,6 +485,13 @@ function PregnanciesBoard() {
         >
           ANC Registry
         </SectionLabel>
+
+        {/* The count under this heading is a filtered cohort, not the raw
+          pregnancy table. Saying so here is what stops it reading as a
+          mismatch against the hospital console's own ANC figure. */}
+        <p className="text-[12px] leading-relaxed text-[var(--ink-navy-muted)]">
+          {ANC_REGISTRY_CRITERIA_TH}
+        </p>
 
         <div
           className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 border bg-white px-3 py-2"
