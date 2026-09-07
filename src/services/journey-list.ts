@@ -8,11 +8,7 @@ import type { DatabaseAdapter } from '@/db/adapter';
 import { toIsoString } from '@/lib/dates';
 import { decryptSafe } from '@/lib/encryption';
 import { CareStage } from '@/types/domain';
-import {
-  ancFreshnessCutoffs,
-  ancRegistryScopeSql,
-  ANC_MAX_GA_WEEKS,
-} from '@/config/anc-freshness';
+import { ancFreshnessCutoffs, ancRegistryScopeSql, ANC_MAX_GA_WEEKS } from '@/config/anc-freshness';
 import { ANC_OPS, ancOpsCutoffs } from '@/config/anc-ops';
 import type {
   AncOpsCounts,
