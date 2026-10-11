@@ -62,7 +62,7 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch as unknown as typeof fetch;
 
 // PasteJSON (session-retrieval) response for the current test. Every other
-// fetch — the TopNavBar presence heartbeat (fires because the mocked session
+// fetch — the AppShell presence heartbeat (fires because the mocked session
 // carries a userId) and any skipped onboarding/poll calls — routes to a benign
 // 200 so sendHeartbeat's `fetch(...).catch()` always has a real promise.
 let sessionResolver: () => Promise<unknown>;

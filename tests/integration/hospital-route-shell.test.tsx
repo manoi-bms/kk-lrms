@@ -2,7 +2,7 @@
 /* @vitest-environment-options { "url": "http://localhost/" } */
 // Task 16: hospital route group + maternity-ward page layout shell.
 // Verifies the (hospital) layout wires SessionProvider + BmsSessionProvider +
-// TopNavBar around the page, that the page shows the BMS-session prompt
+// AppShell around the page, that the page shows the BMS-session prompt
 // when no session is present, and surfaces session-retrieval errors.
 // next-auth and next/navigation are mocked so the layout renders synchronously.
 // Post-session render (header summary, room/bed grid) is covered by
@@ -16,7 +16,7 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch as unknown as typeof fetch;
 
 // PasteJSON (session-retrieval) response for the current test. Every other
-// fetch — notably TopNavBar's presence heartbeat, which fires because the
+// fetch — notably the AppShell presence heartbeat, which fires because the
 // mocked session carries a userId — routes to a benign 200 so
 // `fetch(...).catch()` in sendHeartbeat has a real promise to chain onto.
 let sessionResolver: () => Promise<unknown>;
@@ -87,13 +87,13 @@ describe('Hospital route shell', () => {
     expect(await screen.findByText(/เปิดหน้านี้จาก HOSxP/)).toBeInTheDocument();
   });
 
-  it('renders the hospital-variant top navbar: ห้องคลอด label, no provincial nav links (design §4.2)', async () => {
+  it('renders the hospital-variant shell: ห้องคลอด label, no provincial nav links (design §4.2)', async () => {
     render(
       <HospitalLayout>
         <HospitalMaternityWardPage />
       </HospitalLayout>,
     );
-    expect(await screen.findByText('ห้องคลอด')).toBeInTheDocument();
+    expect((await screen.findAllByText('ห้องคลอด')).length).toBeGreaterThan(0);
     for (const label of ['แดชบอร์ด', 'ฝากครรภ์', 'โรงพยาบาล', 'ส่งต่อ', 'ผลลัพธ์ทารก']) {
       expect(screen.queryByText(label)).not.toBeInTheDocument();
     }

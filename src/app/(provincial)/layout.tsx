@@ -1,7 +1,7 @@
 import { SessionProvider } from 'next-auth/react';
 import { BmsSessionProvider } from '@/contexts/BmsSessionContext';
 import { CallProvider } from '@/components/calls/CallProvider';
-import { TopNavBarSlot } from '@/components/layout/TopNavBarSlot';
+import { AppShell } from '@/components/layout/AppShell';
 import { ContentFrameSlot } from '@/components/layout/ContentFrameSlot';
 import { BreadcrumbProvider } from '@/components/layout/BreadcrumbContext';
 import { DbHealthBanner } from '@/components/layout/DbHealthBanner';
@@ -19,16 +19,15 @@ export default function ProvincialLayout({ children }: { children: React.ReactNo
       <BmsSessionProvider>
         <CallProvider>
           <BreadcrumbProvider>
-            <div className="flex min-h-screen flex-col bg-slate-50/50">
-              <DbHealthBanner />
-              <TopNavBarSlot />
+            <DbHealthBanner />
+            <AppShell variant="provincial">
               <main className="flex-1">
                 <ContentFrameSlot>{children}</ContentFrameSlot>
               </main>
-              {/* Clinical chatbot — statistics mode (provincial dashboard
-                  aggregates). Clinical drilldown pages can override per-page. */}
-              <ClinicalChatPanel mode="statistics" />
-            </div>
+            </AppShell>
+            {/* Clinical chatbot — statistics mode (provincial dashboard
+                aggregates). Clinical drilldown pages can override per-page. */}
+            <ClinicalChatPanel mode="statistics" />
           </BreadcrumbProvider>
         </CallProvider>
       </BmsSessionProvider>
