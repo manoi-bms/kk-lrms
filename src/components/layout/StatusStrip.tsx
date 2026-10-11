@@ -14,11 +14,31 @@ function Dot({ tone }: { tone: 'ok' | 'warn' | 'danger' }) {
   return <span aria-hidden="true" className={cn('inline-block h-2.5 w-2.5 rounded-full', cls)} />;
 }
 
-function HighRisk({ count, href }: { count: number; href: string }) {
-  if (count <= 0) return <span className="ml-auto text-ok-text">ไม่มีผู้คลอดเสี่ยงสูง</span>;
+function HighRisk({
+  count,
+  href,
+  suffix,
+  unavailable,
+}: {
+  count: number;
+  href: string;
+  /** Appended to the number when the underlying data is incomplete. */
+  suffix?: string;
+  /** Data not current: show no number at all. */
+  unavailable?: boolean;
+}) {
+  if (unavailable) {
+    return <span className="ml-auto text-warn-text">CPD เสี่ยงสูง — (ข้อมูลไม่เป็นปัจจุบัน)</span>;
+  }
+  if (count <= 0) {
+    return <span className="ml-auto text-ink-muted">CPD เสี่ยงสูง 0{suffix}</span>;
+  }
   return (
-    <Link href={href} className="ml-auto rounded-full bg-danger px-3 py-0.5 font-semibold text-white">
-      เสี่ยงสูง {count} ราย
+    <Link
+      href={href}
+      className="ml-auto rounded-full bg-danger px-3 py-0.5 font-semibold text-white"
+    >
+      CPD เสี่ยงสูง {count} ราย{suffix}
     </Link>
   );
 }
@@ -44,8 +64,16 @@ export function StatusStrip({ variant }: { variant: 'provincial' | 'hospital' })
       <div className={BAR}>
         {data.own ? (
           <>
-            <FreshnessBadge lastSyncAt={data.own.lastSyncAt} label="ข้อมูลจาก HOSxP ล่าสุด" />
-            <HighRisk count={data.own.highRisk} href="/hospital-maternity-ward" />
+            <FreshnessBadge
+              lastSyncAt={data.own.lastSyncAt}
+              health={data.own.health}
+              label="ข้อมูลจาก HOSxP ล่าสุด"
+            />
+            <HighRisk
+              count={data.own.highRisk}
+              href="/hospital-maternity-ward"
+              unavailable={data.own.health !== 'ok'}
+            />
           </>
         ) : (
           <span>บัญชีนี้ไม่ได้ผูกกับโรงพยาบาลที่ส่งข้อมูล</span>
@@ -56,6 +84,7 @@ export function StatusStrip({ variant }: { variant: 'provincial' | 'hospital' })
 
   const p = data.province;
   const clock = describeSyncAge(p.lastSyncAt).clock;
+  const missing = p.reporting - p.fresh;
   return (
     <div className={BAR}>
       <span className="inline-flex items-center gap-2">
@@ -83,7 +112,11 @@ export function StatusStrip({ variant }: { variant: 'provincial' | 'hospital' })
           อัปเดตล่าสุด <b className="tabular-nums text-ink">{clock}</b>
         </span>
       )}
-      <HighRisk count={p.highRisk} href="/" />
+      <HighRisk
+        count={p.highRisk}
+        href="/"
+        suffix={missing > 0 ? ` · ข้อมูลไม่ครบ ${missing} รพ.` : undefined}
+      />
     </div>
   );
 }

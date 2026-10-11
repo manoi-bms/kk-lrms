@@ -12,7 +12,7 @@ export interface SyncAge {
   relative: string;
 }
 
-const HEALTH_TONE: Record<SyncHealthClass, FreshnessTone> = {
+export const HEALTH_TONE: Record<SyncHealthClass, FreshnessTone> = {
   ok: 'ok',
   stale: 'warn',
   critical: 'danger',

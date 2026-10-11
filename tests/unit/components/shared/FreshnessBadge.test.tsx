@@ -16,4 +16,15 @@ describe('FreshnessBadge', () => {
     expect(screen.getByRole('status')).toHaveTextContent('ยังไม่เคยซิงค์');
     expect(screen.getByRole('status')).toHaveAttribute('data-tone', 'danger');
   });
+  it('server health override wins over the client clock (fast ward-PC clock)', () => {
+    // 3h old by this clock would be "stale"/warn; the server said ok.
+    render(<FreshnessBadge lastSyncAt="2026-10-11T02:40:00Z" now={NOW} health="ok" />);
+    const s = screen.getByRole('status');
+    expect(s).toHaveAttribute('data-tone', 'ok');
+    expect(s).toHaveTextContent('ซิงค์ล่าสุด 09:40 · 3 ชั่วโมงที่แล้ว');
+  });
+  it('health override maps blocked to danger', () => {
+    render(<FreshnessBadge lastSyncAt="2026-10-11T05:38:00Z" now={NOW} health="blocked" />);
+    expect(screen.getByRole('status')).toHaveAttribute('data-tone', 'danger');
+  });
 });

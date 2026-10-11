@@ -1,5 +1,6 @@
 'use client';
-import { describeSyncAge, type FreshnessTone } from '@/lib/sync-age';
+import { describeSyncAge, HEALTH_TONE, type FreshnessTone } from '@/lib/sync-age';
+import type { SyncHealthClass } from '@/config/hospital-network';
 import { cn } from '@/lib/utils';
 
 const TEXT: Record<FreshnessTone, string> = {
@@ -12,6 +13,9 @@ const DOT: Record<FreshnessTone, string> = { ok: 'bg-ok', warn: 'bg-warn', dange
 export interface FreshnessBadgeProps {
   lastSyncAt: string | null | undefined;
   syncStatus?: string;
+  /** Server-side classification; overrides the client-clock tone so a fast
+   *  ward-PC clock cannot flip a server-ok hospital to stale. */
+  health?: SyncHealthClass;
   label?: string;
   now?: Date;
   className?: string;
@@ -20,11 +24,13 @@ export interface FreshnessBadgeProps {
 export function FreshnessBadge({
   lastSyncAt,
   syncStatus,
+  health,
   label = 'ซิงค์ล่าสุด',
   now,
   className,
 }: FreshnessBadgeProps) {
-  const a = describeSyncAge(lastSyncAt, syncStatus, now);
+  const age = describeSyncAge(lastSyncAt, syncStatus, now);
+  const a = health ? { ...age, health, tone: HEALTH_TONE[health] } : age;
   return (
     <span
       role="status"

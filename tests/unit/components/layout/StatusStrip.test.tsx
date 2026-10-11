@@ -30,7 +30,7 @@ describe('StatusStrip', () => {
     render(<StatusStrip variant="provincial" />);
     expect(screen.getByText(/ข้อมูลสด/)).toHaveTextContent('ข้อมูลสด 16/27 รพ.');
     expect(screen.getByRole('link', { name: /ไม่ซิงค์เกิน 1 ชม\. 10 รพ\./ })).toHaveAttribute('href', '/hospitals');
-    expect(screen.getByRole('link', { name: 'เสี่ยงสูง 2 ราย' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: /^CPD เสี่ยงสูง 2 ราย/ })).toHaveAttribute('href', '/');
     expect(screen.getByText(/ยังไม่เคยซิงค์/)).toHaveTextContent('ยังไม่เคยซิงค์ 1 รพ.');
   });
 
@@ -38,7 +38,7 @@ describe('StatusStrip', () => {
     swrState.data = summary;
     render(<StatusStrip variant="hospital" />);
     expect(screen.getByRole('status')).toHaveTextContent('ข้อมูลจาก HOSxP ล่าสุด');
-    expect(screen.getByRole('link', { name: 'เสี่ยงสูง 1 ราย' })).toHaveAttribute('href', '/hospital-maternity-ward');
+    expect(screen.getByRole('link', { name: 'CPD เสี่ยงสูง 1 ราย' })).toHaveAttribute('href', '/hospital-maternity-ward');
   });
 
   it('hospital session without an own block explains why', () => {
@@ -47,10 +47,38 @@ describe('StatusStrip', () => {
     expect(screen.getByText('บัญชีนี้ไม่ได้ผูกกับโรงพยาบาลที่ส่งข้อมูล')).toBeInTheDocument();
   });
 
-  it('zero high risk is calm, not a red pill', () => {
-    swrState.data = { ...summary, province: { ...summary.province, highRisk: 0 } };
+  it('zero high risk is neutral, never a green all-clear', () => {
+    swrState.data = { ...summary, province: { ...summary.province, fresh: 27, stale: 0, never: 0, highRisk: 0 } };
     render(<StatusStrip variant="provincial" />);
-    expect(screen.getByText('ไม่มีผู้คลอดเสี่ยงสูง')).toBeInTheDocument();
+    const el = screen.getByText('CPD เสี่ยงสูง 0');
+    expect(el).toHaveClass('text-ink-muted');
+    expect(screen.queryByText('ไม่มีผู้คลอดเสี่ยงสูง')).not.toBeInTheDocument();
+  });
+
+  it('hospital with non-ok data: number suppressed, shows stale notice', () => {
+    swrState.data = { ...summary, own: { ...summary.own!, health: 'stale' } };
+    render(<StatusStrip variant="hospital" />);
+    const el = screen.getByText('CPD เสี่ยงสูง — (ข้อมูลไม่เป็นปัจจุบัน)');
+    expect(el).toHaveClass('text-warn-text');
+    expect(screen.queryByRole('link', { name: /CPD เสี่ยงสูง 1/ })).not.toBeInTheDocument();
+  });
+
+  it('hospital badge uses the server classification, not the client clock', () => {
+    swrState.data = { ...summary, own: { ...summary.own!, lastSyncAt: '2020-01-01T00:00:00Z', health: 'ok' } };
+    render(<StatusStrip variant="hospital" />);
+    expect(screen.getByRole('status')).toHaveAttribute('data-tone', 'ok');
+  });
+
+  it('provincial incomplete data: suffix says how many hospitals are missing', () => {
+    swrState.data = summary; // 27 reporting, 16 fresh -> 11 missing
+    render(<StatusStrip variant="provincial" />);
+    expect(screen.getByRole('link', { name: /CPD เสี่ยงสูง 2 ราย · ข้อมูลไม่ครบ 11 รพ\./ })).toBeInTheDocument();
+  });
+
+  it('provincial complete data: no incomplete suffix', () => {
+    swrState.data = { ...summary, province: { ...summary.province, fresh: 27, stale: 0, never: 0 } };
+    render(<StatusStrip variant="provincial" />);
+    expect(screen.queryByText(/ข้อมูลไม่ครบ/)).not.toBeInTheDocument();
   });
 
   it('API failure: quiet Thai notice with retry, page keeps working', async () => {
