@@ -14,10 +14,13 @@ describe('CareStageSection', () => {
   it('row labels are Thai and say what getStageKPIs counts', () => {
     render(<CareStageSection stageKPIs={makeStageKPIs()} />);
     const delivered = screen.getByRole('link', { name: /คลอดแล้ว · เดือนนี้/ });
-    expect(within(delivered).getByText('ทารกปกติ').closest('[title]')).toHaveAttribute(
+    const normalRow = within(delivered).getByText('ไม่พบความผิดปกติที่บันทึก').closest('[title]');
+    expect(normalRow).toHaveAttribute(
       'title',
-      'Apgar 5 นาที ≥ 7 และน้ำหนักแรกเกิด ≥ 2,500 ก.',
+      'การคลอดที่ไม่มีบันทึก Apgar 5 นาที < 7 หรือน้ำหนักแรกเกิด < 2,500 ก. รวมรายที่ยังไม่มีข้อมูลทารก',
     );
+    expect(normalRow?.getAttribute('title')).toContain('ยังไม่มีข้อมูลทารก');
+    expect(within(delivered).queryByText('ทารกปกติ')).toBeNull();
     expect(within(delivered).getByText('Apgar 5 นาที < 7')).toBeInTheDocument();
     expect(within(delivered).getByText('น้ำหนักแรกเกิด < 2,500 ก.')).toBeInTheDocument();
     expect(screen.getByText('CPD เสี่ยงสูง')).toBeInTheDocument();

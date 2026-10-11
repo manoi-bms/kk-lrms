@@ -83,12 +83,14 @@ export function StageKPICards({ stageKPIs }: StageKPICardsProps) {
         total={stageKPIs.delivered.total}
         href="/outcomes"
         rows={[
-          // normal = total − newborns with apgar_5min < 7 OR birth_weight_g < 2500
+          // normal = total − newborns with apgar_5min < 7 OR birth_weight_g < 2500;
+          // deliveries with missing newborn/Apgar/weight data count here, so the
+          // label claims only "no recorded abnormality".
           {
-            label: 'ทารกปกติ',
+            label: 'ไม่พบความผิดปกติที่บันทึก',
             value: stageKPIs.delivered.normal,
             color: 'var(--risk-low)',
-            title: 'Apgar 5 นาที ≥ 7 และน้ำหนักแรกเกิด ≥ 2,500 ก.',
+            title: 'การคลอดที่ไม่มีบันทึก Apgar 5 นาที < 7 หรือน้ำหนักแรกเกิด < 2,500 ก. รวมรายที่ยังไม่มีข้อมูลทารก',
           },
           { label: 'Apgar 5 นาที < 7', value: stageKPIs.delivered.lowApgar, color: 'var(--risk-medium)' },
           { label: 'น้ำหนักแรกเกิด < 2,500 ก.', value: stageKPIs.delivered.lbw, color: 'var(--risk-high)' },
