@@ -2,6 +2,7 @@
 
 import type { DatabaseAdapter } from '@/db/adapter';
 import { classifySyncHealth } from '@/config/hospital-network';
+import { EXEMPT_HCODES } from '@/lib/hospital-access-guard';
 import { cacheStatus } from '@/lib/cache';
 
 export interface HealthStatus {
@@ -32,12 +33,13 @@ export async function getHealthStatus(db: DatabaseAdapter): Promise<HealthStatus
     dbStatus = 'connected';
 
     // Get hospital connection stats
-    const hospitals = await db.query<{
-      connection_status: string;
-      last_sync_at: string | Date | null;
-    }>(
-      'SELECT connection_status, last_sync_at FROM hospitals WHERE is_active = true',
-    );
+    const hospitals = (
+      await db.query<{
+        hcode: string;
+        connection_status: string;
+        last_sync_at: string | Date | null;
+      }>('SELECT hcode, connection_status, last_sync_at FROM hospitals WHERE is_active = true')
+    ).filter((h) => !EXEMPT_HCODES.has(h.hcode)); // pseudo-hospitals never sync
     const now = new Date();
     hospitalConnections.total = hospitals.length;
 

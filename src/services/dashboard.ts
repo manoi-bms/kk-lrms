@@ -67,11 +67,39 @@ interface DashboardRow {
 // rule set — preventing the "same hospital shows two different dot colors
 // on the two pages" inconsistency.
 
-interface PatientCountRow {
+export interface ActiveLaborRiskRow {
   hospital_id: string;
   hcode: string;
   risk_level: string | null;
   count: number;
+}
+
+/** ACTIVE labour per hospital by latest CPD risk — the one aggregate behind
+ *  every "high risk N" number (dashboard, status strip). */
+export async function countActiveLaborByRisk(
+  db: DatabaseAdapter,
+  opts: { hcode?: string } = {},
+): Promise<ActiveLaborRiskRow[]> {
+  const params: string[] = [];
+  let hcodeFilter = '';
+  if (opts.hcode) {
+    params.push(opts.hcode);
+    hcodeFilter = 'AND h.hcode = ?';
+  }
+  // SQLite-compatible: no LATERAL join, use subquery
+  const rows = await db.query<ActiveLaborRiskRow>(
+    `SELECT h.id as hospital_id, h.hcode,
+       (SELECT cs.risk_level FROM cpd_scores cs
+        WHERE cs.patient_id = cp.id
+        ORDER BY cs.calculated_at DESC LIMIT 1) as risk_level,
+       COUNT(cp.id) as count
+     FROM hospitals h
+     LEFT JOIN cached_patients cp ON cp.hospital_id = h.id AND cp.labor_status = 'ACTIVE'
+     WHERE h.is_active = true ${hcodeFilter}
+     GROUP BY h.id, h.hcode, risk_level`,
+    params,
+  );
+  return rows.map((r) => ({ ...r, count: Number(r.count) || 0 }));
 }
 
 export interface DashboardResult {
@@ -95,19 +123,8 @@ export async function getProvinceDashboard(db: DatabaseAdapter): Promise<Dashboa
      ORDER BY h.name`,
   );
 
-  // Get patient counts per hospital grouped by risk level
-  // SQLite-compatible: no LATERAL join, use subquery
-  const counts = await db.query<PatientCountRow>(`
-    SELECT h.id as hospital_id, h.hcode,
-      (SELECT cs.risk_level FROM cpd_scores cs
-       WHERE cs.patient_id = cp.id
-       ORDER BY cs.calculated_at DESC LIMIT 1) as risk_level,
-      COUNT(cp.id) as count
-    FROM hospitals h
-    LEFT JOIN cached_patients cp ON cp.hospital_id = h.id AND cp.labor_status = 'ACTIVE'
-    WHERE h.is_active = true
-    GROUP BY h.id, h.hcode, risk_level
-  `);
+  // Patient counts per hospital grouped by risk level (shared aggregate)
+  const counts = await countActiveLaborByRisk(db);
 
   // Build result
   const hospitalMap = new Map<string, DashboardHospital>();
