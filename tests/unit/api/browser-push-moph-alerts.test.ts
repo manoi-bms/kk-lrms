@@ -1,5 +1,5 @@
 // TDD (Red→Green) for the browser-push → MOPH alert wiring (step 7).
-// Asserts: an HR3 (HIGH-risk) ANC patient enqueues a pending moph_alert_log row
+// Asserts: an HR3 ANC patient is durably deferred when no recipients exist
 // and the route appends a final moph_alerts_drain sync step; a non-HR3 patient
 // enqueues nothing. Drain/sender are mocked so no real LINE I/O occurs.
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
@@ -27,7 +27,9 @@ vi.mock('@/lib/ensure-init', () => ({ ensureInit: async () => {} }));
 // route's import-time module resolution (codex flaky-test fix: the inline
 // factory + post-import cast can race under memory pressure).
 const { mockDrain } = vi.hoisted(() => ({
-  mockDrain: vi.fn(async () => ({ sent: 0, retryable: 0, failed: 0, skipped: 0 })),
+  mockDrain: vi.fn<(db: DatabaseAdapter, hospitalId: string) => Promise<{
+    sent: number; retryable: number; failed: number; skipped: number;
+  }>>(async () => ({ sent: 0, retryable: 0, failed: 0, skipped: 0 })),
 }));
 vi.mock('@/services/moph-alert-drain', () => ({
   drainMophAlerts: mockDrain,
@@ -84,7 +86,7 @@ describe('POST /api/sync/browser-push — MOPH alert wiring (HIGH/HR3)', () => {
     vi.restoreAllMocks();
   });
 
-  it('HR3 ANC patient enqueues a pending moph_alert_log row + appends a moph_alerts_drain step', async () => {
+  it('retains an HR3 alert awaiting recipients and appends a moph_alerts_drain step', async () => {
     const res = await POST(
       jsonRequest({ anc: { patients: [hr3Patient('1007000100131')] } }) as never,
     );
@@ -95,20 +97,22 @@ describe('POST /api/sync/browser-push — MOPH alert wiring (HIGH/HR3)', () => {
       `SELECT status, severity, alert_source FROM moph_alert_log WHERE hospital_id = ?`,
       [hid],
     );
-    // Row may not exist if no recipients are seeded (no consult doctors /
-    // center monitors). The wiring contract is: enqueue was ATTEMPTED for an
-    // HR3 patient. We assert the drain step ran regardless (drain is always
-    // appended as a final step).
+    // No recipient is seeded: retain the event without creating a delivery.
+    expect(rows).toHaveLength(0);
+    const queued = await db.query<{ status: string; severity: string; alert_source: string }>(
+      'SELECT status, severity, alert_source FROM moph_alert_event_queue WHERE hospital_id = ?',
+      [hid],
+    );
+    expect(queued).toEqual([
+      { status: 'awaiting_recipients', severity: 'high', alert_source: 'anc_hr3' },
+    ]);
     const run = await getLatestSyncRun(hid);
-    const drainStep = run!.steps.find((s) => s.name === 'moph_alerts_drain');
+    const drainStep = run!.steps.filter((s) => s.name === 'moph_alerts_drain').at(-1);
     expect(drainStep).toBeDefined();
-    expect(mockDrain).toHaveBeenCalledWith(expect.anything(), hid, expect.anything());
+    expect(mockDrain).toHaveBeenCalledTimes(1);
+    expect(mockDrain.mock.calls[0]?.[1]).toBe(hid);
 
-    // If recipients existed, a pending row would be present. With the seed
-    // (no consult doctors seeded for 10670), expect 0 rows but no error.
-    // The key contract: the route did not throw and the drain step is 'success'.
     expect(drainStep!.status).toBe('success');
-    void rows; // presence depends on seeded recipients; not asserted here
   });
 
   it('non-HR3 patient enqueues no alert row (drain step still runs, no-op)', async () => {
@@ -122,6 +126,7 @@ describe('POST /api/sync/browser-push — MOPH alert wiring (HIGH/HR3)', () => {
       [hid],
     );
     expect(rows[0].c).toBe(0);
+    expect(await db.query('SELECT id FROM moph_alert_event_queue WHERE hospital_id = ?', [hid])).toHaveLength(0);
     const run = await getLatestSyncRun(hid);
     expect(run!.steps.find((s) => s.name === 'moph_alerts_drain')).toBeDefined();
   });

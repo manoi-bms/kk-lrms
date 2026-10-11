@@ -195,9 +195,13 @@ describe('utils', () => {
       expect(formatHospitalLevel(HospitalLevel.F3)).toBe('รพ.สต./F3');
     });
 
-    it('returns string representation for unknown level', () => {
+    it('labels an unclassified registry destination explicitly', () => {
+      expect(formatHospitalLevel(HospitalLevel.UNKNOWN)).toBe('ยังไม่ระบุระดับ');
+    });
+
+    it('returns string representation for an unrecognized level', () => {
       // Cast an unknown value to test the fallback
-      expect(formatHospitalLevel('UNKNOWN' as HospitalLevel)).toBe('UNKNOWN');
+      expect(formatHospitalLevel('UNRECOGNIZED' as HospitalLevel)).toBe('UNRECOGNIZED');
     });
   });
 

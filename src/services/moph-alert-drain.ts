@@ -26,6 +26,7 @@ import { sendMophPrompt } from '@/services/moph-prompt';
 import { resolveSessionIdForHospital } from '@/lib/bms-session';
 import { mophAlertsEnabled, mophAlertLimits } from '@/config/moph-alert-config';
 import { decryptSafe } from '@/lib/encryption';
+import { materializeDeferredAlertEvents } from '@/services/risk-alert';
 import {
   buildAlertFlex,
   alertTitle,
@@ -81,6 +82,23 @@ export async function drainMophAlerts(
   const limits = mophAlertLimits();
   const maxAlerts = opts.maxAlerts ?? limits.maxAlertsPerDrain;
   const budgetMs = opts.budgetMs ?? limits.drainBudgetMs;
+  const drainStartedAt = Date.now();
+
+  // A clinical event may have arrived before any recipient was configured.
+  // Retry recipient resolution before claiming deliveries. This is best-effort:
+  // a queue replay failure must never block ordinary pending alert delivery.
+  try {
+    const replayBudgetMs = Math.min(500, Math.max(0, Math.floor(budgetMs / 4)));
+    await materializeDeferredAlertEvents(db, hospitalId, {
+      maxEvents: maxAlerts,
+      deadlineMs: drainStartedAt + replayBudgetMs,
+    });
+  } catch (error) {
+    logger.warn('moph_alert_deferred_replay_failed', {
+      hospitalId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 
   // Recover stale `processing` rows first — a previous drain crashed mid-send
   // (or its request was aborted) leaving rows claimed but never finalized.
@@ -147,7 +165,7 @@ export async function drainMophAlerts(
     return summary;
   }
 
-  const deadline = Date.now() + budgetMs;
+  const deadline = drainStartedAt + budgetMs;
   let sentIdx = 0;
   for (const row of claimed) {
     if (Date.now() >= deadline) {
@@ -173,6 +191,12 @@ async function purgeOldMophAlerts(db: DatabaseAdapter, retentionDays: number): P
     `DELETE FROM moph_alert_log
      WHERE status IN ('sent', 'failed', 'skipped')
        AND created_at < NOW() - ($1 || ' days')::interval`,
+    [String(retentionDays)],
+  );
+  await db.query(
+    `DELETE FROM moph_alert_event_queue
+     WHERE status IN ('materialized', 'expired')
+       AND updated_at < NOW() - ($1 || ' days')::interval`,
     [String(retentionDays)],
   );
 }

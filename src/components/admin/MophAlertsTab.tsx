@@ -30,6 +30,10 @@ interface ConfigResponse {
   config: { active_province_code?: string | null };
 }
 
+interface AlertStatusResponse {
+  eventQueue: { awaitingRecipients: number; expired: number };
+}
+
 const EMPTY_FORM = { id: '', cid: '', name: '', position: '', isActive: true };
 
 function maskCid(cid: string): string {
@@ -49,6 +53,7 @@ export function MophAlertsTab() {
   const { data, isLoading, error, mutate } = useSWR<{ monitors: CenterMonitor[] }>(
     provinceCode ? `/api/admin/provinces/${provinceCode}/center-monitors` : null,
   );
+  const { data: alertStatus } = useSWR<AlertStatusResponse>('/api/admin/moph-alerts?limit=1');
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [busy, setBusy] = useState(false);
@@ -169,6 +174,25 @@ export function MophAlertsTab() {
       <p className="font-mono text-[11px] text-[var(--ink-navy-muted)]">
         ผู้รับเหล่านี้จะได้รับแจ้งเตือน LINE เมื่อมีกรณีเสี่ยงสูง/ฉุกเฉินจากโรงพยาบาลใดๆ ในจังหวัด
       </p>
+
+      {alertStatus?.eventQueue && (
+        <div
+          className="font-mono text-[11px] px-3 py-2 border"
+          style={{
+            borderColor:
+              alertStatus.eventQueue.awaitingRecipients > 0 ? '#d97706' : 'var(--rule-strong)',
+            color: 'var(--ink-navy-muted)',
+          }}
+        >
+          เหตุการณ์รอผู้รับ {alertStatus.eventQueue.awaitingRecipients} · หมดอายุโดยไม่ได้ส่ง{' '}
+          {alertStatus.eventQueue.expired}
+          {alertStatus.eventQueue.awaitingRecipients > 0 && (
+            <span className="ml-2 text-amber-700">
+              เพิ่มหรือเปิดใช้งานผู้รับแจ้งเตือนเพื่อส่งเหตุการณ์ของวันนี้
+            </span>
+          )}
+        </div>
+      )}
 
       {message && (
         <div

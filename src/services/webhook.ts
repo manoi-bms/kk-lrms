@@ -25,9 +25,10 @@ import { classifyAncItems } from '@/config/anc-classifying-canon';
 import { ANC_RISK_CONFIGS, ANC_RISK_LEVEL_ORDER } from '@/config/anc-risk-rules';
 import { insertAncScreeningIfChanged } from '@/services/anc-screening';
 import { logger } from '@/lib/logger';
+import { resolveReferralDestination } from '@/services/referral-destination';
 import { CooperativeYielder } from '@/lib/event-loop';
 import { diagnoseCid, describeCidFailure, isValidThaiCidChecksum } from '@/lib/cid';
-import { isoDatesEqual, toIsoDate } from '@/lib/dates';
+import { toIsoDate } from '@/lib/dates';
 import { isMaternalScreenIngestEnabled, isMaternalScreenEventsEnabled } from '@/lib/feature-flags';
 import { normalizeProteinuriaGrade } from '@/services/maternal-screening';
 import {
@@ -1703,17 +1704,24 @@ export async function processAncWebhook(
           ? await getJourneyByHn(db, patientHn, hospitalId)
           : null;
 
-    // Detect if incoming data is a NEW pregnancy vs update to existing.
-    // The pg driver returns lmp as a Date (the column is `timestamp with
-    // time zone`) even though the journey type claims string|null, so a
-    // raw `!==` between the HOSxP-side string ("2026-01-12") and the
-    // Date object compared identity — always true — and synthesised a new
-    // pregnancy on every cycle. isoDatesEqual normalises both sides to
-    // "YYYY-MM-DD" and compares as strings.
-    const isNewPregnancy =
-      existing &&
-      (patient.pregNo > existing.gravida ||
-        (patient.lmp != null && existing.lmp != null && !isoDatesEqual(patient.lmp, existing.lmp)));
+    // A lower pregnancy number is an out-of-order snapshot of an older
+    // pregnancy. Skip the entire row before any journey, risk, visit, or
+    // extended-clinical write can overwrite the active pregnancy.
+    if (existing != null && patient.pregNo < existing.gravida) {
+      logger.warn('anc_stale_pregnancy_skipped', {
+        hospitalId,
+        hcode,
+        journeyId: existing.id,
+        incomingPregNo: patient.pregNo,
+        currentPregNo: existing.gravida,
+      });
+      continue;
+    }
+
+    // A corrected LMP is clinical data for the current pregnancy, not a
+    // pregnancy identity signal. HOSxP may revise it after ultrasound dating;
+    // only an explicitly higher pregnancy number rolls the journey over.
+    const isNewPregnancy = existing != null && patient.pregNo > existing.gravida;
     const existingIsActive =
       existing && (existing.careStage === 'PREGNANCY' || existing.careStage === 'LABOR');
 
@@ -2255,9 +2263,12 @@ export async function processReferralCreate(
   }
 
   // Resolve destination hospital
-  const toHospital = await resolveHospitalByHcode(db, payload.toHospitalCode);
+  const toHospital = await resolveReferralDestination(db, payload.toHospitalCode);
   if (!toHospital) {
-    throw new Error(`ไม่พบโรงพยาบาลปลายทาง HCODE "${payload.toHospitalCode}"`);
+    throw new WebhookReferralError(
+      'REFERRAL_DESTINATION_NOT_FOUND',
+      `ไม่พบโรงพยาบาลปลายทาง HCODE "${payload.toHospitalCode}"`,
+    );
   }
 
   // Encrypt patient data (PDPA)
@@ -2416,7 +2427,7 @@ export async function processReferralCreate(
 export class WebhookReferralError extends Error {
   constructor(
     public readonly code:
-      'REFERRAL_NOT_FOUND' | 'INVALID_REFERRAL_STATUS' | 'INVALID_REFERRAL_ACTION',
+      'REFERRAL_NOT_FOUND' | 'REFERRAL_DESTINATION_NOT_FOUND' | 'INVALID_REFERRAL_STATUS' | 'INVALID_REFERRAL_ACTION',
     message: string,
   ) {
     super(message);
