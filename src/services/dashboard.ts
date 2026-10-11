@@ -117,10 +117,10 @@ export type DerivedSyncStatus = 'OK' | 'BLOCKED' | 'NEVER_SYNCED';
  *      even if the authenticity probe later wrote 'authentic' (it
  *      shouldn't, since the cooldown blocks polling, but be explicit).
  *   2. last_authenticity_status in failure set -> BLOCKED.
- *   3. No BMS config row at all -> NEVER_SYNCED.
- *   4. last_sync_at null but has config -> NEVER_SYNCED (onboarded but
- *      first cycle hasn't completed).
- *   5. Otherwise OK.
+ *   3. last_sync_at null -> NEVER_SYNCED (not onboarded, or onboarded but
+ *      the first cycle hasn't completed).
+ *   4. Otherwise OK — including hospitals with no BMS config row that sync
+ *      via webhook (a recorded sync is authoritative).
  */
 export function deriveSyncStatus(h: {
   has_bms_config: number | boolean | null;
@@ -128,13 +128,15 @@ export function deriveSyncStatus(h: {
   data_purged_at: string | Date | null;
   last_sync_at: string | Date | null;
 }): { syncStatus: DerivedSyncStatus; syncBlockedReason: string | null } {
-  const hasConfig = h.has_bms_config === true || h.has_bms_config === 1;
   const status = h.last_authenticity_status;
   if (h.data_purged_at)
     return { syncStatus: 'BLOCKED', syncBlockedReason: 'purged_pending_reonboard' };
   if (status && SYNC_FAILURE_STATUSES.has(status))
     return { syncStatus: 'BLOCKED', syncBlockedReason: status };
-  if (!hasConfig || !h.last_sync_at) return { syncStatus: 'NEVER_SYNCED', syncBlockedReason: null };
+  // A recorded sync is authoritative: webhook-only hospitals push data without
+  // a hospital_bms_config row (one live hospital on 2026-10-11), so a missing
+  // config row alone must not read as "never synced".
+  if (!h.last_sync_at) return { syncStatus: 'NEVER_SYNCED', syncBlockedReason: null };
   return { syncStatus: 'OK', syncBlockedReason: null };
 }
 

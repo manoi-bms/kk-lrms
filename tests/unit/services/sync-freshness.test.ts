@@ -90,13 +90,22 @@ describe('getSyncFreshness', () => {
     expect(s.province.fresh).toBe(1); // only 11000
   });
 
-  it('a hospital with no BMS config row is never-synced, like the dashboard', async () => {
+  it('a hospital with no BMS config row but a recent sync is fresh (webhook-only feed)', async () => {
     await db.query(
       `INSERT INTO hospitals (id, hcode, name, level, is_active, connection_status, last_sync_at, created_at, updated_at)
        VALUES ('h7','11007','รพ.11007','A_S',true,'ONLINE',?,NOW(),NOW())`,
       [mins(1)],
     );
     const s = await getSyncFreshness(db, { hcode: '11007', now: NOW });
+    expect(s.own?.health).toBe('ok');
+  });
+
+  it('a hospital with no BMS config row and no sync is never-synced', async () => {
+    await db.query(
+      `INSERT INTO hospitals (id, hcode, name, level, is_active, connection_status, last_sync_at, created_at, updated_at)
+       VALUES ('h8','11009','รพ.11009','A_S',true,'ONLINE',NULL,NOW(),NOW())`,
+    );
+    const s = await getSyncFreshness(db, { hcode: '11009', now: NOW });
     expect(s.own?.health).toBe('never');
   });
 });

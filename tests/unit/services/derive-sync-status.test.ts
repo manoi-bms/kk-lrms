@@ -16,10 +16,13 @@ describe('deriveSyncStatus', () => {
       syncBlockedReason: 'cid_unstable',
     });
   });
-  it('no config or no sync -> NEVER_SYNCED', () => {
-    expect(deriveSyncStatus({ ...base, has_bms_config: false }).syncStatus).toBe('NEVER_SYNCED');
-    expect(deriveSyncStatus({ ...base, has_bms_config: 0 }).syncStatus).toBe('NEVER_SYNCED');
+  it('no recorded sync -> NEVER_SYNCED, with or without a BMS config row', () => {
     expect(deriveSyncStatus({ ...base, last_sync_at: null }).syncStatus).toBe('NEVER_SYNCED');
+    expect(deriveSyncStatus({ ...base, has_bms_config: false, last_sync_at: null }).syncStatus).toBe('NEVER_SYNCED');
+  });
+  it('no BMS config row but a recorded sync -> OK (webhook-only hospitals sync without a BMS config; 1 such live hospital on 2026-10-11)', () => {
+    expect(deriveSyncStatus({ ...base, has_bms_config: false }).syncStatus).toBe('OK');
+    expect(deriveSyncStatus({ ...base, has_bms_config: 0 }).syncStatus).toBe('OK');
   });
   it('otherwise OK', () => {
     expect(deriveSyncStatus({ ...base, has_bms_config: 1 })).toEqual({ syncStatus: 'OK', syncBlockedReason: null });
