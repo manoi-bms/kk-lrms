@@ -34,3 +34,28 @@ export function selectTimeLabels(items: readonly TimeLabelItem[]): TimeLabelItem
   }
   return kept.sort((a, b) => a.px - b.px);
 }
+
+/** Lanes for categorical strip values (temperature, urine, …). Unlike the TIME
+ *  row nothing may be dropped — every reading is clinical data — so a value
+ *  that would overlap the previous one in lane 0 moves to the next free lane
+ *  (two readings in one hour cell are drawn one above the other). With more
+ *  readings than `maxLanes` in one spot the extra ones reuse lanes round-robin;
+ *  they still render, never silently disappear. Returns lanes in input order. */
+export function assignLanes(
+  items: readonly { px: number; text: string }[],
+  maxLanes = 2,
+): number[] {
+  const order = items.map((_, i) => i).sort((a, b) => items[a].px - items[b].px);
+  const lastInLane: ({ px: number; text: string } | undefined)[] = Array(maxLanes).fill(undefined);
+  const lanes = new Array<number>(items.length).fill(0);
+  order.forEach((idx, rank) => {
+    const it = items[idx];
+    const free = lastInLane.findIndex(
+      (prev) => !prev || Math.abs(prev.px - it.px) >= halfWidth({ id: 0, ...prev }) + halfWidth({ id: 0, ...it }),
+    );
+    const lane = free === -1 ? rank % maxLanes : free;
+    lanes[idx] = lane;
+    lastInLane[lane] = it;
+  });
+  return lanes;
+}

@@ -12,7 +12,7 @@ import type {
   CdssSeverity,
   PartographObservationDto,
 } from '@/types/api';
-import { selectTimeLabels } from './time-labels';
+import { assignLanes, selectTimeLabels } from './time-labels';
 import { countBySeverity } from '@/services/partogram';
 import { MIN_TEXT_PX } from '@/config/design-tokens';
 
@@ -496,26 +496,33 @@ function CategoricalStrip({
   const chartLeft = x + P.LEFT_W;
   const chartRight = x + w;
   const chartW = chartRight - chartLeft;
+  const cells = obs.flatMap((o) => {
+    const v = extractValue(o, kind);
+    if (!v) return [];
+    const px = obsX(o, firstMs);
+    if (px < chartLeft || px > chartRight) return [];
+    const display = kind !== 'amniotic' && v.length > 12 ? v.slice(0, 11) + '…' : v;
+    return [{ o, v, px, display }];
+  });
+  const lanes = assignLanes(cells.map((c) => ({ px: c.px, text: c.display })));
+  const stacked = lanes.some((l) => l > 0);
 
   return (
     <g data-testid={testid}>
       <RowLabel x={x} y={y} w={P.LEFT_W} h={h} title={label} />
       <rect x={chartLeft} y={y} width={chartW} height={h} fill={C.BG} />
       <HourGrid x={chartLeft} y={y} w={chartW} h={h} />
-      {obs.map((o) => {
-        const v = extractValue(o, kind);
-        if (!v) return null;
-        const px = obsX(o, firstMs);
-        if (px < chartLeft || px > chartRight) return null;
+      {cells.map(({ o, v, px, display }, i) => {
         const s = cellStyle(kind, v, o);
         const cellX = px - P.HOUR_W / 2;
-        const display = kind !== 'amniotic' && v.length > 12 ? v.slice(0, 11) + '…' : v;
+        // Crowded cells stack readings on two baselines instead of overprinting.
+        const baseline = stacked ? y + (lanes[i] === 0 ? 12 : 24) : y + h / 2 + 4;
         return (
           <g key={o.id}>
             {s.bg && <rect x={cellX} y={y} width={P.HOUR_W} height={h} fill={s.bg} />}
             <text
               x={px}
-              y={y + h / 2 + 4}
+              y={baseline}
               fontSize={MIN_TEXT_PX}
               fontWeight={s.bold ? 700 : 400}
               fill={s.color}

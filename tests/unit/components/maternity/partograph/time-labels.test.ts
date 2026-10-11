@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { selectTimeLabels, TIME_LABEL_CHAR_PX, type TimeLabelItem } from '@/components/maternity/partograph/time-labels';
+import { assignLanes, selectTimeLabels, TIME_LABEL_CHAR_PX, type TimeLabelItem } from '@/components/maternity/partograph/time-labels';
 
 const HOUR_W = 30; // px per hour in the chart
 const at = (startHour: number, minutes: number, id: number): TimeLabelItem => {
@@ -71,5 +71,34 @@ describe('selectTimeLabels', () => {
   it('empty input and a single label', () => {
     expect(selectTimeLabels([])).toEqual([]);
     expect(selectTimeLabels([at(9, 0, 1)])).toHaveLength(1);
+  });
+});
+
+describe('assignLanes (categorical strips: every reading stays visible)', () => {
+  const item = (id: number, px: number, text = '36.8') => ({ id, px, text });
+
+  it('two readings in the same hour cell go to different lanes', () => {
+    expect(assignLanes([item(1, 100), item(2, 100)])).toEqual([0, 1]);
+  });
+
+  it('readings an hour or more apart all stay in lane 0', () => {
+    expect(assignLanes([item(1, 100), item(2, 130), item(3, 160)])).toEqual([0, 0, 0]);
+  });
+
+  it('a hot reading is never dropped — it gets a lane like any other', () => {
+    const lanes = assignLanes([item(1, 100, '36.8'), item(2, 100, '38.4'), item(3, 160, '37.0')]);
+    expect(lanes).toHaveLength(3);
+    expect(lanes[0]).not.toBe(lanes[1]);
+  });
+
+  it('kept items in the same lane never overlap for two readings per cell', () => {
+    const items = Array.from({ length: 12 }, (_, i) => item(i, 100 + Math.floor(i / 2) * 30));
+    const lanes = assignLanes(items);
+    for (let i = 0; i < items.length; i++) {
+      for (let j = i + 1; j < items.length; j++) {
+        if (lanes[i] !== lanes[j]) continue;
+        expect(Math.abs(items[i].px - items[j].px)).toBeGreaterThanOrEqual(items[i].text.length * TIME_LABEL_CHAR_PX);
+      }
+    }
   });
 });
