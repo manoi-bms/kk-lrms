@@ -17,6 +17,7 @@ import {
   HOSPITAL_LINK_STATUS,
   hospitalLinkText,
   kioskLinkText,
+  type StatusTone,
 } from '@/config/hospital-status';
 
 interface HospitalTableProps {
@@ -49,6 +50,7 @@ function severityRank(h: DashboardHospital): number {
   // HIGH gets heaviest weight, then MED, then LOW, then offline penalty
   return h.counts.high * 100 + h.counts.medium * 10 + h.counts.low;
 }
+
 
 export function HospitalTable({
   hospitals,
@@ -144,6 +146,13 @@ export function HospitalTable({
   const isKiosk = variant === 'kiosk';
   const ink = isKiosk ? 'var(--kiosk-ink)' : 'var(--ink-navy)';
   const inkMuted = isKiosk ? 'var(--kiosk-dim)' : 'var(--ink-navy-muted)';
+  // HOSPITAL_LINK_STATUS tone → ink colour; neutral follows the surface's muted ink.
+  const linkToneColor: Record<StatusTone, string> = {
+    ok: 'var(--risk-low)',
+    warn: 'var(--risk-medium)',
+    danger: 'var(--risk-high)',
+    neutral: inkMuted,
+  };
   const ruleStrong = isKiosk ? 'var(--kiosk-rule)' : 'var(--rule-strong)';
   const ruleHair = isKiosk ? 'var(--kiosk-rule)' : 'var(--rule-hair)';
   const accent = isKiosk ? 'var(--kiosk-accent)' : 'var(--accent-navy)';
@@ -196,23 +205,14 @@ export function HospitalTable({
       <div className={cn(isKiosk ? 'max-h-[360px]' : 'max-h-[420px]', 'overflow-y-auto')}>
         {sorted.map((h) => {
           const isSel = selected === h.hcode;
-          const isOnline = h.connectionStatus === ConnectionStatusEnum.ONLINE;
           const isOffline = h.connectionStatus === ConnectionStatusEnum.OFFLINE;
           // Sync state OVERRIDES connection state in the badge — a hospital
           // can be ONLINE (tunnel responds) but BLOCKED (authenticity probe
           // failed or admin purged), and showing "ONLINE" for that case
           // misled operators into thinking sync was healthy.
-          const isBlocked = h.syncStatus === 'BLOCKED';
-          const isNeverSynced = h.syncStatus === 'NEVER_SYNCED';
           const link = classifyHospitalLink(h.connectionStatus, h.syncStatus);
           const statusLabel = isKiosk ? HOSPITAL_LINK_STATUS[link].kioskLabel : HOSPITAL_LINK_STATUS[link].labelTh;
-          const statusColor = isBlocked
-            ? 'var(--risk-medium)'
-            : isOnline && !isNeverSynced
-              ? 'var(--risk-low)'
-              : isOffline
-                ? 'var(--risk-high)'
-                : inkMuted;
+          const statusColor = linkToneColor[HOSPITAL_LINK_STATUS[link].tone];
           const statusTitle = isKiosk
             ? kioskLinkText(h.connectionStatus, h.syncStatus, h.syncBlockedReason).tableTitle
             : hospitalLinkText(link, h.syncBlockedReason).detail;

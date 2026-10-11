@@ -7,6 +7,7 @@
 'use client';
 
 import { useState } from 'react';
+import { NETWORK_RETRY_REMEDY } from '@/lib/actionable-errors';
 import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { useKioskMode } from '@/hooks/useKioskMode';
 import { useProvinceDashboard } from '@/hooks/useProvinceDashboard';
@@ -59,7 +60,7 @@ export default function DashboardPage() {
       <ErrorState
         message="ไม่สามารถโหลดข้อมูลภาพรวมจังหวัดได้"
         detail={d.error instanceof Error ? d.error.message : String(d.error)}
-        remedy="ตรวจสอบการเชื่อมต่อเครือข่าย แล้วกด ลองใหม่ หากยังไม่ได้ แจ้งผู้ดูแลระบบ"
+        remedy={NETWORK_RETRY_REMEDY}
         onRetry={d.refreshAll}
       />
     );

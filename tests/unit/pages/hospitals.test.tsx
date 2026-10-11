@@ -178,6 +178,12 @@ describe('HospitalsPage — list-page pattern (sub-project 4)', () => {
     expect(within(roster).getByText(/แสดง 3 จาก 3 แห่ง/)).toBeInTheDocument();
   });
 
+  it('the KPI tiles sit in a Thai summary SectionCard like the other list pages', async () => {
+    renderPage();
+    const summary = await screen.findByRole('region', { name: 'ภาพรวมเครือข่าย' });
+    expect(within(summary).getByTestId('kpi-roster')).toBeInTheDocument();
+  });
+
   it('a row opens the hospital console; its name link does not double-navigate', async () => {
     nav.push.mockClear();
     renderPage();

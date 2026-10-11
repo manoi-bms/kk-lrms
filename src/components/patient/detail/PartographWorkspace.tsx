@@ -4,6 +4,7 @@
 // severity logic is untouched (countBySeverity, sevFhr, sevBp).
 'use client';
 
+import { NETWORK_RETRY_REMEDY } from '@/lib/actionable-errors';
 import { SectionCard } from '@/components/shared/SectionCard';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ErrorState } from '@/components/shared/ErrorState';
@@ -74,7 +75,7 @@ export function PartographWorkspace({ partogram, error, onRetry, vitals, header 
         <ErrorState
           message="ไม่สามารถโหลดข้อมูลพาร์โทกราฟได้"
           detail={error instanceof Error ? error.message : undefined}
-          remedy="ตรวจสอบการเชื่อมต่อเครือข่าย แล้วกด ลองใหม่ หากยังไม่ได้ แจ้งผู้ดูแลระบบ"
+          remedy={NETWORK_RETRY_REMEDY}
           onRetry={onRetry}
         />
       );

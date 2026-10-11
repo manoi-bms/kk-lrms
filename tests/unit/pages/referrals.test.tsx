@@ -1,9 +1,10 @@
 // Referrals board page — behavior tests for the redesigned provincial view.
 // KPI strips must come from the API's DB-wide counts (never the visible page),
 // patient identity must render masked, and INITIATED rows must show SLA aging.
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { SWRConfig } from 'swr';
+import { failNextRefresh } from '../../helpers/swr-stale';
 import type {
   ReferralDetailResponse,
   ReferralInsightsResponse,
@@ -265,8 +266,19 @@ describe('ReferralsPage — empty state', () => {
   });
 });
 
+describe('ReferralsPage — stale data', () => {
+  afterEach(() => vi.useRealTimers());
+  it('keeps the cached rows and shows the stale banner when a refresh fails', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { fetcher } = renderPage();
+    expect(await screen.findByTestId('referral-row-ref-emergency')).toBeInTheDocument();
+    await failNextRefresh(fetcher);
+    expect(await screen.findByText(/การเชื่อมต่อล้มเหลว/)).toBeInTheDocument();
+    expect(screen.getByTestId('referral-row-ref-emergency')).toBeInTheDocument();
+  });
+});
 
-const toggleIn = (tile: HTMLElement) => within(tile).getByRole('button', { pressed: false });
+const toggleIn =(tile: HTMLElement) => within(tile).getByRole('button', { pressed: false });
 
 describe('ReferralsPage — list-page pattern (sub-project 4)', () => {
   it('Thai header and sections; no English mono labels', async () => {
@@ -280,6 +292,7 @@ describe('ReferralsPage — list-page pattern (sub-project 4)', () => {
   });
 
   it('the overdue tile quotes REFERRAL_SLA and toggles the overdue filter', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const { fetcher } = renderPage();
     const overdue = await screen.findByTestId('kpi-overdue');
     expect(overdue).toHaveTextContent(`ค้างเกิน ${REFERRAL_SLA.overdueAfterHours} ชม.`);
@@ -288,8 +301,13 @@ describe('ReferralsPage — list-page pattern (sub-project 4)', () => {
   });
 
   it('status chips filter by status and carry DB-wide counts', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const { fetcher } = renderPage();
-    fireEvent.click(await screen.findByTestId('status-ARRIVED'));
+    const arrived = await screen.findByTestId('status-ARRIVED');
+    // The chip carries the DB-wide ARRIVED count (0 in this fixture), not a page-row tally.
+    expect(within(arrived).getByText('0')).toBeInTheDocument();
+    expect(within(screen.getByTestId('status-INITIATED')).getByText('125')).toBeInTheDocument();
+    fireEvent.click(arrived);
     await waitFor(() => expect(fetcher.mock.calls.some((c) => String(c[0]).includes('status=ARRIVED'))).toBe(true));
   });
 

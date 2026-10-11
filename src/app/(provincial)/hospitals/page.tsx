@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { NETWORK_RETRY_REMEDY } from '@/lib/actionable-errors';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { LoadingState } from '@/components/shared/LoadingState';
@@ -69,7 +70,9 @@ const PARTO_TEXT: Record<PartographCoverageClass, string> = {
 function SyncCell({ hospital }: { hospital: DashboardHospital }) {
   const health = classifySyncHealth(hospital.syncStatus, hospital.lastSyncAt);
   const text =
-    health === 'blocked' || health === 'never' ? SYNC_HEALTH_TH[health] : formatRelativeAge(hospital.lastSyncAt, 'th');
+    health === 'blocked' || health === 'never'
+      ? SYNC_HEALTH_TH[health]
+      : formatRelativeAge(hospital.lastSyncAt, 'th');
   return (
     <span
       className={cn('inline-flex items-center gap-1.5 text-label tabular-nums', SYNC_TEXT[health])}
@@ -109,7 +112,11 @@ function HospitalName({ hospital: h, asLink }: { hospital: DashboardHospital; as
         {asLink ? (
           // tabIndex -1: the row is the keyboard target; the link keeps
           // middle-click / open-in-new-tab (spec L2).
-          <Link href={`/hospitals/${h.hcode}`} tabIndex={-1} className="text-body font-semibold text-ink hover:underline">
+          <Link
+            href={`/hospitals/${h.hcode}`}
+            tabIndex={-1}
+            className="text-body font-semibold text-ink hover:underline"
+          >
             {h.name}
           </Link>
         ) : (
@@ -130,7 +137,12 @@ function HospitalName({ hospital: h, asLink }: { hospital: DashboardHospital; as
 const dash = (n: number) => (n > 0 ? n.toLocaleString('en-US') : '—');
 
 const ROSTER_COLUMNS: DataTableColumn<DashboardHospital>[] = [
-  { key: 'name', header: 'โรงพยาบาล', className: 'min-w-[160px]', cell: (h) => <HospitalName hospital={h} asLink /> },
+  {
+    key: 'name',
+    header: 'โรงพยาบาล',
+    className: 'min-w-[160px]',
+    cell: (h) => <HospitalName hospital={h} asLink />,
+  },
   { key: 'anc', header: 'ANC', numeric: true, cell: (h) => dash(h.ancCounts.total) },
   { key: 'labor', header: 'ห้องคลอด', numeric: true, cell: (h) => dash(h.counts.total) },
   { key: 'parto', header: 'พาร์โทกราฟ', numeric: true, cell: (h) => <PartoCell hospital={h} /> },
@@ -197,7 +209,8 @@ export default function HospitalsPage() {
   useEffect(() => {
     if (!selected || !rosterRef.current) return;
     for (const el of rosterRef.current.querySelectorAll<HTMLElement>('[data-hcode]')) {
-      if (el.dataset.hcode === selected) el.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+      if (el.dataset.hcode === selected)
+        el.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
     }
   }, [selected]);
 
@@ -210,7 +223,7 @@ export default function HospitalsPage() {
       <ErrorState
         message="ไม่สามารถโหลดข้อมูลโรงพยาบาลได้"
         detail={error instanceof Error ? error.message : String(error)}
-        remedy="ตรวจสอบการเชื่อมต่อเครือข่าย แล้วกด ลองใหม่ หากยังไม่ได้ แจ้งผู้ดูแลระบบ"
+        remedy={NETWORK_RETRY_REMEDY}
         onRetry={() => mutate()}
       />
     );
@@ -246,71 +259,84 @@ export default function HospitalsPage() {
         />
       }
     >
-      <KpiGrid min="md">
-        <KpiTile
-          testId="kpi-roster"
-          label="โรงพยาบาลในพื้นที่นี้"
-          count={s.hospitals}
-          unit="แห่ง"
-          sub={`มีผู้ป่วยในระบบ ${s.withWorkload} แห่ง`}
-          hint={{
-            title: 'โรงพยาบาลในพื้นที่ที่เลือก',
-            body: 'จำนวนโรงพยาบาลในพื้นที่ที่เลือก (จ.ขอนแก่น หรือภายนอก) และจำนวนแห่งที่มีผู้ป่วยในระบบ — นับจากภาระงานรวมห้องคลอดและทะเบียนฝากครรภ์',
-          }}
-        />
-        <KpiTile
-          testId="kpi-sync"
-          label={`ข้อมูลสด (ซิงค์ภายใน ${SYNC_HEALTH.staleAfterMinutes} นาที)`}
-          count={s.sync.ok}
-          unit={`/ ${s.hospitals} แห่ง`}
-          tone={s.syncAttention > 0 ? 'warn' : 'default'}
-          sub={`ล่าช้า ${s.sync.stale + s.sync.critical} · ${SYNC_HEALTH_TH.never} ${s.sync.never} · ${SYNC_HEALTH_TH.blocked} ${s.sync.blocked}`}
-          hint={{
-            title: 'ความสดของข้อมูล (ไม่ใช่แค่การเชื่อมต่อ)',
-            body: `นับโรงพยาบาลที่ซิงค์ข้อมูลจาก HOSxP ภายใน ${SYNC_HEALTH.staleAfterMinutes} นาทีล่าสุด — ล่าช้า = เกิน ${SYNC_HEALTH.staleAfterMinutes} นาที (แดงเมื่อเกิน ${SYNC_HEALTH.criticalAfterHours} ชม.), ${SYNC_HEALTH_TH.never} = ไม่เคยมีข้อมูล, ${SYNC_HEALTH_TH.blocked} = ระบบระงับการซิงค์ (ดูเหตุผลที่แถวรายชื่อ) — สถานะ "${HOSPITAL_LINK_STATUS.online.labelTh}" อย่างเดียวไม่รับประกันว่าข้อมูลเป็นปัจจุบัน`,
-          }}
-        />
-        <KpiTile
-          testId="kpi-anc"
-          label={ANC_REGISTRY_LABEL_TH}
-          count={s.anc}
-          unit="ราย"
-          sub={`ครรภ์เสี่ยงสูง HR3 ${s.ancHr3} ราย`}
-          hint={{ title: 'ทะเบียนฝากครรภ์ทั้งพื้นที่', body: `ผลรวมของทุกโรงพยาบาลในพื้นที่นี้ — ${ANC_REGISTRY_CRITERIA_TH}` }}
-        />
-        <KpiTile
-          testId="kpi-labor"
-          label="ผู้คลอดในห้องคลอด"
-          count={s.labor.total}
-          unit="ราย"
-          sub={
-            s.labor.total > 0 ? (
-              <span className="flex flex-col gap-1">
-                <RiskBar low={s.labor.low} medium={s.labor.medium} high={s.labor.high} height={6} />
-                <span>เสี่ยงสูง {s.labor.high} ราย</span>
-              </span>
-            ) : (
-              'ไม่มีผู้คลอดที่กำลังรอคลอด'
-            )
-          }
-          hint={{
-            title: 'ห้องคลอดทั้งพื้นที่',
-            body: 'ผู้ที่กำลังรอคลอด (labor_status = ACTIVE) รวมทุกโรงพยาบาล แถบสีคือสัดส่วนความเสี่ยง CPD ล่าสุด: ต่ำ / ปานกลาง / สูง',
-          }}
-        />
-        <KpiTile
-          testId="kpi-partograph"
-          label={`การบันทึกพาร์โทกราฟ (${PARTOGRAPH_QUALITY.windowDays} วัน)`}
-          count={s.parto.pct}
-          unit="%"
-          tone={s.parto.below > 0 ? 'warn' : 'default'}
-          sub={`บันทึก ${s.parto.charted}/${s.parto.recent} ราย · ${s.parto.below > 0 ? `ต่ำกว่าเกณฑ์ ${s.parto.below} แห่ง` : 'ทุกแห่งผ่านเกณฑ์'}`}
-          hint={{
-            title: 'คุณภาพการบันทึกพาร์โทกราฟ',
-            body: `สัดส่วนผู้คลอดที่รับใหม่ใน ${PARTOGRAPH_QUALITY.windowDays} วันที่ผ่านมา ที่มีการบันทึกพาร์โทกราฟอย่างน้อย 1 จุด — ต่ำกว่า ${PARTOGRAPH_QUALITY.warnBelowPct}% สีเหลือง ต่ำกว่า ${PARTOGRAPH_QUALITY.criticalBelowPct}% สีแดง หากโรงพยาบาลไม่บันทึกเลย ส่วนกลางจะมองไม่เห็นภาวะวิกฤตระหว่างคลอด`,
-          }}
-        />
-      </KpiGrid>
+      <SectionCard
+        title="ภาพรวมเครือข่าย"
+        description="สรุปสถานะการส่งข้อมูลและภาระงานของโรงพยาบาลในพื้นที่ที่เลือก"
+      >
+        <KpiGrid min="md">
+          <KpiTile
+            testId="kpi-roster"
+            label="โรงพยาบาลในพื้นที่นี้"
+            count={s.hospitals}
+            unit="แห่ง"
+            sub={`มีผู้ป่วยในระบบ ${s.withWorkload} แห่ง`}
+            hint={{
+              title: 'โรงพยาบาลในพื้นที่ที่เลือก',
+              body: 'จำนวนโรงพยาบาลในพื้นที่ที่เลือก (จ.ขอนแก่น หรือภายนอก) และจำนวนแห่งที่มีผู้ป่วยในระบบ — นับจากภาระงานรวมห้องคลอดและทะเบียนฝากครรภ์',
+            }}
+          />
+          <KpiTile
+            testId="kpi-sync"
+            label={`ข้อมูลสด (ซิงค์ภายใน ${SYNC_HEALTH.staleAfterMinutes} นาที)`}
+            count={s.sync.ok}
+            unit={`/ ${s.hospitals} แห่ง`}
+            tone={s.syncAttention > 0 ? 'warn' : 'default'}
+            sub={`ล่าช้า ${s.sync.stale + s.sync.critical} · ${SYNC_HEALTH_TH.never} ${s.sync.never} · ${SYNC_HEALTH_TH.blocked} ${s.sync.blocked}`}
+            hint={{
+              title: 'ความสดของข้อมูล (ไม่ใช่แค่การเชื่อมต่อ)',
+              body: `นับโรงพยาบาลที่ซิงค์ข้อมูลจาก HOSxP ภายใน ${SYNC_HEALTH.staleAfterMinutes} นาทีล่าสุด — ล่าช้า = เกิน ${SYNC_HEALTH.staleAfterMinutes} นาที (แดงเมื่อเกิน ${SYNC_HEALTH.criticalAfterHours} ชม.), ${SYNC_HEALTH_TH.never} = ไม่เคยมีข้อมูล, ${SYNC_HEALTH_TH.blocked} = ระบบระงับการซิงค์ (ดูเหตุผลที่แถวรายชื่อ) — สถานะ "${HOSPITAL_LINK_STATUS.online.labelTh}" อย่างเดียวไม่รับประกันว่าข้อมูลเป็นปัจจุบัน`,
+            }}
+          />
+          <KpiTile
+            testId="kpi-anc"
+            label={ANC_REGISTRY_LABEL_TH}
+            count={s.anc}
+            unit="ราย"
+            sub={`ครรภ์เสี่ยงสูง HR3 ${s.ancHr3} ราย`}
+            hint={{
+              title: 'ทะเบียนฝากครรภ์ทั้งพื้นที่',
+              body: `ผลรวมของทุกโรงพยาบาลในพื้นที่นี้ — ${ANC_REGISTRY_CRITERIA_TH}`,
+            }}
+          />
+          <KpiTile
+            testId="kpi-labor"
+            label="ผู้คลอดในห้องคลอด"
+            count={s.labor.total}
+            unit="ราย"
+            sub={
+              s.labor.total > 0 ? (
+                <span className="flex flex-col gap-1">
+                  <RiskBar
+                    low={s.labor.low}
+                    medium={s.labor.medium}
+                    high={s.labor.high}
+                    height={6}
+                  />
+                  <span>เสี่ยงสูง {s.labor.high} ราย</span>
+                </span>
+              ) : (
+                'ไม่มีผู้คลอดที่กำลังรอคลอด'
+              )
+            }
+            hint={{
+              title: 'ห้องคลอดทั้งพื้นที่',
+              body: 'ผู้ที่กำลังรอคลอด (labor_status = ACTIVE) รวมทุกโรงพยาบาล แถบสีคือสัดส่วนความเสี่ยง CPD ล่าสุด: ต่ำ / ปานกลาง / สูง',
+            }}
+          />
+          <KpiTile
+            testId="kpi-partograph"
+            label={`การบันทึกพาร์โทกราฟ (${PARTOGRAPH_QUALITY.windowDays} วัน)`}
+            count={s.parto.pct}
+            unit="%"
+            tone={s.parto.below > 0 ? 'warn' : 'default'}
+            sub={`บันทึก ${s.parto.charted}/${s.parto.recent} ราย · ${s.parto.below > 0 ? `ต่ำกว่าเกณฑ์ ${s.parto.below} แห่ง` : 'ทุกแห่งผ่านเกณฑ์'}`}
+            hint={{
+              title: 'คุณภาพการบันทึกพาร์โทกราฟ',
+              body: `สัดส่วนผู้คลอดที่รับใหม่ใน ${PARTOGRAPH_QUALITY.windowDays} วันที่ผ่านมา ที่มีการบันทึกพาร์โทกราฟอย่างน้อย 1 จุด — ต่ำกว่า ${PARTOGRAPH_QUALITY.warnBelowPct}% สีเหลือง ต่ำกว่า ${PARTOGRAPH_QUALITY.criticalBelowPct}% สีแดง หากโรงพยาบาลไม่บันทึกเลย ส่วนกลางจะมองไม่เห็นภาวะวิกฤตระหว่างคลอด`,
+            }}
+          />
+        </KpiGrid>
+      </SectionCard>
 
       {/* Two columns only when the page content is wide enough (spec L4):
           640px keeps the roster table at ≥ 560px inside its card. */}
@@ -321,7 +347,12 @@ export default function HospitalsPage() {
           className="min-w-0"
         >
           <div className="h-[360px] overflow-hidden rounded-xl border border-border @min-[1160px]:h-[max(480px,calc(100dvh_-_var(--app-header-h,0px)_-_260px))]">
-            <ProvinceMap hospitals={areaHospitals} selected={selected} onSelect={setSelected} size="full" />
+            <ProvinceMap
+              hospitals={areaHospitals}
+              selected={selected}
+              onSelect={setSelected}
+              size="full"
+            />
           </div>
         </SectionCard>
 
@@ -334,7 +365,12 @@ export default function HospitalsPage() {
           }
           className="min-w-0"
         >
-          <SearchField label="ค้นหา" value={search} onChange={setSearch} placeholder="ชื่อหรือรหัสโรงพยาบาล" />
+          <SearchField
+            label="ค้นหา"
+            value={search}
+            onChange={setSearch}
+            placeholder="ชื่อหรือรหัสโรงพยาบาล"
+          />
           <div
             ref={rosterRef}
             className="mt-4 flex flex-col gap-5 @min-[1160px]:max-h-[calc(100dvh_-_var(--app-header-h,0px)_-_200px)] @min-[1160px]:overflow-y-auto"
@@ -348,7 +384,10 @@ export default function HospitalsPage() {
               groups.map((g) => (
                 <section key={g.level} aria-label={g.nameTh}>
                   <h3 className="text-body-lg font-semibold text-brand">
-                    {g.nameTh} <span className="text-label font-normal text-ink-muted">· {g.hospitals.length} แห่ง</span>
+                    {g.nameTh}{' '}
+                    <span className="text-label font-normal text-ink-muted">
+                      · {g.hospitals.length} แห่ง
+                    </span>
                   </h3>
                   <p className="mb-2 text-caption text-ink-muted">
                     ANC {g.stats.anc.toLocaleString('en-US')} · ห้องคลอด {g.stats.labor}
@@ -371,7 +410,11 @@ export default function HospitalsPage() {
                     onRowClick={(h) => router.push(`/hospitals/${h.hcode}`)}
                     rowLabel={(h) => `เปิดหน้าโรงพยาบาล ${h.name}`}
                     renderCard={(h) => (
-                      <RosterCard hospital={h} selected={h.hcode === selected} onHover={() => setSelected(h.hcode)} />
+                      <RosterCard
+                        hospital={h}
+                        selected={h.hcode === selected}
+                        onHover={() => setSelected(h.hcode)}
+                      />
                     )}
                   />
                 </section>

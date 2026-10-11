@@ -1,9 +1,10 @@
 // Pregnancies board page — behavior tests for the redesigned provincial view.
 // KPI strips must come from the API's DB-wide counts, EDC/due and follow-up
 // aging must render per anc-ops config, and patient identity stays masked.
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { SWRConfig } from 'swr';
+import { failNextRefresh } from '../../helpers/swr-stale';
 import type { JourneyListResponse } from '@/types/api';
 import PregnanciesPage from '@/app/(provincial)/pregnancies/page';
 import { ANC_LAST_VISIT_MAX_AGE_DAYS } from '@/config/anc-freshness';
@@ -294,5 +295,17 @@ describe('PregnanciesPage — list-page pattern (sub-project 4)', () => {
     // not inside both the table and the card views.
     expect(await screen.findByText('ไม่พบข้อมูลฝากครรภ์')).toBeInTheDocument();
     expect(screen.getByText(/ยังไม่มีข้อมูลฝากครรภ์ในทะเบียน/)).toBeInTheDocument();
+  });
+});
+
+describe('PregnanciesPage — stale data', () => {
+  afterEach(() => vi.useRealTimers());
+  it('keeps the cached rows and shows the stale banner when a refresh fails', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { fetcher } = renderPage();
+    expect(await screen.findByTestId('journey-row-j-overdue')).toBeInTheDocument();
+    await failNextRefresh(fetcher);
+    expect(await screen.findByText(/การเชื่อมต่อล้มเหลว/)).toBeInTheDocument();
+    expect(screen.getByTestId('journey-row-j-overdue')).toBeInTheDocument();
   });
 });

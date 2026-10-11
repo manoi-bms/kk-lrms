@@ -2,9 +2,10 @@
 // KPIs must render the API payload faithfully (percent LBW!), the range and
 // hospital filters must hit the API, names stay masked, and an empty table
 // states honestly that no sync data exists yet.
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { SWRConfig } from 'swr';
+import { failNextRefresh } from '../../helpers/swr-stale';
 import type { OutcomesResponse } from '@/types/api';
 import OutcomesPage from '@/app/(provincial)/outcomes/page';
 import { NEWBORN_THRESHOLDS } from '@/config/newborn';
@@ -110,6 +111,21 @@ describe('OutcomesPage — KPI tiles', () => {
     });
   });
 
+  it('offers a clear-filter button once a hospital is chosen and resets the hospital filter', async () => {
+    const { fetcher } = renderPage();
+    expect(screen.queryByRole('button', { name: 'ล้างตัวกรอง' })).toBeNull();
+    fireEvent.change(await screen.findByTestId('filter-hospital'), { target: { value: 'h-kkh' } });
+    fireEvent.click(await screen.findByRole('button', { name: 'ล้างตัวกรอง' }));
+    await waitFor(() => expect((screen.getByTestId('filter-hospital') as HTMLSelectElement).value).toBe(''));
+    expect(fetcher.mock.calls.length).toBeGreaterThan(1);
+  });
+
+  it('shows a status EmptyState (not a bare cell) when the hospital table has no rows', async () => {
+    renderPage({ ...makeFixture(), byHospital: [] });
+    const section = await screen.findByTestId('hospital-outcomes');
+    expect(within(section).getByRole('status')).toHaveTextContent('ไม่มีข้อมูลในช่วงที่เลือก');
+  });
+
   it('shows a last-updated stamp', async () => {
     renderPage();
     expect(await screen.findByText(/ข้อมูลหน้านี้ ณ/)).toBeInTheDocument();
@@ -185,5 +201,17 @@ describe('OutcomesPage — list-page pattern (sub-project 4)', () => {
     renderPage();
     const recent = await screen.findByRole('region', { name: 'การเกิดล่าสุด' });
     expect(within(recent).getByText(/จาก 48 ราย/)).toBeInTheDocument();
+  });
+});
+
+describe('OutcomesPage — stale data', () => {
+  afterEach(() => vi.useRealTimers());
+  it('keeps the cached figures and shows the stale banner when a refresh fails', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { fetcher } = renderPage();
+    expect((await screen.findAllByText(/รพ.ขอนแก่น/)).length).toBeGreaterThan(0);
+    await failNextRefresh(fetcher);
+    expect(await screen.findByText(/การเชื่อมต่อล้มเหลว/)).toBeInTheDocument();
+    expect(screen.getAllByText(/รพ.ขอนแก่น/).length).toBeGreaterThan(0);
   });
 });

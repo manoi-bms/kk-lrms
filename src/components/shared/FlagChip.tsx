@@ -1,7 +1,8 @@
 // FlagChip — small clinical flag chip (LBW, เกินกำหนด, HR3, อายุ < 20 …).
 // `tone` renders token text on a token tint (AA, foundation deviation 5).
-// `color` is the legacy marker-colour mode, kept only for /patients/[an]
-// until its owner migrates it — do not use it in new code.
+// `color` is the legacy marker-colour mode. Remaining consumers: the journey
+// detail page flag rows (/pregnancies/[journeyId]), NewbornOutcomesCard and
+// ReferralHistoryCard (patient detail). Do not use it in new code.
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 

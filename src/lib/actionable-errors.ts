@@ -8,6 +8,10 @@ export interface ActionableError {
   detail?: string;
 }
 
+/** Generic remedy for a failed load — shared by every ErrorState that has no more specific advice. */
+export const NETWORK_RETRY_REMEDY =
+  'ตรวจสอบการเชื่อมต่อเครือข่าย แล้วกด ลองใหม่ หากยังไม่ได้ แจ้งผู้ดูแลระบบ';
+
 const REOPEN = 'ปิดหน้านี้แล้วเปิด KK-LRMS จากเมนูใน HOSxP ใหม่อีกครั้งเพื่อสร้างเซสชันใหม่';
 
 function errorText(err: unknown): string | undefined {
@@ -111,7 +115,7 @@ export function describePatientLoadError(err: unknown): ActionableError {
   }
   return {
     message: 'โหลดข้อมูลผู้คลอดไม่สำเร็จ',
-    remedy: 'ตรวจสอบการเชื่อมต่อเครือข่าย แล้วกด ลองใหม่ หากยังไม่ได้ แจ้งผู้ดูแลระบบ',
+    remedy: NETWORK_RETRY_REMEDY,
     detail,
   };
 }

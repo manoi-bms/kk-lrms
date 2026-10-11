@@ -61,7 +61,6 @@ import {
   HelpCircle,
   Activity,
   Ruler,
-  MapPin,
   User,
   TrendingUp,
   Syringe,
@@ -1437,7 +1436,6 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
           <MetricTile
             label="ประจำเดือนครั้งสุดท้าย (LMP)"
             value={formatThaiShort(journey.lmp)}
-            sub="ประจำเดือนครั้งสุดท้าย"
             color="var(--ink-navy-muted)"
             icon={<Calendar className="h-3 w-3" />}
           />
@@ -2843,44 +2841,6 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
             </div>
           </div>
         </aside>
-
-        {/* Mobile fallback — same panels, no sticky */}
-        <div className="bg-white p-5 space-y-4 lg:hidden border-t border-[var(--rule-strong)]">
-          {latestRisk && (
-            <section>
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="font-mono text-caption font-bold tracking-[0.18em] text-[var(--accent-navy)]">
-                  01
-                </span>
-                <span className="font-mono text-caption font-semibold uppercase tracking-[0.1em]">
-                  Risk · {latestRisk.riskLevel}
-                </span>
-              </div>
-              {latestRisk.triggeredRules.length > 0 && (
-                <ul className="text-caption space-y-1">
-                  {latestRisk.triggeredRules.map((r) => (
-                    <li key={r} className="text-caption text-[var(--ink-navy-dim)]">
-                      · {RULE_LABEL_TH[r] ?? r}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )}
-          <section>
-            <div className="flex items-baseline gap-2 mb-1">
-              <MapPin className="h-3 w-3 text-[var(--ink-navy-muted)]" />
-              <span className="font-mono text-caption font-semibold uppercase tracking-[0.1em]">
-                {journey.hospitalName}
-              </span>
-            </div>
-            {isReferred && journey.currentHospitalName && (
-              <div className="font-mono text-caption text-[var(--risk-medium)]">
-                → {journey.currentHospitalName}
-              </div>
-            )}
-          </section>
-        </div>
       </div>
 
       {/* ─── Footer ─── */}

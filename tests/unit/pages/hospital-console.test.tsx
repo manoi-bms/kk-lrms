@@ -104,6 +104,22 @@ describe('HospitalConsolePage — characterization', () => {
     expect(nav.push).toHaveBeenCalledWith('/patients/10670-AN2');
   });
 
+  it('focusing a row scrolls a stacked preview into view (hover selects without scrolling)', async () => {
+    // jsdom lays everything out at 0,0 — the preview is "not beside" the list, i.e. stacked.
+    const scroll = vi.fn();
+    Element.prototype.scrollIntoView = scroll;
+    try {
+      await renderConsole();
+      const row = (await screen.findAllByRole('button', { name: /นาง มะลิ/ }))[0];
+      fireEvent.mouseEnter(row);
+      expect(scroll).not.toHaveBeenCalled();
+      fireEvent.focus(row);
+      expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    } finally {
+      Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
+    }
+  });
+
   it('the ANC tab lists pregnancies and a row opens the journey', async () => {
     nav.push.mockClear();
     await renderConsole();

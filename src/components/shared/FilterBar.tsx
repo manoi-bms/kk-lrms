@@ -6,20 +6,28 @@ import type { ReactNode } from 'react';
 import { Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+/** The one "ล้างตัวกรอง" button — used in the FilterBar and in filtered-empty states. */
+export function ClearFiltersButton({ onClick, className }: { onClick: () => void; className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'inline-flex h-10 items-center gap-1.5 rounded-lg border border-border bg-surface-card px-3 text-label text-ink-muted hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+        className,
+      )}
+    >
+      <X aria-hidden="true" className="h-4 w-4" />
+      ล้างตัวกรอง
+    </button>
+  );
+}
+
 export function FilterBar({ active = false, onClear, children }: { active?: boolean; onClear?: () => void; children: ReactNode }) {
   return (
     <div role="group" aria-label="ตัวกรองรายการ" className="flex flex-wrap items-end gap-x-4 gap-y-3 rounded-xl bg-surface-muted p-3">
       {children}
-      {active && onClear && (
-        <button
-          type="button"
-          onClick={onClear}
-          className="ml-auto inline-flex h-10 items-center gap-1.5 rounded-lg border border-border bg-surface-card px-3 text-label text-ink-muted hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          <X aria-hidden="true" className="h-4 w-4" />
-          ล้างตัวกรอง
-        </button>
-      )}
+      {active && onClear && <ClearFiltersButton onClick={onClear} className="ml-auto" />}
     </div>
   );
 }
