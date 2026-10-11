@@ -10,12 +10,14 @@
 
 import { COLOR } from '@/config/design-tokens';
 import { use, useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { maskName } from '@/lib/pii-mask';
 import {
   classifyPartographCoverage,
   needsPartographNudge,
+  HOSPITAL_CONSOLE,
   PARTOGRAPH_QUALITY,
   STALE_ADMISSION,
 } from '@/config/hospital-network';
@@ -25,8 +27,17 @@ import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { LoadingState } from '@/components/shared/LoadingState';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { ConnectionStatus } from '@/components/shared/ConnectionStatus';
+import { ListPageLayout } from '@/components/shared/ListPageLayout';
+import { KpiGrid } from '@/components/shared/KpiGrid';
+import { KpiTile } from '@/components/shared/KpiTile';
+import { SectionCard } from '@/components/shared/SectionCard';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { DataTable, type DataTableColumn } from '@/components/shared/DataTable';
+import { AncRiskChip } from '@/components/shared/AncRiskChip';
+import { RiskBar } from '@/components/dashboard/shared';
+import { ANC_REGISTRY_CRITERIA_TH, ANC_REGISTRY_LABEL_TH } from '@/config/anc-freshness';
 import { ANC_RISK_RULES } from '@/config/anc-risk-rules';
-import { buildPatientId } from '@/lib/utils';
+import { buildPatientId, cn, formatThaiDate } from '@/lib/utils';
 import { ConnectionStatus as ConnectionStatusEnum } from '@/types/domain';
 import type {
   JourneyListResponse,
@@ -121,6 +132,34 @@ interface IncomingPregnanciesResponse {
   byTrigger: { ga: number; fw: number; risk: number };
   items: IncomingTermPregnancyItem[];
 }
+
+const TRIGGER_TH: Record<'GA' | 'FW' | 'RISK', string> = { GA: 'อายุครรภ์', FW: 'น้ำหนักทารก', RISK: 'ความเสี่ยง' };
+
+const INCOMING_COLUMNS: DataTableColumn<IncomingTermPregnancyItem>[] = [
+  { key: 'hn', header: 'HN', cell: (p) => <span className="tabular-nums">{p.hn}</span> },
+  { key: 'name', header: 'ชื่อ', className: 'min-w-[140px]', cell: (p) => maskName(p.name) },
+  { key: 'age', header: 'อายุ', numeric: true, cell: (p) => p.age },
+  { key: 'gp', header: 'G/P', numeric: true, cell: (p) => `${p.gravida}/${p.para}` },
+  { key: 'ga', header: 'GA', numeric: true, cell: (p) => (p.gaWeeks != null ? `${p.gaWeeks} สัปดาห์` : '—') },
+  { key: 'efw', header: 'น้ำหนักทารกโดยประมาณ', numeric: true, cell: (p) => (p.efwG != null ? `${p.efwG.toLocaleString('en-US')} ก.` : '—') },
+  {
+    key: 'edc',
+    header: 'กำหนดคลอด (EDC)',
+    cell: (p) => (
+      <span className={cn('tabular-nums', p.daysToEdc != null && p.daysToEdc < 0 ? 'text-danger-text' : p.daysToEdc != null && p.daysToEdc <= HOSPITAL_CONSOLE.ancDueWithinDays ? 'text-warn-text' : 'text-ink')}>
+        {p.edc ? formatThaiDate(p.edc) : '—'}
+        {p.daysToEdc != null && (
+          <span className="ml-1.5 text-caption text-ink-muted">
+            ({p.daysToEdc < 0 ? `เลย ${Math.abs(p.daysToEdc)} วัน` : `อีก ${p.daysToEdc} วัน`})
+          </span>
+        )}
+      </span>
+    ),
+  },
+  { key: 'risk', header: 'ความเสี่ยง', cell: (p) => <AncRiskChip level={p.ancRiskLevel} /> },
+  { key: 'why', header: 'เหตุผล', cell: (p) => p.triggers.map((t) => TRIGGER_TH[t]).join(' + ') || '—' },
+  { key: 'from', header: 'จาก', className: 'min-w-[140px]', cell: (p) => `${p.fromHospitalName} (${p.fromHcode})` },
+];
 
 // ─── Helpers ────────────────────────────────────────────────────────────
 
@@ -303,9 +342,9 @@ function ancConcerns(j: JourneyListItem): Array<{ label: string; warn?: boolean 
   const out: Array<{ label: string; warn?: boolean }> = [];
   if (j.ancRiskLevel === 'HR3') out.push({ label: 'HR3' });
   const last = daysSince(j.lastAncDate);
-  if (last != null && last >= 14) out.push({ label: 'ขาดนัด' });
+  if (last != null && last >= HOSPITAL_CONSOLE.ancOverdueAfterDays) out.push({ label: 'ขาดนัด' });
   const edc = j.edc ? Math.round((new Date(j.edc).getTime() - Date.now()) / 86400000) : null;
-  if (edc != null && edc <= 7 && edc >= 0) out.push({ label: 'ใกล้คลอด', warn: true });
+  if (edc != null && edc <= HOSPITAL_CONSOLE.ancDueWithinDays && edc >= 0) out.push({ label: 'ใกล้คลอด', warn: true });
   if (edc != null && edc < 0) out.push({ label: 'หลัง EDC' });
   return out;
 }
@@ -324,54 +363,6 @@ function ConcernChip({ label, warn }: { label: string; warn?: boolean }) {
     >
       {label}
     </span>
-  );
-}
-
-interface KpiProps {
-  group: 'LABOR' | 'ANC' | 'REFER-IN';
-  label: string;
-  value: string;
-  unit?: string;
-  sub?: React.ReactNode;
-  valueColor?: string;
-  riskMix?: { low: number; medium: number; high: number };
-}
-
-function KpiCell({ group, label, value, unit, sub, valueColor, riskMix }: KpiProps) {
-  return (
-    <div className="relative px-5 py-3" style={{ borderRight: '1px solid var(--rule-strong)' }}>
-      <div
-        className="absolute right-3 top-1 font-mono text-caption tracking-[0.16em] opacity-50"
-        style={{ color: 'var(--ink-navy-muted)' }}
-      >
-        {group}
-      </div>
-      <div className="font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
-        {label}
-      </div>
-      <div
-        className="mt-1 font-mono text-page font-semibold leading-none tabular-nums"
-        style={{ color: valueColor ?? 'var(--ink-navy)', letterSpacing: '-0.02em' }}
-      >
-        {value}
-        {unit && (
-          <span className="ml-1.5 text-caption font-normal text-[var(--ink-navy-muted)]">
-            {unit}
-          </span>
-        )}
-      </div>
-      {sub && <div className="mt-1 font-mono text-caption text-[var(--ink-navy-dim)]">{sub}</div>}
-      {riskMix && riskMix.low + riskMix.medium + riskMix.high > 0 && (
-        <div
-          className="mt-2 flex h-1 overflow-hidden rounded-sm"
-          style={{ background: 'var(--rule-hair)' }}
-        >
-          <span style={{ background: 'var(--risk-low)', flex: riskMix.low }} />
-          <span style={{ background: 'var(--risk-medium)', flex: riskMix.medium }} />
-          <span style={{ background: 'var(--risk-high)', flex: riskMix.high }} />
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -494,7 +485,7 @@ function AncRow({ j, isSelected, onSelect, onOpen }: AncRowProps) {
   const tier = ancTier(j.ancRiskLevel);
   const concerns = ancConcerns(j);
   const lastDays = daysSince(j.lastAncDate);
-  const lastOverdue = lastDays != null && lastDays >= 14;
+  const lastOverdue = lastDays != null && lastDays >= HOSPITAL_CONSOLE.ancOverdueAfterDays;
   return (
     <button
       type="button"
@@ -570,25 +561,15 @@ function GroupHeader({
   hr?: number;
 }) {
   return (
-    <div
-      className="flex items-center justify-between px-3 py-1.5"
-      style={{
-        background: 'var(--accent-navy-soft)',
-        border: '1px solid var(--rule-strong)',
-        borderBottom: 'none',
-      }}
-    >
+    <div className="flex items-center justify-between rounded-t-xl border border-b-0 border-border bg-brand-soft px-3 py-2">
       <div>
-        <span className="font-mono text-caption uppercase tracking-[0.14em] font-semibold text-[var(--accent-navy)]">
-          {title}
+        <span className="text-label font-semibold text-brand-strong">
+          {sub ? `${title} · ${sub}` : title}
         </span>
-        {sub && (
-          <span className="ml-2 font-mono text-caption text-[var(--ink-navy-muted)]">{sub}</span>
-        )}
       </div>
-      <div className="font-mono text-caption font-semibold text-[var(--accent-navy)] tabular-nums">
+      <div className="text-label font-semibold tabular-nums text-brand-strong">
         {count}
-        {hr != null && hr > 0 && <span className="ml-2 text-[var(--risk-high)]">· HR3 {hr}</span>}
+        {hr != null && hr > 0 && <span className="ml-2 text-danger-text">· HR3 {hr}</span>}
       </div>
     </div>
   );
@@ -602,9 +583,7 @@ function EmptyPreview({ message }: { message: string }) {
       className="flex h-full flex-col items-center justify-center p-10 text-center"
       style={{ minHeight: 480 }}
     >
-      <div className="font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
-        SELECT A PATIENT
-      </div>
+      <div className="text-label text-ink-muted">เลือกผู้ป่วย</div>
       <p className="mt-2 max-w-sm text-caption text-[var(--ink-navy-dim)]">{message}</p>
     </div>
   );
@@ -776,7 +755,7 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
   const { daysToEdc, edcText } = formatEdc(journey.edc, journey.gaWeeks);
   const lastAncRel = formatRelativeAge(journey.lastAncDate);
   const lastDays = daysSince(journey.lastAncDate);
-  const overdue = lastDays != null && lastDays >= 14;
+  const overdue = lastDays != null && lastDays >= HOSPITAL_CONSOLE.ancOverdueAfterDays;
 
   // Build a rough EDC progress percentage. 40 weeks total; we cap at 99
   // so the marker doesn't disappear at exactly term.
@@ -885,7 +864,7 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
               <span
                 className="font-semibold"
                 style={{
-                  color: daysToEdc != null && daysToEdc <= 7 ? COLOR.riskMediumText : 'var(--ink-navy)',
+                  color: daysToEdc != null && daysToEdc <= HOSPITAL_CONSOLE.ancDueWithinDays ? COLOR.riskMediumText : 'var(--ink-navy)',
                 }}
               >
                 {edcText}
@@ -1185,11 +1164,12 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
   // Pregnancies elsewhere whose capability rules say they'll be referred
   // here for delivery. Only meaningful for hub hospitals (spokes return 0).
   const { data: incomingData } = useSWR<IncomingPregnanciesResponse>(
-    `/api/hospitals/${hcode}/incoming-pregnancies?min_ga=34`,
+    `/api/hospitals/${hcode}/incoming-pregnancies?min_ga=${HOSPITAL_CONSOLE.referInMinGaWeeks}`,
     { refreshInterval: 60000 },
   );
   const incomingCount = incomingData?.count ?? 0;
   const incomingItems = useMemo(() => incomingData?.items ?? [], [incomingData?.items]);
+  const minGa = incomingData?.minGaWeeks ?? HOSPITAL_CONSOLE.referInMinGaWeeks;
 
   const hospital = laborData?.hospital;
   const hospitalName = hospital?.name ?? `รหัส ${hcode}`;
@@ -1255,7 +1235,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
     [labor],
   );
   const laborSecondStage = useMemo(
-    () => labor.filter((p) => (p.latest_cervix_cm ?? 0) >= 8 && p.labor_status === 'ACTIVE').length,
+    () => labor.filter((p) => (p.latest_cervix_cm ?? 0) >= HOSPITAL_CONSOLE.nearSecondStageCervixCm && p.labor_status === 'ACTIVE').length,
     [labor],
   );
   const laborMix = useMemo(() => {
@@ -1292,7 +1272,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
     () =>
       journeys.filter((j) => {
         const d = daysSince(j.lastAncDate);
-        return d != null && d >= 14;
+        return d != null && d >= HOSPITAL_CONSOLE.ancOverdueAfterDays;
       }).length,
     [journeys],
   );
@@ -1301,7 +1281,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
       journeys.filter((j) => {
         if (!j.edc) return false;
         const d = (new Date(j.edc).getTime() - now) / 86400000;
-        return d >= 0 && d <= 7;
+        return d >= 0 && d <= HOSPITAL_CONSOLE.ancDueWithinDays;
       }).length,
     [journeys, now],
   );
@@ -1320,6 +1300,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
       <ErrorState
         message="ไม่สามารถโหลดข้อมูลโรงพยาบาลได้"
         detail={laborError instanceof Error ? laborError.message : String(laborError ?? ancError)}
+        remedy="ตรวจสอบการเชื่อมต่อเครือข่าย แล้วกด ลองใหม่ หากยังไม่ได้ แจ้งผู้ดูแลระบบ"
         onRetry={() => {
           laborMutate();
           ancMutate();
@@ -1329,63 +1310,26 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
   }
 
   return (
-    <div
-      style={{
-        color: 'var(--ink-navy)',
-        background: 'var(--surface-cool)',
-        // 1.15 matches sister detail pages (/pregnancies/[id], /patients/[an]).
-        // The parent /hospitals uses 1.3 because its layout is sparser; this
-        // detail page has KPI strip + tabs + split list/preview, so 1.3
-        // over-scaled the cell numbers (KPI 26px → 34px effective, Sig
-        // 20px → 26px) and felt cramped.
-        zoom: 1.15,
-      }}
-    >
-      {/* Header */}
-      <div
-        className="flex flex-wrap items-center gap-3 bg-white px-5 py-2.5"
-        style={{ borderBottom: '1px solid var(--rule-strong)' }}
-      >
-        <button
-          onClick={() => router.push('/hospitals')}
-          className="inline-flex items-center gap-1 border bg-white px-2.5 py-1 font-mono text-caption uppercase tracking-[0.06em] text-[var(--ink-navy-muted)]"
-          style={{ borderColor: 'var(--rule-strong)' }}
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> Back
-        </button>
-        <div>
-          <div className="font-mono text-caption uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
-            PROVINCIAL REGISTRY · HOSPITAL · MISSION CONSOLE
-          </div>
-          <h1 className="mt-0.5 text-page font-bold leading-tight tracking-tight text-[var(--ink-navy)]">
-            {hospitalName}
-          </h1>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          {hospital?.level && (
-            <span
-              className="border px-2 py-0.5 font-mono text-caption tracking-[0.06em] text-[var(--ink-navy-dim)]"
-              style={{ borderColor: 'var(--rule-strong)' }}
-            >
-              {hospital.level}
-            </span>
-          )}
-          <span
-            className="border px-2 py-0.5 font-mono text-caption tracking-[0.06em] text-[var(--ink-navy-dim)]"
-            style={{ borderColor: 'var(--rule-strong)' }}
+    <ListPageLayout
+      title={hospitalName}
+      subtitle={`ห้องคลอดและทะเบียนฝากครรภ์ของโรงพยาบาล · รหัส ${hcode}${hospital?.level ? ` · ระดับ ${hospital.level}` : ''}`}
+      updatedAt={hospital?.lastSyncAt ?? null}
+      freshnessLabel="ซิงค์ล่าสุด"
+      actions={
+        <>
+          <Link
+            href="/hospitals"
+            className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border bg-surface-card px-3 text-label text-ink hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
-            {hcode}
-          </span>
+            <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+            รายชื่อโรงพยาบาล
+          </Link>
           {hospital?.connectionStatus && (
-            <ConnectionStatus
-              status={hospital.connectionStatus as ConnectionStatusEnum}
-              lastSyncAt={hospital.lastSyncAt ?? null}
-              className="text-caption"
-            />
+            <ConnectionStatus status={hospital.connectionStatus as ConnectionStatusEnum} className="text-label" />
           )}
-        </div>
-      </div>
-
+        </>
+      }
+    >
       {/* Per-feed staleness banners — one feed can fail while the other keeps
           serving cached data, so name which registry went stale rather than
           replacing the whole console. */}
@@ -1393,6 +1337,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
         <ErrorState
           variant="banner"
           message="โหลดข้อมูลห้องคลอดไม่สำเร็จ — แสดงข้อมูลเดิมจากแคช"
+          remedy="ระบบจะลองใหม่อัตโนมัติ หรือกด ลองใหม่"
           onRetry={() => laborMutate()}
         />
       )}
@@ -1400,393 +1345,283 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
         <ErrorState
           variant="banner"
           message="โหลดข้อมูลฝากครรภ์ไม่สำเร็จ — แสดงข้อมูลเดิมจากแคช"
+          remedy="ระบบจะลองใหม่อัตโนมัติ หรือกด ลองใหม่"
           onRetry={() => ancMutate()}
         />
       )}
 
-      {/* KPI strip — 7 cells: 3 LABOR + 3 ANC + 1 REFER-IN (hub-only signal) */}
-      <div
-        className="grid bg-white"
-        style={{
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          borderBottom: '1px solid var(--rule-strong)',
-        }}
-      >
-        <KpiCell
-          group="LABOR"
-          label="ON FLOOR"
-          value={String(laborTotal)}
+      <KpiGrid>
+        <KpiTile
+          testId="kpi-labor-total"
+          label="ผู้คลอดในห้องคลอด"
+          count={laborTotal}
           unit="ราย"
-          riskMix={laborMix}
+          sub={
+            laborMix.low + laborMix.medium + laborMix.high > 0 ? (
+              <RiskBar low={laborMix.low} medium={laborMix.medium} high={laborMix.high} height={6} />
+            ) : (
+              'ไม่มีผู้คลอดในขณะนี้'
+            )
+          }
         />
-        <KpiCell
-          group="LABOR"
-          label="ALARMS"
-          value={String(laborAlarmCount)}
-          unit="vitals"
-          valueColor={laborAlarmCount > 0 ? 'var(--risk-high)' : undefined}
+        <KpiTile
+          testId="kpi-labor-alarms"
+          label="สัญญาณชีพผิดปกติ"
+          count={laborAlarmCount}
+          unit="ราย"
+          tone={laborAlarmCount > 0 ? 'high' : 'default'}
           sub={laborAlarmCount > 0 ? 'ตรวจสอบทันที' : 'ไม่มีสัญญาณเตือน'}
+          hint={{
+            title: 'สัญญาณชีพผิดปกติ',
+            body: 'ผู้คลอดที่ค่าล่าสุดเข้าเกณฑ์เตือนอย่างน้อยหนึ่งอย่าง: ความดันโลหิตสูงมาก เสียงหัวใจทารกผิดปกติ หรือคะแนน CPD สูง — ดูรายละเอียดที่แถวผู้คลอด',
+          }}
         />
-        <KpiCell
-          group="LABOR"
-          label="2ND STAGE"
-          value={String(laborSecondStage)}
+        <KpiTile
+          testId="kpi-labor-second-stage"
+          label={`ปากมดลูก ≥ ${HOSPITAL_CONSOLE.nearSecondStageCervixCm} ซม.`}
+          count={laborSecondStage}
           unit="ราย"
-          sub={laborSecondStage > 0 ? 'cervix ≥ 8 cm · active' : '—'}
+          sub="ใกล้ระยะเบ่งคลอด"
         />
-        <KpiCell
-          group="ANC"
-          label="ANC ลงทะเบียน"
-          value={String(ancTotal)}
+        <KpiTile
+          testId="kpi-anc-total"
+          label={ANC_REGISTRY_LABEL_TH}
+          count={ancTotal}
           unit="ราย"
-          riskMix={ancMix}
+          sub={<RiskBar low={ancMix.low} medium={ancMix.medium} high={ancMix.high} height={6} />}
+          hint={{ title: 'ทะเบียนฝากครรภ์ของโรงพยาบาล', body: ANC_REGISTRY_CRITERIA_TH }}
         />
-        <KpiCell
-          group="ANC"
-          label="HIGH-RISK · HR3"
-          value={String(ancHr3)}
+        <KpiTile
+          testId="kpi-anc-hr3"
+          label="ครรภ์เสี่ยงสูง HR3"
+          count={ancHr3}
           unit="ราย"
-          valueColor={ancHr3 > 0 ? 'var(--risk-high)' : undefined}
-          sub={ancTotal > 0 ? `${((ancHr3 / ancTotal) * 100).toFixed(1)}% ของลงทะเบียน` : '—'}
+          tone={ancHr3 > 0 ? 'warn' : 'default'}
+          sub={ancTotal > 0 ? `${((ancHr3 / ancTotal) * 100).toFixed(1)}% ของทะเบียน` : undefined}
         />
-        <KpiCell
-          group="ANC"
-          label="OVERDUE / DUE 7d"
-          value={`${ancOverdue}/${ancDueWeek}`}
-          valueColor={ancOverdue > 0 ? COLOR.riskMediumText : undefined}
-          sub={`ขาดนัด ${ancOverdue} · ครบกำหนด 7 วัน ${ancDueWeek}`}
-        />
-        <KpiCell
-          group="REFER-IN"
-          label="GA ≥ 34w · จะส่งต่อมา"
-          value={String(incomingCount)}
+        <KpiTile
+          testId="kpi-anc-overdue"
+          label={`ห่างนัด ANC ≥ ${HOSPITAL_CONSOLE.ancOverdueAfterDays} วัน`}
+          count={ancOverdue}
           unit="ราย"
-          valueColor={incomingCount > 0 ? 'var(--accent-navy)' : undefined}
+          tone={ancOverdue > 0 ? 'warn' : 'default'}
+        />
+        <KpiTile
+          testId="kpi-anc-due-week"
+          label={`ครบกำหนดคลอดใน ${HOSPITAL_CONSOLE.ancDueWithinDays} วัน`}
+          count={ancDueWeek}
+          unit="ราย"
+        />
+        <KpiTile
+          testId="kpi-refer-in"
+          label={`จะส่งต่อมา (GA ≥ ${minGa} สัปดาห์)`}
+          count={incomingCount}
+          unit="ราย"
           sub={
             incomingCount > 0
-              ? `GA ${incomingData?.byTrigger.ga ?? 0} · FW ${incomingData?.byTrigger.fw ?? 0} · risk ${incomingData?.byTrigger.risk ?? 0}`
+              ? `GA ${incomingData?.byTrigger.ga ?? 0} · น้ำหนักทารก ${incomingData?.byTrigger.fw ?? 0} · ความเสี่ยง ${incomingData?.byTrigger.risk ?? 0}`
               : 'ไม่มีรายชื่อในขณะนี้'
           }
         />
-      </div>
+      </KpiGrid>
 
       {/* REFER-IN PIPELINE — pregnancies at spokes that will be sent here.
-          Hidden on spoke hospitals (count === 0). Compact table; full drill
-          on click → patient detail. */}
+          Hidden on spoke hospitals (count === 0). */}
       {incomingCount > 0 && (
-        <div className="bg-white" style={{ borderBottom: '1px solid var(--rule-strong)' }}>
-          <div
-            className="flex items-baseline justify-between border-b px-5 py-2"
-            style={{ borderColor: 'var(--accent-navy)' }}
-          >
-            <div className="font-mono text-caption tracking-[0.1em] text-[var(--ink-navy)]">
-              <span className="mr-1.5 text-[var(--ink-navy-muted)]">02</span>
-              ผู้คลอดที่จะส่งต่อมา · GA ≥ {incomingData?.minGaWeeks ?? 34} สัปดาห์
-            </div>
-            <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
-              {incomingCount} ราย ·{' '}
-              {incomingItems.length === incomingCount ? 'ทั้งหมด' : `แสดง ${incomingItems.length}`}
-            </div>
-          </div>
-          <div className="overflow-x-auto" style={{ maxHeight: 320 }}>
-            <table className="w-full border-collapse text-caption">
-              <thead className="sticky top-0 bg-[var(--surface-cool)] text-[var(--ink-navy-muted)]">
-                <tr>
-                  <th className="px-5 py-1.5 text-left font-mono text-caption uppercase tracking-[0.1em]">
-                    HN
-                  </th>
-                  <th className="px-3 py-1.5 text-left font-mono text-caption uppercase tracking-[0.1em]">
-                    ชื่อ
-                  </th>
-                  <th className="px-3 py-1.5 text-right font-mono text-caption uppercase tracking-[0.1em]">
-                    อายุ
-                  </th>
-                  <th className="px-3 py-1.5 text-right font-mono text-caption uppercase tracking-[0.1em]">
-                    G/P
-                  </th>
-                  <th className="px-3 py-1.5 text-right font-mono text-caption uppercase tracking-[0.1em]">
-                    GA
-                  </th>
-                  <th className="px-3 py-1.5 text-right font-mono text-caption uppercase tracking-[0.1em]">
-                    EFW
-                  </th>
-                  <th className="px-3 py-1.5 text-right font-mono text-caption uppercase tracking-[0.1em]">
-                    EDC / วันที่เหลือ
-                  </th>
-                  <th className="px-3 py-1.5 text-center font-mono text-caption uppercase tracking-[0.1em]">
-                    ANC
-                  </th>
-                  <th className="px-3 py-1.5 text-center font-mono text-caption uppercase tracking-[0.1em]">
-                    เหตุผล
-                  </th>
-                  <th className="px-5 py-1.5 text-left font-mono text-caption uppercase tracking-[0.1em]">
-                    จาก
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {incomingItems.map((p) => {
-                  const edcTone =
-                    p.daysToEdc != null && p.daysToEdc < 0
-                      ? 'var(--risk-high)'
-                      : p.daysToEdc != null && p.daysToEdc <= 7
-                        ? COLOR.riskMediumText
-                        : 'var(--ink-navy)';
-                  const riskTier = ancTier(p.ancRiskLevel);
-                  return (
-                    <tr
-                      key={p.id}
-                      className="cursor-pointer border-t hover:bg-[var(--surface-cool)]"
-                      style={{ borderColor: 'var(--rule-hair)' }}
-                      onClick={() => router.push(`/pregnancies/${p.id}`)}
-                    >
-                      <td className="px-5 py-1.5 font-mono text-caption tabular-nums text-[var(--ink-navy)]">
-                        {p.hn}
-                      </td>
-                      <td className="px-3 py-1.5 text-[var(--ink-navy)]">{maskName(p.name)}</td>
-                      <td className="px-3 py-1.5 text-right font-mono tabular-nums">{p.age}</td>
-                      <td className="px-3 py-1.5 text-right font-mono tabular-nums">
-                        {p.gravida}/{p.para}
-                      </td>
-                      <td className="px-3 py-1.5 text-right font-mono tabular-nums">
-                        {p.gaWeeks != null ? `${p.gaWeeks}w` : '—'}
-                      </td>
-                      <td className="px-3 py-1.5 text-right font-mono tabular-nums text-[var(--ink-navy-dim)]">
-                        {p.efwG != null ? `${p.efwG}g` : '—'}
-                      </td>
-                      <td
-                        className="px-3 py-1.5 text-right font-mono tabular-nums"
-                        style={{ color: edcTone }}
-                      >
-                        {p.edc ? p.edc.slice(0, 10) : '—'}
-                        {p.daysToEdc != null && (
-                          <span className="ml-1.5 text-caption text-[var(--ink-navy-muted)]">
-                            ({p.daysToEdc < 0 ? `เลย ${Math.abs(p.daysToEdc)}` : `${p.daysToEdc}`}d)
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-1.5 text-center">
-                        <span
-                          className="inline-block border px-1.5 py-0.5 font-mono text-caption"
-                          style={{
-                            color: tierColor(riskTier),
-                            borderColor: tierColor(riskTier),
-                          }}
-                        >
-                          {p.ancRiskLevel}
-                        </span>
-                      </td>
-                      <td className="px-3 py-1.5 text-center font-mono text-caption text-[var(--ink-navy-dim)]">
-                        {p.triggers.join('+') || '—'}
-                      </td>
-                      <td className="px-5 py-1.5 text-caption text-[var(--ink-navy-dim)]">
-                        <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
-                          [{p.fromHcode}]
-                        </span>{' '}
-                        {p.fromHospitalName}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <SectionCard
+          title={`ผู้คลอดที่จะส่งต่อมา · GA ≥ ${minGa} สัปดาห์`}
+          actions={
+            <span className="text-label text-ink-muted">
+              {incomingCount} ราย · {incomingItems.length === incomingCount ? 'แสดงทั้งหมด' : `แสดง ${incomingItems.length}`}
+            </span>
+          }
+        >
+          <DataTable<IncomingTermPregnancyItem>
+            caption="ผู้คลอดที่จะส่งต่อมา"
+            maxHeight={320}
+            columns={INCOMING_COLUMNS}
+            rows={incomingItems}
+            rowKey={(p) => p.id}
+            onRowClick={(p) => router.push(`/pregnancies/${p.id}`)}
+            rowLabel={(p) => `เปิดข้อมูลการตั้งครรภ์ ${maskName(p.name)} HN ${p.hn}`}
+            empty="ไม่มีรายชื่อในขณะนี้"
+          />
+        </SectionCard>
       )}
 
-      {/* Tabs */}
-      <div
-        className="flex items-stretch bg-white px-5"
-        style={{ borderBottom: '1px solid var(--rule-strong)' }}
-      >
-        <button
-          onClick={() => setTab('labor')}
-          className="-mb-px flex items-center gap-2 px-5 py-2.5 text-label"
-          style={{
-            color: tab === 'labor' ? 'var(--ink-navy)' : 'var(--ink-navy-muted)',
-            fontWeight: tab === 'labor' ? 700 : 500,
-            borderBottom:
-              tab === 'labor' ? '2px solid var(--accent-navy)' : '2px solid transparent',
-          }}
-        >
-          LABOR WARD
-          <span
-            className="rounded-full px-2 py-0.5 font-mono text-caption tabular-nums"
+      <section aria-label="ผู้ป่วยในโรงพยาบาล" className="overflow-hidden rounded-2xl bg-surface-card shadow-soft">
+        {/* Tabs */}
+        <div className="flex flex-wrap items-stretch border-b border-border px-3">
+          <button
+            onClick={() => setTab('labor')}
+            aria-pressed={tab === 'labor'}
+            className="-mb-px flex items-center gap-2 px-5 py-2.5 text-label"
             style={{
-              background: tab === 'labor' ? 'var(--accent-navy-soft)' : 'var(--rule-hair)',
-              color: tab === 'labor' ? 'var(--accent-navy)' : 'var(--ink-navy-muted)',
+              color: tab === 'labor' ? 'var(--ink-navy)' : 'var(--ink-navy-muted)',
+              fontWeight: tab === 'labor' ? 700 : 500,
+              borderBottom:
+                tab === 'labor' ? '2px solid var(--accent-navy)' : '2px solid transparent',
             }}
           >
-            {laborTotal}
-          </span>
-          {laborAlarmCount > 0 && (
+            ห้องคลอด
             <span
-              className="rounded-sm px-1.5 py-0.5 font-mono text-caption font-bold uppercase tracking-[0.08em]"
-              style={{ background: COLOR.riskHighTint, color: COLOR.riskHighText }}
+              className="rounded-full px-2 py-0.5 font-mono text-caption tabular-nums"
+              style={{
+                background: tab === 'labor' ? 'var(--accent-navy-soft)' : 'var(--rule-hair)',
+                color: tab === 'labor' ? 'var(--accent-navy)' : 'var(--ink-navy-muted)',
+              }}
             >
-              {laborAlarmCount} ALARM
+              {laborTotal}
             </span>
-          )}
-        </button>
-        <button
-          onClick={() => setTab('anc')}
-          className="-mb-px flex items-center gap-2 px-5 py-2.5 text-label"
-          style={{
-            color: tab === 'anc' ? 'var(--ink-navy)' : 'var(--ink-navy-muted)',
-            fontWeight: tab === 'anc' ? 700 : 500,
-            borderBottom: tab === 'anc' ? '2px solid var(--accent-navy)' : '2px solid transparent',
-          }}
-        >
-          ANC REGISTRY
-          <span
-            className="rounded-full px-2 py-0.5 font-mono text-caption tabular-nums"
+            {laborAlarmCount > 0 && (
+              <span
+                className="rounded-sm px-1.5 py-0.5 text-caption font-bold"
+                style={{ background: COLOR.riskHighTint, color: COLOR.riskHighText }}
+              >
+                สัญญาณเตือน {laborAlarmCount}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setTab('anc')}
+            aria-pressed={tab === 'anc'}
+            className="-mb-px flex items-center gap-2 px-5 py-2.5 text-label"
             style={{
-              background: tab === 'anc' ? 'var(--accent-navy-soft)' : 'var(--rule-hair)',
-              color: tab === 'anc' ? 'var(--accent-navy)' : 'var(--ink-navy-muted)',
+              color: tab === 'anc' ? 'var(--ink-navy)' : 'var(--ink-navy-muted)',
+              fontWeight: tab === 'anc' ? 700 : 500,
+              borderBottom: tab === 'anc' ? '2px solid var(--accent-navy)' : '2px solid transparent',
             }}
           >
-            {ancTotal}
-          </span>
-          {ancHr3 > 0 && (
+            ทะเบียนฝากครรภ์
             <span
-              className="inline-block h-1.5 w-1.5 rounded-full"
-              style={{ background: 'var(--risk-high)' }}
-            />
-          )}
-        </button>
-      </div>
-
-      {/* Body split */}
-      <div
-        className="grid"
-        style={{
-          gridTemplateColumns: '1.05fr 1fr',
-          minHeight: 'calc(100vh - 280px)',
-        }}
-      >
-        {/* List */}
-        <div
-          className="overflow-y-auto bg-white px-5 py-4"
-          style={{
-            borderRight: '1px solid var(--rule-strong)',
-            maxHeight: 'calc(100vh - 280px)',
-          }}
-        >
-          <div
-            className="mb-2 flex items-baseline justify-between border-b pb-1"
-            style={{ borderColor: 'var(--accent-navy)' }}
-          >
-            <div className="font-mono text-caption tracking-[0.1em] text-[var(--ink-navy)]">
-              <span className="text-[var(--ink-navy-muted)] mr-1.5">01</span>
-              {tab === 'labor'
-                ? 'LABOR FLOOR · เรียงตามความเสี่ยง'
-                : 'ANC LIST · เรียงตามไตรมาส / ความเสี่ยง'}
-            </div>
-            <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
-              {tab === 'labor'
-                ? labor.length < laborTotal
-                  ? `แสดง ${labor.length} จาก ${laborTotal} PATIENTS`
-                  : `${laborTotal} PATIENTS`
-                : journeys.length < ancTotal
-                  ? `แสดง ${journeys.length} จาก ${ancTotal} PATIENTS`
-                  : `${ancTotal} PATIENTS`}{' '}
-              · LIVE
-            </div>
-          </div>
-
-          {tab === 'labor' ? (
-            <>
-              {labor.length === 0 ? (
-                <div
-                  className="border bg-white py-10 text-center"
-                  style={{ borderColor: 'var(--rule-strong)' }}
-                >
-                  <p className="font-mono text-caption text-[var(--ink-navy-muted)]">
-                    ไม่มีผู้คลอดในขณะนี้
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <GroupHeader title="ALL PATIENTS" sub="sorted by CPD risk" count={labor.length} />
-                  <div>
-                    {labor.map((p) => (
-                      <LaborRow
-                        key={p.an}
-                        p={p}
-                        isSelected={effectiveLabor === p.an}
-                        onSelect={() => setSelectedLabor(p.an)}
-                        onOpen={() => router.push(`/patients/${buildPatientId(hcode, p.an)}`)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-              <PartographAuditPanel audit={laborData?.partographAudit} />
-            </>
-          ) : journeys.length === 0 ? (
-            <div
-              className="border bg-white py-10 text-center"
-              style={{ borderColor: 'var(--rule-strong)' }}
+              className="rounded-full px-2 py-0.5 font-mono text-caption tabular-nums"
+              style={{
+                background: tab === 'anc' ? 'var(--accent-navy-soft)' : 'var(--rule-hair)',
+                color: tab === 'anc' ? 'var(--accent-navy)' : 'var(--ink-navy-muted)',
+              }}
             >
-              <p className="font-mono text-caption text-[var(--ink-navy-muted)]">
-                ยังไม่มีหญิงตั้งครรภ์ลงทะเบียนกับโรงพยาบาลนี้
-              </p>
+              {ancTotal}
+            </span>
+            {ancHr3 > 0 && (
+              <span
+                className="inline-block h-1.5 w-1.5 rounded-full"
+                style={{ background: 'var(--risk-high)' }}
+              />
+            )}
+          </button>
+        </div>
+
+        {/* Body split */}
+        <div className="grid grid-cols-1 @min-[1000px]:grid-cols-[1.05fr_1fr]">
+          {/* List */}
+          <div className="px-4 py-4 @min-[1000px]:max-h-[calc(100dvh_-_var(--app-header-h,0px)_-_120px)] @min-[1000px]:overflow-y-auto @min-[1000px]:border-r @min-[1000px]:border-border">
+            <div className="mb-2 flex items-baseline justify-between border-b border-brand pb-1">
+              <div className="text-label text-ink">
+                {tab === 'labor'
+                  ? 'ห้องคลอด · เรียงตามความเสี่ยง CPD'
+                  : 'ทะเบียนฝากครรภ์ · เรียงตามไตรมาสและความเสี่ยง'}
+              </div>
+              <div className="text-label text-ink-muted">
+                {tab === 'labor'
+                  ? labor.length < laborTotal
+                    ? `แสดง ${labor.length} จาก ${laborTotal} ราย`
+                    : `${laborTotal} ราย`
+                  : journeys.length < ancTotal
+                    ? `แสดง ${journeys.length} จาก ${ancTotal} ราย`
+                    : `${ancTotal} ราย`}
+              </div>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {(['T3', 'T2', 'T1', 'unknown'] as const).map((tri) => {
-                const list = ancByTrimester[tri];
-                if (list.length === 0) return null;
-                const hr = list.filter((j) => j.ancRiskLevel === 'HR3').length;
-                const title =
-                  tri === 'T3'
-                    ? '3RD TRIMESTER'
-                    : tri === 'T2'
-                      ? '2ND TRIMESTER'
-                      : tri === 'T1'
-                        ? '1ST TRIMESTER'
-                        : 'GA UNKNOWN';
-                const sub =
-                  tri === 'T3' ? '28w+' : tri === 'T2' ? '13–27w' : tri === 'T1' ? '0–12w' : '—';
-                return (
-                  <div key={tri}>
-                    <GroupHeader title={title} sub={sub} count={list.length} hr={hr} />
+
+            {tab === 'labor' ? (
+              <>
+                {labor.length === 0 ? (
+                  <EmptyState
+                    illustration="ward"
+                    title="ไม่มีผู้คลอดในขณะนี้"
+                    description="ข้อมูลจะปรากฏเมื่อโรงพยาบาลรับผู้คลอดเข้าห้องคลอดใน HOSxP"
+                  />
+                ) : (
+                  <div>
+                    <GroupHeader title="ผู้คลอดทั้งหมด" sub="เรียงตามคะแนน CPD" count={labor.length} />
                     <div>
-                      {list.map((j) => (
-                        <AncRow
-                          key={j.id}
-                          j={j}
-                          isSelected={effectiveAnc === j.id}
-                          onSelect={() => setSelectedAnc(j.id)}
-                          onOpen={() => router.push(`/pregnancies/${j.id}`)}
+                      {labor.map((p) => (
+                        <LaborRow
+                          key={p.an}
+                          p={p}
+                          isSelected={effectiveLabor === p.an}
+                          onSelect={() => setSelectedLabor(p.an)}
+                          onOpen={() => router.push(`/patients/${buildPatientId(hcode, p.an)}`)}
                         />
                       ))}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                )}
+                <PartographAuditPanel audit={laborData?.partographAudit} />
+              </>
+            ) : journeys.length === 0 ? (
+              <EmptyState
+                title="ยังไม่มีหญิงตั้งครรภ์ลงทะเบียนกับโรงพยาบาลนี้"
+                description="ข้อมูลจะปรากฏเมื่อโรงพยาบาลซิงค์ทะเบียนฝากครรภ์จาก HOSxP"
+              />
+            ) : (
+              <div className="space-y-3">
+                {(['T3', 'T2', 'T1', 'unknown'] as const).map((tri) => {
+                  const list = ancByTrimester[tri];
+                  if (list.length === 0) return null;
+                  const hr = list.filter((j) => j.ancRiskLevel === 'HR3').length;
+                  const title =
+                    tri === 'T3'
+                      ? 'ไตรมาสที่ 3'
+                      : tri === 'T2'
+                        ? 'ไตรมาสที่ 2'
+                        : tri === 'T1'
+                          ? 'ไตรมาสที่ 1'
+                          : 'ไม่ทราบอายุครรภ์';
+                  const sub =
+                    tri === 'T3'
+                      ? '28 สัปดาห์ขึ้นไป'
+                      : tri === 'T2'
+                        ? '13–27 สัปดาห์'
+                        : tri === 'T1'
+                          ? '0–12 สัปดาห์'
+                          : '—';
+                  return (
+                    <div key={tri}>
+                      <GroupHeader title={title} sub={sub} count={list.length} hr={hr} />
+                      <div>
+                        {list.map((j) => (
+                          <AncRow
+                            key={j.id}
+                            j={j}
+                            isSelected={effectiveAnc === j.id}
+                            onSelect={() => setSelectedAnc(j.id)}
+                            onOpen={() => router.push(`/pregnancies/${j.id}`)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-        {/* Detail preview */}
-        <div
-          className="overflow-y-auto bg-[var(--surface-cool)] px-5 py-4"
-          style={{ maxHeight: 'calc(100vh - 280px)' }}
-        >
-          {tab === 'labor' ? (
-            (() => {
-              const p = labor.find((x) => x.an === effectiveLabor);
-              if (!p) return <EmptyPreview message="เลือกผู้คลอดในรายการเพื่อดูข้อมูลสรุป" />;
-              return <LaborPreview patient={p} hcode={hcode} />;
-            })()
-          ) : effectiveAnc ? (
-            <AncPreview journeyId={effectiveAnc} hcode={hcode} />
-          ) : (
-            <EmptyPreview message="เลือกหญิงตั้งครรภ์ในรายการเพื่อดูประวัติ ANC" />
-          )}
+          {/* Detail preview */}
+          <div className="border-t border-border bg-surface-muted px-4 py-4 @min-[1000px]:max-h-[calc(100dvh_-_var(--app-header-h,0px)_-_120px)] @min-[1000px]:overflow-y-auto @min-[1000px]:border-t-0">
+            {tab === 'labor' ? (
+              (() => {
+                const p = labor.find((x) => x.an === effectiveLabor);
+                if (!p) return <EmptyPreview message="เลือกผู้คลอดในรายการเพื่อดูข้อมูลสรุป" />;
+                return <LaborPreview patient={p} hcode={hcode} />;
+              })()
+            ) : effectiveAnc ? (
+              <AncPreview journeyId={effectiveAnc} hcode={hcode} />
+            ) : (
+              <EmptyPreview message="เลือกหญิงตั้งครรภ์ในรายการเพื่อดูประวัติ ANC" />
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </ListPageLayout>
   );
 }

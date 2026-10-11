@@ -135,3 +135,19 @@ export const ANC_WORKLOAD_WEIGHT = 0.1;
 export function combinedWorkload(labor: { total: number }, anc: { total: number }): number {
   return labor.total + anc.total * ANC_WORKLOAD_WEIGHT;
 }
+
+// ─── Hospital console (/hospitals/[hcode]) ──────────────────────────────────
+// Values the console hard-coded before UI sub-project 4, named so copy can
+// quote them. NOTE: ancOverdueAfterDays (14) differs from the province
+// board's ANC_OPS.followupWarnDays (35) — kept as-is pending a clinical
+// decision (spec L13); changing it changes what the tile counts.
+export const HOSPITAL_CONSOLE = {
+  /** ANC row/tile "ห่างนัด" flag: days since the last ANC visit. */
+  ancOverdueAfterDays: 14,
+  /** "ครบกำหนดคลอด" tile: EDC within this many days from now. */
+  ancDueWithinDays: 7,
+  /** Refer-in pipeline: GA threshold sent to /incoming-pregnancies. */
+  referInMinGaWeeks: 34,
+  /** Near second stage: cervix at or above this (cm), still ACTIVE. */
+  nearSecondStageCervixCm: 8,
+} as const;

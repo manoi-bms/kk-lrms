@@ -7,6 +7,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { Suspense } from 'react';
 import { SWRConfig } from 'swr';
+import { HOSPITAL_CONSOLE } from '@/config/hospital-network';
 import HospitalConsolePage from '@/app/(provincial)/hospitals/[hcode]/page';
 
 const nav = vi.hoisted(() => ({ push: vi.fn() }));
@@ -115,5 +116,45 @@ describe('HospitalConsolePage — characterization', () => {
     await renderConsole({ laborFails: true });
     expect(await screen.findByText(/โหลดข้อมูลห้องคลอดไม่สำเร็จ/)).toBeInTheDocument();
     expect(screen.getAllByText('435').length).toBeGreaterThan(0);
+  });
+});
+
+
+
+describe('HospitalConsolePage — sub-project 4 chrome', () => {
+  it('KPI tiles in Thai with server-aggregate values', async () => {
+    await renderConsole();
+    // The value node also carries the unit ("42ราย"); the figure is its leading digits.
+    const v = async (id: string) =>
+      (await screen.findByTestId(id)).querySelector('[data-kpi-value]')!.textContent!.match(/^[\d,]+/)![0];
+    expect(await v('kpi-labor-total')).toBe('42');
+    expect(await v('kpi-labor-alarms')).toBe('1'); // p1 BP 165/100
+    expect(await v('kpi-labor-second-stage')).toBe('1'); // p1 cervix 9 cm, active
+    expect(await v('kpi-anc-total')).toBe('435');
+    expect(await v('kpi-anc-hr3')).toBe('35');
+    expect(await v('kpi-anc-overdue')).toBe('1'); // j1 last ANC 20 days ago
+    expect(await v('kpi-anc-due-week')).toBe('1'); // j1 EDC in 3 days
+    expect(await v('kpi-refer-in')).toBe('7');
+    expect(screen.getByTestId('kpi-anc-overdue')).toHaveTextContent(`ห่างนัด ANC ≥ ${HOSPITAL_CONSOLE.ancOverdueAfterDays} วัน`);
+    expect(screen.getByTestId('kpi-refer-in')).toHaveTextContent(`GA ≥ ${HOSPITAL_CONSOLE.referInMinGaWeeks} สัปดาห์`);
+  });
+
+  it('Thai header, back link, tabs and group labels; no English chrome and no zoom', async () => {
+    await renderConsole();
+    await screen.findByRole('heading', { level: 1, name: 'รพ.ขอนแก่น' });
+    expect(screen.getByRole('link', { name: /รายชื่อโรงพยาบาล/ })).toHaveAttribute('href', '/hospitals');
+    expect(screen.getByRole('button', { name: /ห้องคลอด/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText(/ผู้คลอดทั้งหมด · เรียงตามคะแนน CPD/)).toBeInTheDocument();
+    for (const en of ['MISSION CONSOLE', 'PROVINCIAL REGISTRY', 'ON FLOOR', '2ND STAGE', 'LABOR WARD', 'ANC REGISTRY', 'ALL PATIENTS', 'SELECT A PATIENT', 'REFER-IN', '3RD TRIMESTER']) {
+      expect(screen.queryByText(new RegExp(en))).toBeNull();
+    }
+    expect(document.querySelector('[style*="zoom"]')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /ทะเบียนฝากครรภ์/ }));
+    expect(await screen.findByText(/ไตรมาสที่ 3/)).toBeInTheDocument();
+  });
+
+  it('the refer-in pipeline is a section card', async () => {
+    await renderConsole();
+    expect(await screen.findByRole('region', { name: /ผู้คลอดที่จะส่งต่อมา/ })).toBeInTheDocument();
   });
 });
