@@ -55,6 +55,19 @@ describe('Login — auth flow characterization (must not change)', () => {
     expect(window.localStorage.getItem('kk-lrms:auth-provider')).toBe('bms');
   });
 
+  it.each([
+    ['https://evil.example/x', '/'],
+    ['//evil.example', '/'],
+    ['/\\evil.example', '/'],
+    ['/patients/x', '/patients/x'],
+  ])('callbackUrl %s is navigated to as %s (no open redirect)', async (cb, expected) => {
+    nav.params = new URLSearchParams({ 'bms-session-id': 'abc', callbackUrl: cb });
+    stubPreflight({ ok: true });
+    auth.signIn.mockResolvedValue({ error: undefined });
+    render(<LoginPage />);
+    await waitFor(() => expect(nav.push).toHaveBeenCalledWith(expected));
+  });
+
   it('an empty submit asks for the session id and calls nothing', async () => {
     const fetchMock = stubPreflight({ ok: true });
     const { container } = render(<LoginPage />);
@@ -136,7 +149,9 @@ describe('Login — direction-C layout', () => {
   });
   it('states the PDPA protection and links to /about', () => {
     render(<LoginPage />);
-    expect(screen.getByText('ข้อมูลผู้ป่วยได้รับการเข้ารหัสตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล (PDPA)')).toBeInTheDocument();
+    expect(
+      screen.getByText('ชื่อและเลขบัตรประชาชนผู้ป่วยถูกเข้ารหัสและแสดงแบบปิดบังบางส่วน ตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล'),
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'เกี่ยวกับระบบ KK-LRMS' })).toHaveAttribute('href', '/about');
   });
   it('the hero illustration is decorative', () => {
