@@ -38,3 +38,6 @@ export function formatSyncDuration(ms: number | null): string {
 
 /** /api/admin/sync-overview refresh — quoted in the tab's copy. */
 export const SYNC_OVERVIEW_POLL_MS = 15_000;
+
+/** Per-hospital sync log refresh in the edit dialog — quoted in its copy. */
+export const SYNC_LOG_POLL_MS = 10_000;

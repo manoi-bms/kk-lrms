@@ -36,7 +36,7 @@ export function HosxpVersionDialog({ rejection, onClose }: { rejection: VersionR
                   <DialogTitle className="text-base font-semibold text-danger-text">
                     ต้องอัปเดต HOSxP ก่อนใช้งาน
                   </DialogTitle>
-                  <DialogDescription className="text-label text-danger-text/80 mt-1">
+                  <DialogDescription className="text-label text-danger-text mt-1">
                     เวอร์ชัน HOSxP API ของโรงพยาบาลเก่ากว่าที่ระบบ KK-LRMS รองรับ
                   </DialogDescription>
                 </DialogHeader>

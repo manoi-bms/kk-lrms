@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { SectionCard } from '@/components/shared/SectionCard';
 import { DataTable } from '@/components/shared/DataTable';
+import { LoadingState } from '@/components/shared/LoadingState';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { StatusPill } from '@/components/admin/admin-ui';
@@ -87,27 +88,6 @@ function effectiveOutcome(entry: OverviewEntry): SyncOverviewOutcome {
   return entry.latestRun.outcome;
 }
 
-// Reuse the per-hospital edit dialog so clicking a row jumps to the same
-// "Sync Log" tab admins already know — keeps the data model consistent
-// and avoids two places that render step trails. The dialog re-fetches
-// fuller data internally; we just pass enough for it to mount.
-function entryToHospital(entry: OverviewEntry): AdminHospital {
-  return {
-    hcode: entry.hcode,
-    name: entry.name,
-    level: entry.level,
-    serviceType: null,
-    provinceCode: null,
-    districtCode: null,
-    lat: null,
-    lon: null,
-    isActive: entry.isActive,
-    connectionStatus: entry.connectionStatus,
-    lastSyncAt: entry.lastSyncAt,
-    bmsConfig: null,
-  };
-}
-
 export function SyncOverviewTab() {
   const { data, isLoading, error, mutate } = useSWR<OverviewResponse>(
     '/api/admin/sync-overview',
@@ -115,6 +95,15 @@ export function SyncOverviewTab() {
   );
   const [filter, setFilter] = useState<FilterKey>('all');
   const [openHcode, setOpenHcode] = useState<string | null>(null);
+  // The drill-down edits the REAL registry record. The overview rows are a
+  // lite projection (no province/coords/service type), so passing them to the
+  // dialog would make "save General" overwrite real registry data with nulls.
+  const {
+    data: registry,
+    isLoading: registryLoading,
+    error: registryError,
+    mutate: mutateRegistry,
+  } = useSWR<{ hospitals: AdminHospital[] }>('/api/admin/hospitals');
 
   const counts = useMemo(() => {
     const c = { all: 0, failing: 0, never: 0, ok: 0 };
@@ -140,7 +129,8 @@ export function SyncOverviewTab() {
     });
   }, [data, filter]);
 
-  const openEntry = data?.hospitals.find((h) => h.hcode === openHcode);
+  const openHospital = registry?.hospitals.find((h) => h.hcode === openHcode) ?? null;
+  const registryUnavailable = openHcode !== null && !openHospital && !registryLoading;
 
   return (
     <section className="space-y-4">
@@ -241,15 +231,28 @@ export function SyncOverviewTab() {
         />
       </SectionCard>
 
-      {/* Reuse the standard hospital edit dialog so the click → drill-down
-          path lands operators on the same Sync Log tab they already know.
-          The dialog re-fetches /api/admin/hospitals internally for full
-          data; the lite shape here is just enough for it to mount. */}
+      {openHcode && registryLoading ? <LoadingState message="กำลังโหลดข้อมูลโรงพยาบาลเพื่อเปิดแก้ไข..." /> : null}
+      {registryUnavailable ? (
+        <ErrorState
+          variant="banner"
+          className="rounded-xl border"
+          message={
+            registryError
+              ? 'โหลดข้อมูลโรงพยาบาลเพื่อแก้ไขไม่สำเร็จ'
+              : 'ไม่พบโรงพยาบาลนี้ในทะเบียน — โหลดข้อมูลโรงพยาบาลเพื่อแก้ไขไม่สำเร็จ'
+          }
+          remedy="กด ลองใหม่ หากยังไม่ได้ให้รีเฟรชหน้านี้ ระบบจะไม่เปิดหน้าแก้ไขจนกว่าจะได้ข้อมูลจริง เพื่อไม่ให้เขียนทับทะเบียนโรงพยาบาล"
+          onRetry={() => void mutateRegistry()}
+        />
+      ) : null}
+
+      {/* Reuse the standard hospital edit dialog (same Sync Log tab admins
+          already know) — fed the full registry record, never the lite row. */}
       <HospitalEditDialog
-        hospital={openEntry ? entryToHospital(openEntry) : null}
+        hospital={openHospital}
         onClose={() => setOpenHcode(null)}
         onSaved={async () => {
-          await mutate();
+          await Promise.all([mutate(), mutateRegistry()]);
         }}
         initialSection="sync-log"
       />

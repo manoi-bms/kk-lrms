@@ -43,6 +43,8 @@ const RULES: Rule[] = [
   ['css zoom', (l) => /\bzoom:\s*[\d.]/.test(l)],
   ['uppercase eyebrow', (l) => /\buppercase\b/.test(l)],
   ['slate palette', (l) => /\b(?:bg|text|border|from|via|to|ring|divide)-slate-\d/.test(l)],
+  // Opacity on a contrast-checked *-text token defeats the AA pairing.
+  ['opacity on -text token', (l) => /\btext-[a-z]+-text\/\d/.test(l)],
   // Tailwind 4 keeps commas literally: grid-cols-[90px,1fr] → invalid CSS (B1).
   ['comma grid template', (l) =>
     [...l.matchAll(/grid-cols-\[([^\]]*)\]/g)].some((m) => m[1].replace(/\([^)]*\)/g, '').includes(','))],

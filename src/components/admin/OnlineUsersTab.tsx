@@ -77,7 +77,7 @@ export function OnlineUsersTab() {
           variant="banner"
           className="mb-3 rounded-xl border"
           message="โหลดรายชื่อผู้ใช้งานออนไลน์ไม่สำเร็จ"
-          remedy="ระบบจะลองใหม่ทุก 10 วินาที หากยังไม่ได้ ตรวจสอบ Redis ของเซิร์ฟเวอร์"
+          remedy={`ระบบจะลองใหม่ทุก ${ONLINE_USERS_POLL_MS / 1000} วินาที หากยังไม่ได้ ตรวจสอบ Redis ของเซิร์ฟเวอร์`}
         />
       )}
       <DataTable

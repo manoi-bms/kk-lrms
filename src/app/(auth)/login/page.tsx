@@ -4,6 +4,7 @@
 // unchanged and pinned by tests/unit/pages/login.test.tsx.
 'use client';
 
+import { sanitizeCallbackUrl } from '@/lib/safe-callback-url';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -29,7 +30,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const autoLoginAttempted = useRef(false);
 
-  const callbackUrl = searchParams.get('callbackUrl') || '/';
+  const callbackUrl = sanitizeCallbackUrl(searchParams.get('callbackUrl'));
   const bmsSessionId = searchParams.get('bms-session-id');
   const providerError = searchParams.get('providerError');
   const mappedProviderError = providerError ? mapProviderError(providerError) : null;
@@ -264,7 +265,7 @@ function LoginForm() {
 
           <p className="flex items-start gap-2 text-caption text-ink-muted">
             <ShieldCheck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
-            ข้อมูลผู้ป่วยได้รับการเข้ารหัสตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล (PDPA)
+            ชื่อและเลขบัตรประชาชนผู้ป่วยถูกเข้ารหัสและแสดงแบบปิดบังบางส่วน ตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล
           </p>
           <p className="text-caption text-ink-muted">
             <Link href="/about" className="font-medium text-brand underline-offset-4 hover:underline">

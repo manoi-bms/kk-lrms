@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { render, screen, within } from '@testing-library/react';
 import AboutPage from '@/app/about/page';
 import { KK_HOSPITALS } from '@/config/hospitals';
 import { CPD_FACTOR_WEIGHTS, RISK_LEVELS } from '@/config/risk-levels';
 import { RiskLevel } from '@/types/domain';
+import { maskCid, maskName } from '@/lib/pii-mask';
 
 describe('About page', () => {
   it('has one h1; the header art is decorative', () => {
@@ -49,6 +51,21 @@ describe('About page', () => {
     expect(screen.queryByText(/ไม่แสดงชื่อ-สกุล/)).toBeNull();
     expect(screen.getByText(/แสดงชื่อแบบย่อ/)).toBeInTheDocument();
     expect(screen.getAllByText(/ProviderID \(สิทธิ์อ่านอย่างเดียว\)/).length).toBeGreaterThanOrEqual(1);
+  });
+  it('the masking examples in the copy are exactly what the real maskers produce', () => {
+    const { container } = render(<AboutPage />);
+    const text = (container.textContent ?? '').replace(/\s+/g, ' ');
+    expect(text).toContain(`(เช่น ${maskName('สมหญิง ขจรศักดิ์')})`);
+    expect(text).toContain(`(เช่น ${maskCid('3320500282121')})`);
+    expect(maskName('สมหญิง ขจรศักดิ์')).toBe('สมหญิง ข.');
+    expect(maskCid('3320500282121')).toBe('3XXXXXXXX2121');
+  });
+  it('about-tables stays a client module and the server page never imports DataTable directly (build fix)', () => {
+    const tables = readFileSync('src/components/about/about-tables.tsx', 'utf8');
+    const page = readFileSync('src/app/about/page.tsx', 'utf8');
+    expect(tables.trimStart().startsWith("'use client'")).toBe(true);
+    expect(page).not.toMatch(/import[^;]*DataTable[^;]*from/);
+    expect(page).toMatch(/from '@\/components\/about\/about-tables'/);
   });
   it('uses no categorical or slate palette', () => {
     const { container } = render(<AboutPage />);

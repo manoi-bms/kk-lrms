@@ -49,7 +49,7 @@ import {
 } from '@/components/ui/dialog';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { InlineNotice } from '@/components/shared/InlineNotice';
-import { SYNC_OUTCOME_META, SYNC_STEP_TONE, formatSyncDuration, syncTriggerLabel } from '@/config/sync-run-status';
+import { SYNC_LOG_POLL_MS, SYNC_OUTCOME_META, SYNC_STEP_TONE, formatSyncDuration, syncTriggerLabel } from '@/config/sync-run-status';
 import type { StatusTone } from '@/config/status-tone';
 import { DEFAULT_ACTION_REMEDY } from '@/lib/action-failure';
 import { cn, formatRelativeTime } from '@/lib/utils';
@@ -860,6 +860,8 @@ function ConsultDoctorsSection({ hospital }: { hospital: AdminHospital }) {
               <div className="truncate font-mono text-caption text-ink-muted">{doctor.phoneNumber ?? '—'}</div>
               <div className="flex justify-end gap-1">
                 <button
+                  type="button"
+                  aria-label={`แก้ไขแพทย์ ${doctor.name}`}
                   onClick={() => startEdit(doctor)}
                   className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-label text-ink-muted hover:bg-brand-soft"
                   disabled={busy || !!deleteBusyId}
@@ -868,6 +870,8 @@ function ConsultDoctorsSection({ hospital }: { hospital: AdminHospital }) {
                   แก้
                 </button>
                 <button
+                  type="button"
+                  aria-label={`ลบแพทย์ ${doctor.name}`}
                   onClick={() => handleDelete(doctor)}
                   className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-label text-danger-text hover:bg-danger-tint"
                   disabled={busy || deleteBusyId === doctor.id}
@@ -1058,6 +1062,7 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
   const [revokeTarget, setRevokeTarget] = useState<WebhookKey | null>(null);
   const [revokeInput, setRevokeInput] = useState('');
   const [revoking, setRevoking] = useState(false);
+  const [revokeError, setRevokeError] = useState<string | null>(null);
 
   // Filter keys to this hospital only so the dialog is focused.
   const keys = useMemo(
@@ -1111,18 +1116,21 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
   const handleRevoke = async () => {
     if (!revokeTarget || revokeInput !== revokeTarget.keyPrefix) return;
     setRevoking(true);
+    setRevokeError(null);
     try {
       const res = await fetch(`/api/admin/webhooks/${revokeTarget.id}`, {
         method: 'DELETE',
       });
       if (!res.ok) {
         const err = (await res.json().catch(() => null)) as { error?: string } | null;
-        alert(err?.error ?? 'ยกเลิกไม่สำเร็จ');
+        setRevokeError(err?.error ?? 'ยกเลิกคีย์ไม่สำเร็จ');
         return;
       }
       setRevokeTarget(null);
       setRevokeInput('');
       await mutate();
+    } catch {
+      setRevokeError('ยกเลิกคีย์ไม่สำเร็จ — ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
     } finally {
       setRevoking(false);
     }
@@ -1229,9 +1237,12 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
               <div className="text-right">
                 {k.isActive ? (
                   <button
+                    type="button"
+                    aria-label={`ยกเลิกคีย์ ${k.keyPrefix}`}
                     onClick={() => {
                       setRevokeTarget(k);
                       setRevokeInput('');
+                      setRevokeError(null);
                     }}
                     className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-label text-danger-text hover:bg-danger-tint"
                   >
@@ -1260,6 +1271,7 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
               value={revokeInput}
               onChange={(e) => setRevokeInput(e.target.value)}
               placeholder={revokeTarget.keyPrefix}
+              aria-label={`พิมพ์ ${revokeTarget.keyPrefix} เพื่อยืนยันการยกเลิก`}
               className="h-11 font-mono"
               autoFocus
             />
@@ -1276,6 +1288,9 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
               {revoking ? 'กำลังยกเลิก...' : 'ยืนยัน'}
             </Button>
           </div>
+          {revokeError ? (
+            <ErrorState variant="banner" className="mt-2 rounded-xl border" message={revokeError} remedy="ลองอีกครั้ง หากยังไม่ได้ให้รีเฟรชหน้าแล้วตรวจสอบสถานะคีย์" />
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -1590,7 +1605,7 @@ function formatTimeShort(iso: string): string {
 function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
   const { data, error, isLoading, mutate } = useSWR<SyncProgressResponse>(
     `/api/admin/hospitals/${hospital.hcode}/sync-progress?limit=20`,
-    { refreshInterval: 10_000 },
+    { refreshInterval: SYNC_LOG_POLL_MS },
   );
   const [expandedRunId, setExpandedRunId] = useState<string | null>(null);
 
@@ -1637,7 +1652,7 @@ function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
       {runs.length > 0 && (
         <div className="overflow-hidden rounded-xl border border-border bg-surface-card">
           <div className="flex items-center justify-between border-b border-border px-3 py-2 text-label text-ink-muted">
-            <span>ประวัติการซิงค์ · 24 ชม. · รีเฟรชอัตโนมัติทุก 10 วินาที</span>
+            <span>ประวัติการซิงค์ · 24 ชม. · รีเฟรชอัตโนมัติทุก {SYNC_LOG_POLL_MS / 1000} วินาที</span>
             <button
               type="button"
               onClick={() => mutate()}
