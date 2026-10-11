@@ -8,19 +8,22 @@ import { BmsSessionProvider } from '@/contexts/BmsSessionContext';
 import { CallProvider } from '@/components/calls/CallProvider';
 import { AppShell } from '@/components/layout/AppShell';
 import { BreadcrumbProvider } from '@/components/layout/BreadcrumbContext';
-import { ClinicalChatPanel } from '@/components/chat/ClinicalChatPanel';
+import { connection } from 'next/server';
+import { ClinicalChatGate, chatReserveClass } from '@/components/chat/ClinicalChatGate';
 
-export default function HospitalLayout({ children }: { children: React.ReactNode }) {
+export default async function HospitalLayout({ children }: { children: React.ReactNode }) {
+  // Read the chat flag per request, never frozen at build time.
+  await connection();
   return (
     <SessionProvider>
       <BmsSessionProvider>
         <CallProvider>
           <BreadcrumbProvider>
             <AppShell variant="hospital">
-              <main className="flex-1">{children}</main>
+              <main className={`flex-1 ${chatReserveClass()}`.trim()}>{children}</main>
             </AppShell>
             {/* Clinical chatbot — maternity-ward mode (per-patient clinical RAG). */}
-            <ClinicalChatPanel mode="clinical" />
+            <ClinicalChatGate mode="clinical" />
           </BreadcrumbProvider>
         </CallProvider>
       </BmsSessionProvider>

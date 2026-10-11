@@ -167,7 +167,7 @@ export function OnlineUsersBadge() {
                 fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
               }}
             >
-              และอีก {overflow} คน — ดูที่หน้าผู้ดูแลระบบ > ผู้ใช้ออนไลน์
+              และอีก {overflow} คน — ดูที่หน้าผู้ดูแลระบบ แท็บผู้ใช้ออนไลน์
             </div>
           )}
         </div>
