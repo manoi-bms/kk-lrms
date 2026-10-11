@@ -262,7 +262,7 @@ function PregnanciesBoard() {
   const [cohortFilter, setCohortFilter] = useState(searchParams.get('cohort') ?? '');
   const [hospitalFilter, setHospitalFilter] = useState('');
   const [sortBy, setSortBy] = useState('due');
-  const resetPage = useCallback(() => setPage(1), []);
+  const resetPage = useCallback(() => setPage(1), [setPage]);
   // Server search: HN prefix, decrypted name or hospital name (journey-list.ts).
   const search = useDebouncedSearch(resetPage);
 
