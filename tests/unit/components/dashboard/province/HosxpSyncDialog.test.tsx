@@ -45,3 +45,22 @@ describe('HosxpSyncDialog', () => {
     expect(screen.getByText(/ยังไม่มีบันทึกขั้นตอน/)).toBeInTheDocument();
   });
 });
+
+describe('HosxpSyncDialog layout and copy', () => {
+  it('overrides the base sm:max-w-sm so the wide layout applies', () => {
+    render(<HosxpSyncDialog open onOpenChange={vi.fn()} state={state} status="QUERYING" help="h" />);
+    const cls = screen.getByRole('dialog').className;
+    expect(cls).toContain('sm:max-w-none');
+    expect(cls).not.toContain('sm:max-w-sm');
+  });
+  it('Thai step-log labels', () => {
+    render(<HosxpSyncDialog open onOpenChange={vi.fn()} state={state} status="QUERYING" help="h" />);
+    expect(screen.getByText('บันทึกขั้นตอน')).toBeInTheDocument();
+    expect(screen.getByText(/รอบล่าสุด · 1 รายการ/)).toBeInTheDocument();
+  });
+  it('Thai ANC failure wording', () => {
+    const failed: OnboardHosxpSyncState = { ran: true, successCount: 1, lastStats: { anc: { error: 'timeout' } } } as OnboardHosxpSyncState;
+    render(<HosxpSyncDialog open onOpenChange={vi.fn()} state={failed} status="RUNNING" help="h" />);
+    expect(screen.getByText(/ซิงค์ ANC ไม่สำเร็จ: timeout/)).toBeInTheDocument();
+  });
+});

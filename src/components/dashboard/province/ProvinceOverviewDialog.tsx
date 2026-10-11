@@ -32,7 +32,7 @@ export function ProvinceOverviewDialog({
 }: ProvinceOverviewDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-[96vw] h-[92vh] w-[96vw] gap-0 overflow-hidden bg-surface-page p-0 sm:max-w-[96vw]">
+      <DialogContent className="h-[92vh] w-[96vw] max-w-[96vw]! grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden bg-surface-page p-0 sm:max-w-[96vw]">
         <DialogHeader className="flex flex-row flex-wrap items-center justify-between gap-4 border-b border-border bg-brand px-5 py-3">
           <div className="min-w-0">
             <DialogTitle className="text-title text-white">ภาพรวมโรงพยาบาล</DialogTitle>
@@ -46,7 +46,7 @@ export function ProvinceOverviewDialog({
         </DialogHeader>
         <div
           className={cn(
-            'grid min-h-0 flex-1 overflow-hidden',
+            'grid min-h-0 overflow-hidden',
             mode === 'map' ? 'grid-cols-[minmax(0,2fr)_minmax(420px,1fr)]' : 'grid-cols-1',
           )}
         >

@@ -4,10 +4,10 @@
 // wrapping). In kiosk mode the header is display:none and the value is 0px.
 'use client';
 
-import { useEffect, type RefObject } from 'react';
+import { useLayoutEffect, type RefObject } from 'react';
 
 export function useCssHeightVar(ref: RefObject<HTMLElement | null>, name: `--${string}`): void {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     const root = document.documentElement;

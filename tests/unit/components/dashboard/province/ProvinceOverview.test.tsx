@@ -48,4 +48,11 @@ describe('ProvinceOverviewDialog', () => {
     expect(screen.getByText(/กด ESC เพื่อปิด/)).toBeInTheDocument();
     expect(screen.getByTestId('province-map')).toBeInTheDocument();
   });
+  it('fills the viewport: grid rows give the body the leftover height', () => {
+    render(<ProvinceOverviewDialog {...base} open onOpenChange={vi.fn()} mode="map" onModeChange={vi.fn()} />);
+    const cls = screen.getByRole('dialog').className;
+    expect(cls).toContain('grid-rows-[auto_minmax(0,1fr)]');
+    expect(cls).toContain('max-w-[96vw]!');
+    expect(cls).not.toContain('!max-w');
+  });
 });

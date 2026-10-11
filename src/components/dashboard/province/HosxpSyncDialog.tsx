@@ -3,7 +3,7 @@
 // IT staff paste into tickets. Title, buttons and prose are Thai.
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Copy } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { OnboardHosxpSyncState } from '@/hooks/useOnboardHosxpSync';
@@ -45,11 +45,14 @@ export interface HosxpSyncDialogProps {
 
 export function HosxpSyncDialog({ open, onOpenChange, state, status, help }: HosxpSyncDialogProps) {
   const [copy, setCopy] = useState<CopyState>('idle');
+  const resetTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(resetTimer.current), []);
   const copyReport = async () => {
     try {
       await navigator.clipboard.writeText(buildHosxpSyncReport(state, status, help));
       setCopy('copied');
-      window.setTimeout(() => setCopy('idle'), 1800);
+      window.clearTimeout(resetTimer.current);
+      resetTimer.current = window.setTimeout(() => setCopy('idle'), 1800);
     } catch {
       setCopy('failed');
     }
@@ -59,7 +62,7 @@ export function HosxpSyncDialog({ open, onOpenChange, state, status, help }: Hos
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] w-[min(1120px,calc(100vw-32px))] max-w-none gap-0 overflow-hidden p-0">
+      <DialogContent className="max-h-[92vh] w-[min(1120px,calc(100vw-32px))] max-w-none gap-0 sm:max-w-none overflow-hidden p-0">
         <DialogHeader className="border-b border-border bg-surface-card px-5 py-4">
           <div className="flex flex-wrap items-start justify-between gap-3 pr-8">
             <DialogTitle className="text-title text-brand">สถานะการดึงข้อมูลจาก HOSxP</DialogTitle>
@@ -122,7 +125,7 @@ export function HosxpSyncDialog({ open, onOpenChange, state, status, help }: Hos
 
           {(state?.error || state?.lastError) && (
             <div className="rounded-lg border border-danger/40 bg-danger-tint px-3 py-2 font-mono text-label leading-relaxed text-ink">
-              <div className="font-semibold text-danger-text">{state.error ?? 'HOSxP sync cycle failed'}</div>
+              <div className="font-semibold text-danger-text">{state.error ?? 'รอบซิงค์ HOSxP ล้มเหลว — ตรวจสอบข้อความด้านล่าง แล้วโหลดหน้านี้ใหม่'}</div>
               {state.detail && <div className="mt-1">{state.detail}</div>}
               {state.lastError && <div className="mt-1">{state.lastError}</div>}
             </div>
@@ -131,9 +134,9 @@ export function HosxpSyncDialog({ open, onOpenChange, state, status, help }: Hos
           {!state?.error && !state?.lastError && (
             <div className="rounded-lg border border-border bg-surface-muted px-3 py-2 font-mono text-label leading-relaxed text-ink">
               {anc?.error
-                ? `ANC sync failed: ${anc.error}`
+                ? `ซิงค์ ANC ไม่สำเร็จ: ${anc.error} — ตรวจสอบการเชื่อมต่อ HOSxP แล้วโหลดหน้านี้ใหม่`
                 : anc?.skippedReason
-                  ? `ANC not synced: ${anc.skippedReason}`
+                  ? `ยังไม่ได้ซิงค์ ANC: ${anc.skippedReason}`
                   : state?.phase === 'querying_hosxp'
                     ? 'กำลัง query HOSxP: active labour patients, active ANC, ANC visits และ partograph observations'
                     : state?.successCount
@@ -144,8 +147,8 @@ export function HosxpSyncDialog({ open, onOpenChange, state, status, help }: Hos
 
           <div className="rounded-lg border border-border font-mono text-label">
             <div className="flex items-center justify-between border-b border-border bg-surface-muted px-3 py-2">
-              <span className="font-semibold text-ink">Step log</span>
-              <span className="text-ink-muted">latest cycle · {steps.length} entries</span>
+              <span className="font-semibold text-ink">บันทึกขั้นตอน</span>
+              <span className="text-ink-muted">รอบล่าสุด · {steps.length} รายการ</span>
             </div>
             <div className="max-h-[260px] divide-y divide-border overflow-auto">
               {steps.length === 0 ? (
