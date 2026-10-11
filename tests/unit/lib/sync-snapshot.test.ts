@@ -27,6 +27,8 @@ describe('isSnapshotCurrent', () => {
   });
 
   it.each([undefined, NaN])('missing/invalid receivedAt %p is not current', (receivedAt) => {
-    expect(isSnapshotCurrent({ receivedAt: receivedAt as number, hasError: false, now: NOW })).toBe(false);
+    expect(isSnapshotCurrent({ receivedAt: receivedAt as number, hasError: false, now: NOW })).toBe(
+      false,
+    );
   });
 });
