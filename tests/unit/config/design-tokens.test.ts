@@ -8,6 +8,7 @@ import {
   CONTRAST_PAIRS,
   cssVarName,
   contrastRatio,
+  withAlpha,
   type ColorToken,
 } from '@/config/design-tokens';
 
@@ -62,5 +63,12 @@ describe('design tokens', () => {
     expect(rootBlock).toContain('--primary-teal: var(--brand);');
     expect(rootBlock).toContain('--accent-navy: var(--brand);');
     expect(rootBlock).toContain('--ink-navy: var(--ink);');
+  });
+});
+
+describe('withAlpha', () => {
+  it('turns a token hex into rgba', () => {
+    expect(withAlpha('#2E3A87', 0.06)).toBe('rgba(46, 58, 135, 0.06)');
+    expect(withAlpha(COLOR.surfaceCard, 0.92)).toBe('rgba(255, 255, 255, 0.92)');
   });
 });

@@ -1,5 +1,5 @@
 {
-  "maxEntries": 16,
+  "maxEntries": 15,
   "files": {
     "src/app/(hospital)/hospital-maternity-ward/page.tsx": "neutral cool-grey/slate hex (#F4F7FB, #1E293B, #E2E8F0) have no token yet; migrate when sub-projects 2-5 add neutral tokens (hospital pages)",
     "src/app/(provincial)/page.tsx": "text-[#ffe89a] is a decorative gold section number on the navy header of the normal-mode Province overview dialog (not kiosk); no light-on-navy accent token exists; migrate with sub-projects 2-5 (provincial page)",
@@ -10,7 +10,6 @@
     "src/components/dashboard/KioskHeader.tsx": "kiosk keeps its own larger type scale and dark palette (spec §1); not migrated",
     "src/components/dashboard/MaternalScreenCell.tsx": "kiosk branch text-[11px] is kiosk-only; kiosk keeps its own scale (spec §1)",
     "src/components/dashboard/OnlineUsersBadge.tsx": "dark navy badge palette (#0b1b2e/#e6ecf5) is a one-off with no token; migrate with sub-projects 2-5 (dashboard)",
-    "src/components/dashboard/ProvinceMapLeaflet.tsx": "kiosk map background/marker border (#06121f) and neutral map greys belong to the kiosk palette (spec §1); normal-mode greys migrate with sub-projects 2-5",
     "src/components/dashboard/SimulationControl.tsx": "admin-only simulation panel uses a one-off warm off-white #fffdfa with no token; migrate with sub-projects 2-5 (dashboard)",
     "src/components/maternity/BedTileFull.tsx": "neutral slate greys (#F4F7FB, #CBD5E1, #F8FAFC, #FAFBFC) and critical rgba border have no tokens; migrate when sub-projects 2-5 add neutral tokens (maternity ward)",
     "src/components/maternity/WardLayoutViewFull.tsx": "ward-board slate greys and categorical blue #1565C0 have no tokens; migrate with sub-projects 2-5 (maternity ward)",

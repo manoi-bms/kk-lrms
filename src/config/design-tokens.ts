@@ -96,3 +96,10 @@ export type TypeToken = keyof typeof TYPE_SCALE;
 
 /** Smallest text allowed outside kiosk mode. */
 export const MIN_TEXT_PX = TYPE_SCALE.caption.px;
+
+/** A token colour at partial opacity, for canvases that cannot use
+ *  Tailwind's `/alpha` syntax (Leaflet paths, inline legends). */
+export function withAlpha(hex: string, alpha: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}

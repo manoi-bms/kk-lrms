@@ -156,18 +156,20 @@ export function HospitalTable({
     <div className="border" style={{ borderColor: ruleStrong }}>
       {/* Sort chips */}
       <div
-        className="flex items-center gap-3 border-b px-3 py-2 font-mono text-caption tracking-[0.1em]"
+        className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-3 py-2 text-label"
         style={{ color: inkMuted, borderColor: ruleStrong }}
       >
-        <span>SORT:</span>
+        <span>เรียงตาม:</span>
         {[
-          { k: 'severity' as SortKey, l: 'SEVERITY' },
-          { k: 'name' as SortKey, l: 'NAME' },
-          { k: 'total' as SortKey, l: 'TOTAL' },
-          { k: 'level' as SortKey, l: 'LEVEL' },
+          { k: 'severity' as SortKey, l: 'ความรุนแรง' },
+          { k: 'name' as SortKey, l: 'ชื่อ' },
+          { k: 'total' as SortKey, l: 'จำนวนผู้คลอด' },
+          { k: 'level' as SortKey, l: 'ระดับ' },
         ].map((x) => (
           <button
             key={x.k}
+            type="button"
+            aria-pressed={sortKey === x.k}
             onClick={() => handleSort(x.k)}
             className={cn(
               'cursor-pointer border-b-2 bg-transparent pb-0.5 transition-colors',
@@ -181,7 +183,7 @@ export function HospitalTable({
             {x.l} {sortKey === x.k ? (sortDir === 'asc' ? '↑' : '↓') : ''}
           </button>
         ))}
-        <span className="ml-auto">{hospitals.length} NODES</span>
+        <span className="ml-auto tabular-nums">{hospitals.length} แห่ง</span>
       </div>
 
       {/* Rows */}
@@ -321,20 +323,17 @@ export function HospitalTable({
                 <div
                   className="text-left font-mono tabular-nums"
                   style={{ color: ink, fontSize: isKiosk ? 13 : MIN_TEXT_PX }}
-                  title={`Active labor: ${h.counts.total} ราย`}
+                  title={`ผู้คลอดในห้องคลอด ${h.counts.total} ราย`}
                 >
-                  <span
-                    className="font-mono text-caption uppercase tracking-[0.08em]"
-                    style={{ color: inkMuted }}
-                  >
-                    LB
-                  </span>{' '}
+                  <span className="text-caption" style={{ color: inkMuted }}>
+                ห้องคลอด
+              </span>{' '}
                   {h.counts.total || '–'}
                 </div>
                 <div
                   className="flex items-baseline gap-1 font-mono tabular-nums"
                   style={{ color: ink, fontSize: isKiosk ? 13 : MIN_TEXT_PX }}
-                  title={`ANC registry: ${h.ancCounts.total} · HR3: ${h.ancCounts.hr3}`}
+                  title={`ฝากครรภ์ที่ติดตาม ${h.ancCounts.total} ราย · HR3 ${h.ancCounts.hr3} ราย`}
                 >
                   <span
                     className="font-mono text-caption uppercase tracking-[0.08em]"
@@ -370,8 +369,8 @@ export function HospitalTable({
                   }}
                   title={
                     h.lastSyncAt
-                      ? `Last sync: ${new Date(h.lastSyncAt).toLocaleString('th-TH')}`
-                      : 'ยังไม่เคย sync'
+                      ? `ซิงค์ล่าสุด ${new Date(h.lastSyncAt).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}`
+                      : 'ยังไม่เคยซิงค์'
                   }
                 >
                   {formatRelativeAge(h.lastSyncAt, 'short')}

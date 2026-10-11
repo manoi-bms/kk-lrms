@@ -9,6 +9,7 @@
 'use client';
 
 import { COLOR, MIN_TEXT_PX } from '@/config/design-tokens';
+import { mapBackground, mapLegendTheme, mapPalette, type MapPalette } from '@/config/map-palette';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
@@ -189,7 +190,7 @@ function activeCountRadiusBoost(workload: number): number {
 
 function riskColor(
   live: DashboardHospital | undefined,
-  palette: ReturnType<typeof buildPalette>,
+  palette: MapPalette,
 ): string {
   if (!live) return palette.idle;
   // Acute labor risk owns red/amber outright.
@@ -202,35 +203,6 @@ function riskColor(
   if (live.ancCounts.hr3 > 0) return palette.med;
   if (live.ancCounts.total > 0) return palette.low;
   return palette.idle;
-}
-
-function buildPalette(mode: 'light' | 'kiosk') {
-  if (mode === 'kiosk') {
-    return {
-      boundaryStroke: '#6ba7e5',
-      boundaryFill: 'rgba(107, 167, 229, 0.08)',
-      amphoeStroke: 'rgba(107, 167, 229, 0.18)',
-      high: '#e05c5c',
-      med: '#e0a03a',
-      low: '#4fb58a',
-      idle: '#7f8fad',
-      pinStroke: '#06121f',
-      tooltipBg: '#0b1b2e',
-      tooltipInk: '#e6ecf5',
-    };
-  }
-  return {
-    boundaryStroke: COLOR.brand,
-    boundaryFill: 'rgba(43, 58, 140, 0.06)',
-    amphoeStroke: 'rgba(43, 58, 140, 0.18)',
-    high: COLOR.riskHigh,
-    med: COLOR.riskMedium,
-    low: COLOR.riskLow,
-    idle: '#94a3b8',
-    pinStroke: '#ffffff',
-    tooltipBg: '#ffffff',
-    tooltipInk: '#0c1530',
-  };
 }
 
 interface PinEntry {
@@ -264,7 +236,7 @@ export default function ProvinceMapLeaflet({
   size = 'mini',
 }: ProvinceMapLeafletProps) {
   const router = useRouter();
-  const palette = buildPalette(mode);
+  const palette = mapPalette(mode);
   const w = WEIGHTS[size];
 
   // Active province drives which shapes + pin list are rendered. A missing
@@ -418,7 +390,7 @@ export default function ProvinceMapLeaflet({
       <div
         className="grid h-full w-full place-items-center"
         style={{
-          background: mode === 'kiosk' ? '#06121f' : 'var(--surface-cool)',
+          background: mapBackground(mode),
           isolation: 'isolate',
         }}
       >
@@ -433,7 +405,7 @@ export default function ProvinceMapLeaflet({
     <div
       className="relative h-full w-full overflow-hidden"
       style={{
-        background: mode === 'kiosk' ? '#06121f' : '#eef1f6',
+        background: mapBackground(mode),
         // Contain Leaflet's internal pane z-indexes (200–700) so they
         // can't render on top of modal dialogs or page chrome.
         isolation: 'isolate',
@@ -598,7 +570,7 @@ function HospitalTooltip({ pin, kiosk }: { pin: PinEntry; kiosk: boolean }) {
   // The tooltip surface is dark in BOTH modes (.kk-map-tooltip), so the light
   // palette's riskHigh (~3.2:1 on it) fails AA everywhere; use the kiosk
   // palette's lighter high red for the H / HR3 counts.
-  const highInk = buildPalette('kiosk').high;
+  const highInk = mapPalette('kiosk').high;
 
   // Connection + sync state — same precedence as the corner dot so the
   // tooltip and the dot tell a consistent story.
@@ -824,15 +796,13 @@ function formatRelativeAgeShort(iso: string | null): string {
 
 function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
   const isKiosk = mode === 'kiosk';
-  const bg = isKiosk ? 'rgba(11, 27, 46, 0.85)' : 'rgba(255, 255, 255, 0.92)';
-  const ink = isKiosk ? '#e6ecf5' : '#0b1b2e';
-  const inkMuted = isKiosk ? 'rgba(230,236,245,0.7)' : 'rgba(11,27,46,0.65)';
-  const border = isKiosk ? 'rgba(107,167,229,0.3)' : 'rgba(43,58,140,0.22)';
+  const theme = mapLegendTheme(mode);
+  const { bg, ink, inkMuted, border } = theme;
   const items: Array<{ color: string; label: string; sub: string }> = [
     { color: COLOR.riskLow, label: 'ONLINE', sub: 'sync ปกติ' },
     { color: COLOR.riskMedium, label: 'BLOCKED', sub: 'sync ถูกระงับ' },
     { color: COLOR.riskHigh, label: 'OFFLINE', sub: 'ติดต่อไม่ได้' },
-    { color: '#94a3b8', label: 'UNKNOWN', sub: 'ยังไม่ sync' },
+    { color: theme.unknown, label: 'UNKNOWN', sub: 'ยังไม่ sync' },
   ];
   return (
     <div
@@ -871,7 +841,7 @@ function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
                 height: 8,
                 borderRadius: '50%',
                 background: it.color,
-                border: `1.5px solid ${isKiosk ? '#06121f' : '#ffffff'}`,
+                border: `1.5px solid ${theme.pinBorder}`,
                 boxShadow: '0 0 0 0.5px rgba(0,0,0,0.15)',
                 flexShrink: 0,
               }}
