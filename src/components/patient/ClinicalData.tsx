@@ -171,7 +171,7 @@ function Tile({
         background: bg,
       }}
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="inline-flex items-center gap-1.5" style={{ color: c }}>
           <span className="flex h-3 w-3 items-center justify-center">{icon}</span>
           <span className="font-mono text-caption font-semibold uppercase tracking-[0.1em]">
@@ -180,7 +180,7 @@ function Tile({
         </div>
         {showBadge && (
           <span
-            className="inline-flex items-center gap-0.5 rounded-sm px-1 py-0.5 font-mono text-caption font-bold tracking-[0.06em] text-white"
+            className="inline-flex shrink-0 items-center gap-0.5 rounded-sm px-1 py-0.5 font-mono text-caption font-bold tracking-[0.06em] text-white"
             style={{ background: c }}
           >
             <AlertTriangle className="h-2.5 w-2.5" />
@@ -372,7 +372,7 @@ export function ClinicalData({
             background: weightBg,
           }}
         >
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
             <div className="inline-flex items-center gap-1.5" style={{ color: weightColor }}>
               <Scale className="h-3 w-3" />
               <span className="font-mono text-caption font-semibold uppercase tracking-[0.1em]">
@@ -381,7 +381,7 @@ export function ClinicalData({
             </div>
             {weightShowBadge && weightDiffKg != null && (
               <span
-                className="inline-flex items-center gap-0.5 rounded-sm px-1 py-0.5 font-mono text-caption font-bold tracking-[0.06em] text-white"
+                className="inline-flex shrink-0 items-center gap-0.5 rounded-sm px-1 py-0.5 font-mono text-caption font-bold tracking-[0.06em] text-white"
                 style={{ background: weightColor }}
               >
                 <AlertTriangle className="h-2.5 w-2.5" />
