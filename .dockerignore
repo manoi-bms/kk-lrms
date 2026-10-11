@@ -27,6 +27,3 @@ redis-data/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
-
-# remove after Qwen Research License sign-off (spec §7)
-public/illustrations/*.webp

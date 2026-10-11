@@ -30,8 +30,23 @@ def generate(style: str, item: dict) -> tuple[bytes, int]:
     return base64.b64decode(b64.split(",")[-1]), int(seed)
 
 
-def to_webp(png: bytes) -> bytes:
+def trim_transparent(im: Image.Image, pad_ratio: float = 0.06) -> Image.Image:
+    """Crop empty (fully transparent) margins, keeping a small even padding, so
+    the subject fills the EmptyState card instead of floating in a big margin."""
+    if im.mode != "RGBA":
+        return im
+    box = im.getchannel("A").point(lambda a: 255 if a > 8 else 0).getbbox()
+    if not box:
+        return im
+    pad = int(max(box[2] - box[0], box[3] - box[1]) * pad_ratio)
+    return im.crop((max(box[0] - pad, 0), max(box[1] - pad, 0),
+                    min(box[2] + pad, im.width), min(box[3] + pad, im.height)))
+
+
+def to_webp(png: bytes, transparent: bool = False) -> bytes:
     im = Image.open(io.BytesIO(png))
+    if transparent:
+        im = trim_transparent(im)
     im.thumbnail((900, 900))
     for q in (82, 74, 66, 58, 50):
         buf = io.BytesIO()
@@ -50,7 +65,7 @@ def main() -> None:
             continue
         print(f"[illustrations] generating {item['file']} (seed {item.get('seed') or 'new'}) ...", flush=True)
         png, seed = generate(manifest["style"], item)
-        data = to_webp(png)
+        data = to_webp(png, item["transparent"])
         (OUT / item["file"]).write_bytes(data)
         item["seed"] = seed
         print(f"[illustrations] {item['file']}: {len(data)//1024} KB, seed {seed}", flush=True)

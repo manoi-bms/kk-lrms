@@ -5,8 +5,13 @@ import { EmptyState } from '@/components/shared/EmptyState';
 afterEach(() => vi.unstubAllEnvs());
 
 describe('EmptyState', () => {
-  it('flag off (default): icon fallback, no image request', () => {
+  it('default (flag unset, license signed off 2026-10-11): renders the illustration', () => {
     vi.stubEnv('NEXT_PUBLIC_ILLUSTRATIONS_ENABLED', '');
+    const { container } = render(<EmptyState illustration="ward" title="ยังไม่มีผู้คลอดในห้องคลอดขณะนี้" />);
+    expect(container.querySelector('img')?.getAttribute('src')).toContain('empty-ward.webp');
+  });
+  it('kill switch (flag "false"): icon fallback, no image request', () => {
+    vi.stubEnv('NEXT_PUBLIC_ILLUSTRATIONS_ENABLED', 'false');
     const { container } = render(<EmptyState illustration="ward" title="ยังไม่มีผู้คลอดในห้องคลอดขณะนี้" />);
     expect(container.querySelector('img')).toBeNull();
     expect(container.querySelector('svg')).not.toBeNull();

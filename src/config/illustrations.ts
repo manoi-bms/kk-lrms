@@ -1,7 +1,5 @@
 // Static, pre-generated illustrations (scripts/illustrations/manifest.json).
-// Gated: Qwen-Image-2.1 output may ship only after the license sign-off —
-// until then NEXT_PUBLIC_ILLUSTRATIONS_ENABLED stays unset and EmptyState
-// falls back to icons.
+// Qwen-Image-2.1 output; license signed off 2026-10-11 (see illustrationsEnabled).
 export type IllustrationName = 'ward' | 'referral' | 'stale' | 'generic';
 
 export const ILLUSTRATION_SRC: Record<IllustrationName, string> = {
@@ -11,6 +9,9 @@ export const ILLUSTRATION_SRC: Record<IllustrationName, string> = {
   generic: '/illustrations/generic.webp',
 };
 
+/** Default ON — the Qwen Research License was signed off by the owner on
+ *  2026-10-11. `NEXT_PUBLIC_ILLUSTRATIONS_ENABLED=false` is the kill switch
+ *  (EmptyState then falls back to icons). */
 export function illustrationsEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_ILLUSTRATIONS_ENABLED === 'true';
+  return process.env.NEXT_PUBLIC_ILLUSTRATIONS_ENABLED !== 'false';
 }
