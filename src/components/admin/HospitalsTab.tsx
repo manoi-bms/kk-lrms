@@ -267,7 +267,7 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
         );
       },
     },
-    { key: 'service', header: 'ประเภทบริการ', cell: (h) => <span className="text-label text-ink-muted">{SERVICE_TYPE_LABEL[h.serviceType ?? ''] ?? '—'}</span> },
+    { key: 'service', header: 'ประเภทบริการ', cell: (h) => <span className="whitespace-nowrap text-label text-ink-muted">{SERVICE_TYPE_LABEL[h.serviceType ?? ''] ?? '—'}</span> },
     {
       key: 'province',
       header: 'จังหวัด',
@@ -281,7 +281,7 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
       key: 'active',
       header: 'สถานะ',
       cell: (h) => (
-        <StatusPill tone={h.isActive ? 'ok' : 'neutral'} title={h.isActive ? undefined : 'โรงพยาบาลถูกปิดการใช้งาน — กด "แก้ไข" เพื่อเปิดใช้งานอีกครั้งหรือลบข้อมูล'}>
+        <StatusPill tone={h.isActive ? 'ok' : 'neutral'} className="whitespace-nowrap" title={h.isActive ? undefined : 'โรงพยาบาลถูกปิดการใช้งาน — กด "แก้ไข" เพื่อเปิดใช้งานอีกครั้งหรือลบข้อมูล'}>
           {h.isActive ? 'ใช้งาน' : 'ปิดใช้งาน'}
         </StatusPill>
       ),

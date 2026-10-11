@@ -84,3 +84,22 @@ describe('HospitalsTab — direction-C', () => {
     expect(screen.getByRole('button', { name: /ลองใหม่/ })).toBeInTheDocument();
   });
 });
+
+describe('HospitalsTab — narrow-column chips', () => {
+  it('status badge and service-type label never wrap onto two lines', async () => {
+    renderWithSwr(<HospitalsTab />, {
+      ...BASE,
+      '/api/admin/hospitals': { hospitals: [adminHospital({ serviceType: 'DISTRICT_WITH_MATERNITY', provinceCode: '40' })] },
+    });
+    const table = await screen.findByRole('table', { name: 'โรงพยาบาลในระบบ' });
+    expect(within(table).getByText('ใช้งาน').className).toMatch(/whitespace-nowrap/);
+    expect(within(table).getByText('รพช. มีห้องคลอด').className).toMatch(/whitespace-nowrap/);
+  });
+  it('province column resolves name + code from provinceCode (blank only when the row has none)', async () => {
+    renderWithSwr(<HospitalsTab />, {
+      ...BASE,
+      '/api/admin/hospitals': { hospitals: [adminHospital({ provinceCode: '40' })] },
+    });
+    expect(await screen.findByText('ขอนแก่น · 40')).toBeInTheDocument();
+  });
+});
