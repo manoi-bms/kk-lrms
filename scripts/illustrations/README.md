@@ -1,6 +1,6 @@
 # Illustrations
 
-Generated with Qwen-Image-2.1 (BMS image service) from
+Assets in `public/illustrations/`, generated with Qwen-Image-2.1 (BMS image service) from
 `scripts/illustrations/manifest.json` — prompts, style string and seeds are
 recorded there; `python3 scripts/illustrations/generate.py` reproduces them.
 

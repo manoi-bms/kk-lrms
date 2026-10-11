@@ -96,7 +96,6 @@ export function OnlineUsersBadge() {
             style={{
               fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
               fontSize: MIN_TEXT_PX,
-              
               color: 'rgba(230,236,245,0.7)',
             }}
           >

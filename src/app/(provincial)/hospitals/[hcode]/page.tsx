@@ -663,7 +663,7 @@ function LaborPreview({ patient, hcode }: { patient: LaborPatient; hcode: string
             value={v?.sbp != null && v?.dbp != null ? `${v.sbp}/${v.dbp}` : '—'}
             alarm={bpAlarm}
             warn={bpWarn}
-            sub={bpAlarm ? '↑↑ สูงรุนแรง' : bpWarn ? '↑ สูงเล็กน้อย' : 'ปกติ'}
+            sub={bpAlarm ? '↑↑ สูงรุนแรง' : bpWarn ? '↑ เฝ้าระวัง' : 'ปกติ'}
           />
           <Sig
             label="ชีพจรแม่ (MHR)"

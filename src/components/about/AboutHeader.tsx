@@ -1,7 +1,7 @@
 // src/components/about/AboutHeader.tsx
 // about-header.webp is abstract decoration (rounded shapes + green crosses).
 // It must never be captioned or described as Khon Kaen geography — see
-// public/illustrations/README.md. Text sits beside it, never on it.
+// scripts/illustrations/README.md. Text sits beside it, never on it.
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
