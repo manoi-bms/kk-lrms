@@ -2,6 +2,9 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { attachDebugLogging, flushDebugLog } from './helpers/debug-log';
+import { mockBms } from './helpers/mock-bms';
+import { measureLayout } from './helpers/layout-metrics';
+import { wardScenario } from '../helpers/ward-fixtures';
 
 const TAG = process.env.UI_SNAPSHOT_TAG ?? 'after';
 // Only the PHI-free /login screenshots are committed (PUBLIC_OUT). Authenticated
@@ -19,6 +22,17 @@ const DASH_OUT = 'e2e-private/ui-dashboard';
 mkdirSync(PUBLIC_OUT, { recursive: true });
 mkdirSync(PRIVATE_OUT, { recursive: true });
 mkdirSync(DASH_OUT, { recursive: true });
+
+// Ward/patient screenshots show masked names and AN — gitignored e2e-private only.
+const WARD_OUT = 'e2e-private/ui-ward';
+mkdirSync(WARD_OUT, { recursive: true });
+type Scenario = ReturnType<typeof wardScenario>;
+const wardSql = (s: Scenario, occupancy: unknown[] = [...s.occupancy]): Array<[string, unknown[]]> => [
+  ["is_maternity_ward = 'Y' AND ward_active", [...s.wards]],
+  ['FROM bedno b JOIN roomno r', [...s.beds]],
+  ['latest_lp.cervical_dilation_cm AS last_cervix_cm', occupancy],
+];
+const TILES_PER_ROW: Record<(typeof WIDTHS)[number], number> = { 1440: 3, 1024: 2, 768: 2 };
 
 async function login(page: Page, log: string[]) {
   await page.goto('/login');
@@ -165,6 +179,104 @@ test.describe('UI foundation', () => {
     await page.getByRole('button', { name: 'Exit kiosk mode' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'ภาพรวมจังหวัดขอนแก่น' })).toBeVisible();
     log.push('kiosk exit: page heading back');
+    await flushDebugLog(log, testInfo);
+    expect(log.filter((l) => l.includes('PAGEERROR'))).toEqual([]);
+  });
+
+  test('ward board: 3/2/2 tiles per row, no overflow, no tiny text, Thai KPIs @ward', async ({ page }, testInfo) => {
+    test.skip(!SESSION, 'requires E2E_BMS_SESSION_ID');
+    const log = attachDebugLogging(page);
+    const s = wardScenario(Date.now());
+    await mockBms(page, { log, sql: wardSql(s) });
+    await login(page, log);
+    for (const w of WIDTHS) {
+      await page.setViewportSize({ width: w, height: 900 });
+      await page.goto('/hospital-maternity-ward?bms-session-id=e2e-ward');
+      await expect(page.getByRole('heading', { level: 1, name: 'ห้องคลอด' })).toBeVisible({ timeout: 20_000 });
+      await expect(page.locator('article[data-testid="bed-06"]')).toBeVisible({ timeout: 20_000 });
+      const layout = await measureLayout(page);
+      const grid = await page.evaluate(() => {
+        const tiles = [
+          ...document.querySelectorAll<HTMLElement>('[data-testid="ward-room-LR1"] [data-testid="ward-room-grid"] > *'),
+        ];
+        const top0 = tiles[0].getBoundingClientRect().top;
+        return {
+          perRow: tiles.filter((t) => Math.abs(t.getBoundingClientRect().top - top0) < 2).length,
+          tileWidth: Math.round(tiles[0].getBoundingClientRect().width),
+        };
+      });
+      const prolonged = (await page.getByTestId('ward-kpi-prolonged-latent').locator('[data-kpi-value]').textContent())?.trim();
+      log.push(`/hospital-maternity-ward @${w}: ${JSON.stringify({ ...layout, ...grid, prolonged })}`);
+      expect(layout.scrollWidth, `ward @${w} scrolls sideways`).toBeLessThanOrEqual(layout.clientWidth);
+      expect(layout.tinyText, `ward @${w} text under 13px`).toEqual([]);
+      expect(grid.perRow, `ward @${w} tiles per row`).toBe(TILES_PER_ROW[w]);
+      expect(prolonged).toBe('1');
+      await expect(page.locator('article[data-testid="bed-06"]')).toHaveAttribute('data-stage', 'prolongedLatent');
+      await page.screenshot({ path: `${WARD_OUT}/${TAG}-ward-${w}.png`, fullPage: true });
+    }
+    await flushDebugLog(log, testInfo);
+    expect(log.filter((l) => l.includes('PAGEERROR'))).toEqual([]);
+  });
+
+  test('ward board: empty ward EmptyState and actionable missing-bms_url error @ward', async ({ page }, testInfo) => {
+    test.skip(!SESSION, 'requires E2E_BMS_SESSION_ID');
+    const log = attachDebugLogging(page);
+    const s = wardScenario(Date.now());
+    await mockBms(page, { log, sql: wardSql(s, []) });
+    await login(page, log);
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.goto('/hospital-maternity-ward?bms-session-id=e2e-empty');
+    await expect(page.getByText('ไม่มีผู้คลอดในห้องคลอดขณะนี้')).toBeVisible({ timeout: 20_000 });
+    log.push('empty ward: EmptyState visible');
+    await page.screenshot({ path: `${WARD_OUT}/${TAG}-ward-empty-1024.png`, fullPage: true });
+
+    await page.unrouteAll({ behavior: 'ignoreErrors' });
+    await mockBms(page, { log, sql: wardSql(s), omitBmsUrl: true });
+    await page.goto('/hospital-maternity-ward?bms-session-id=e2e-nourl');
+    const alert = page.getByRole('alert').filter({ hasText: 'เซสชัน HOSxP' });
+    await expect(alert).toContainText('เซสชัน HOSxP ไม่มีที่อยู่เซิร์ฟเวอร์ BMS ของโรงพยาบาล', { timeout: 20_000 });
+    await expect(alert).toContainText('วิธีแก้:');
+    log.push(`missing bms_url: ${(await alert.textContent())?.slice(0, 160)}`);
+    await page.screenshot({ path: `${WARD_OUT}/${TAG}-ward-nourl-1024.png`, fullPage: true });
+    await flushDebugLog(log, testInfo);
+    expect(log.filter((l) => l.includes('PAGEERROR'))).toEqual([]);
+  });
+
+  test('patient detail: no overflow, no zoom, Thai tabs, partograph at native width @ward', async ({ page }, testInfo) => {
+    test.skip(!SESSION, 'requires E2E_BMS_SESSION_ID');
+    const log = attachDebugLogging(page);
+    await login(page, log);
+    for (const w of WIDTHS) {
+      await page.setViewportSize({ width: w, height: 900 });
+      await page.goto('/patients/10670-AN-2026-001');
+      await expect(page.getByTestId('patient-header')).toBeVisible({ timeout: 20_000 });
+      const ack = page.getByRole('button', { name: 'รับทราบ' });
+      if (await ack.isVisible().catch(() => false)) await ack.click(); // HighRiskAlert for the high-risk seed patient
+      const layout = await measureLayout(page);
+      const zoomed = await page.evaluate(
+        () => [...document.querySelectorAll<HTMLElement>('[style]')].filter((el) => el.style.zoom && el.style.zoom !== '1').length,
+      );
+      log.push(`/patients @${w}: ${JSON.stringify({ ...layout, zoomed })}`);
+      expect(layout.scrollWidth, `patient @${w} scrolls sideways`).toBeLessThanOrEqual(layout.clientWidth);
+      expect(layout.tinyText, `patient @${w} text under 13px`).toEqual([]);
+      expect(zoomed).toBe(0);
+      await page.screenshot({ path: `${WARD_OUT}/${TAG}-patient-${w}.png`, fullPage: true });
+
+      await page.getByRole('button', { name: /^พาร์โทกราฟ/ }).click();
+      const form = page.getByTestId('partograph-form');
+      if ((await form.count()) > 0) {
+        const box = await form.boundingBox();
+        const after = await measureLayout(page);
+        log.push(`/patients partograph @${w}: width ${box?.width} · page ${after.scrollWidth}/${after.clientWidth}`);
+        expect(box!.width, 'partograph renders at ≥ native width').toBeGreaterThanOrEqual(899);
+        expect(after.scrollWidth, 'card scrolls, the page does not').toBeLessThanOrEqual(after.clientWidth);
+      } else {
+        await expect(page.getByText('ยังไม่มีข้อมูลพาร์โทกราฟสำหรับผู้คลอดรายนี้')).toBeVisible();
+        log.push(`/patients partograph @${w}: no partogram in the synthetic seed (EmptyState shown)`);
+      }
+      await page.screenshot({ path: `${WARD_OUT}/${TAG}-patient-partograph-${w}.png`, fullPage: true });
+      await page.getByRole('button', { name: 'สรุป' }).click();
+    }
     await flushDebugLog(log, testInfo);
     expect(log.filter((l) => l.includes('PAGEERROR'))).toEqual([]);
   });
