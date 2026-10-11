@@ -1,0 +1,69 @@
+// src/config/design-tokens.ts
+// Direction C ("Warm Public Health") design tokens — the single source of
+// truth. src/app/globals.css mirrors these as CSS custom properties and
+// tests/unit/config/design-tokens.test.ts fails if the two drift. TS is the
+// source because PNG renderers, Leaflet and Recharts cannot read CSS vars.
+export const COLOR = {
+  surfacePage: '#FBF8F3',
+  surfaceCard: '#FFFFFF',
+  surfaceMuted: '#F3EFE6',
+  border: '#E8E1D2',
+  ink: '#22223B',
+  inkMuted: '#5C5C7A',
+  inkSubtle: '#6B6B85',
+  brand: '#2E3A87',
+  brandStrong: '#232D6B',
+  brandSoft: '#E4E6F4',
+  riskHigh: '#C0392B',
+  riskHighText: '#A1271B',
+  riskHighTint: '#FDECEA',
+  riskMedium: '#D08A00',
+  riskMediumText: '#8A5A00',
+  riskMediumTint: '#FFF6E0',
+  riskLow: '#3F8F4F',
+  riskLowText: '#2F6B3A',
+  riskLowTint: '#EEF7EE',
+} as const;
+
+export type ColorToken = keyof typeof COLOR;
+
+/** Data-freshness / status language reuses the risk language. */
+export const STATUS = { ok: 'riskLow', warn: 'riskMedium', danger: 'riskHigh' } as const satisfies Record<
+  string,
+  ColorToken
+>;
+
+/** Text/background pairs components actually use; each must meet AA. */
+export const CONTRAST_PAIRS: ReadonlyArray<readonly [ColorToken, ColorToken]> = [
+  ['ink', 'surfacePage'],
+  ['inkMuted', 'surfacePage'],
+  ['inkSubtle', 'surfacePage'],
+  ['ink', 'surfaceCard'],
+  ['inkMuted', 'surfaceCard'],
+  ['inkMuted', 'surfaceMuted'],
+  ['riskHighText', 'riskHighTint'],
+  ['riskMediumText', 'riskMediumTint'],
+  ['riskLowText', 'riskLowTint'],
+  ['surfaceCard', 'riskHigh'],
+  ['surfaceCard', 'brand'],
+  ['brandStrong', 'brandSoft'],
+];
+
+export function cssVarName(token: ColorToken): string {
+  return `--${token.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
+}
+
+function channel(hex: string, i: number): number {
+  const v = parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16) / 255;
+  return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+}
+
+function luminance(hex: string): number {
+  return 0.2126 * channel(hex, 0) + 0.7152 * channel(hex, 1) + 0.0722 * channel(hex, 2);
+}
+
+/** WCAG 2.x contrast ratio between two #RRGGBB colours. */
+export function contrastRatio(fg: string, bg: string): number {
+  const [hi, lo] = [luminance(fg), luminance(bg)].sort((a, b) => b - a);
+  return (hi + 0.05) / (lo + 0.05);
+}
