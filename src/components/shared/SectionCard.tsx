@@ -15,12 +15,13 @@ export interface SectionCardProps {
   actions?: ReactNode;
   tone?: SectionTone;
   className?: string;
+  testId?: string;
   children: ReactNode;
 }
 
-export function SectionCard({ title, description, actions, tone = 'default', className, children }: SectionCardProps) {
+export function SectionCard({ title, description, actions, tone = 'default', className, testId, children }: SectionCardProps) {
   return (
-    <section aria-label={title} className={cn('rounded-2xl p-5 shadow-soft', TONE[tone], className)}>
+    <section aria-label={title} data-testid={testId} className={cn('rounded-2xl p-5 shadow-soft', TONE[tone], className)}>
       <header className="mb-3 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-title text-brand">{title}</h2>
