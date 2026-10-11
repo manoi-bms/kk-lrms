@@ -9,7 +9,7 @@
 //      room sections, and refresh button render.
 //   3. When the ward query fails, the error UI surfaces.
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import HospitalLayout from '@/app/(hospital)/layout';
 import HospitalMaternityWardPage from '@/app/(hospital)/hospital-maternity-ward/page';
 import { SWRConfig } from 'swr';
@@ -54,6 +54,7 @@ import {
   listWardBedsInventory,
   listWardBedsOccupancyFull,
 } from '@/services/maternity-ward';
+import { makeBed, wardScenario } from '../helpers/ward-fixtures';
 const mockListWards = listMaternityWards as unknown as ReturnType<typeof vi.fn>;
 const mockListInventory = listWardBedsInventory as unknown as ReturnType<typeof vi.fn>;
 const mockListOccupancyFull = listWardBedsOccupancyFull as unknown as ReturnType<typeof vi.fn>;
@@ -300,5 +301,88 @@ describe('Hospital maternity ward page (full render)', () => {
       () => expect(screen.getByText(/ไม่สามารถโหลดข้อมูลห้องคลอด/)).toBeInTheDocument(),
       { timeout: 2000 },
     );
+  });
+});
+
+// ─── Characterization (sub-project 3, Task 1) ──────────────────────────────
+// Behaviour assertions below stay UNEDITED through Task 8; Task 4 changes
+// PAGE_COPY values only.
+const PAGE_COPY = {
+  kpiRegion: () => screen.getByText('Total Beds').closest('section') as HTMLElement,
+  kpiLabels: ['Total Beds', 'Occupied', 'Available', 'Locked', 'High-risk'],
+  refreshButton: /Refresh/i,
+  noWards: 'ไม่มีห้องคลอดที่ใช้งานได้',
+};
+const num = (n: number) => new RegExp(`^0?${n}$`);
+
+function openSession() {
+  sessionResolver = () =>
+    Promise.resolve({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        jwt: 'JWT',
+        bms_url: 'https://t.example/api',
+        user_info: { loginname: 'nurse1', fullname: 'Nurse One', hospcode: '10670' },
+      }),
+    });
+  window.history.replaceState({}, '', 'http://localhost/?bms-session-id=SID');
+}
+
+describe('Hospital maternity ward page — characterization', () => {
+  it('KPI masthead counts the whole ward roster', async () => {
+    const s = wardScenario(Date.now());
+    openSession();
+    mockListWards.mockResolvedValue([...s.wards]);
+    mockListInventory.mockResolvedValue([...s.beds]);
+    mockListOccupancyFull.mockResolvedValue([...s.occupancy]);
+    render(PAGE);
+    await screen.findByText(/ลัดดา ท\./, undefined, { timeout: 2000 });
+    const region = PAGE_COPY.kpiRegion();
+    for (const label of PAGE_COPY.kpiLabels) expect(within(region).getByText(label)).toBeInTheDocument();
+    const e = s.expected;
+    for (const n of [e.totalBeds, e.occupied, e.free, e.locked, e.prolongedLatent]) {
+      expect(within(region).getByText(num(n))).toBeInTheDocument();
+    }
+    expect(within(region).getByText(/44%/)).toBeInTheDocument(); // 4 of 9 beds
+  });
+
+  it('switching ward queries the chosen ward', async () => {
+    const s = wardScenario(Date.now());
+    openSession();
+    mockListWards.mockResolvedValue([...s.wards, { ward: '05', name: 'ห้องคลอดสอง', real_bedcount: 1 }]);
+    mockListInventory.mockImplementation(async (_c: unknown, ward: string) =>
+      ward === '05' ? [makeBed('11', 'LR9', 1)] : [...s.beds],
+    );
+    mockListOccupancyFull.mockImplementation(async (_c: unknown, ward: string) =>
+      ward === '05' ? [] : [...s.occupancy],
+    );
+    const { container } = render(PAGE);
+    await screen.findByText(/ลัดดา ท\./, undefined, { timeout: 2000 });
+    fireEvent.change(screen.getByDisplayValue('ห้องคลอดทดสอบ (03)'), { target: { value: '05' } });
+    await waitFor(() => expect(container.querySelector('article[data-testid="bed-11"]')).not.toBeNull(), {
+      timeout: 2000,
+    });
+    expect(mockListInventory).toHaveBeenCalledWith(expect.anything(), '05');
+  });
+
+  it('refresh re-reads occupancy from HOSxP', async () => {
+    const s = wardScenario(Date.now());
+    openSession();
+    mockListWards.mockResolvedValue([...s.wards]);
+    mockListInventory.mockResolvedValue([...s.beds]);
+    mockListOccupancyFull.mockResolvedValue([...s.occupancy]);
+    render(PAGE);
+    await screen.findByText(/ลัดดา ท\./, undefined, { timeout: 2000 });
+    const before = mockListOccupancyFull.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: PAGE_COPY.refreshButton }));
+    await waitFor(() => expect(mockListOccupancyFull.mock.calls.length).toBeGreaterThan(before));
+  });
+
+  it('a hospital with no maternity ward gets an explanation', async () => {
+    openSession();
+    mockListWards.mockResolvedValue([]);
+    render(PAGE);
+    expect(await screen.findByText(PAGE_COPY.noWards, undefined, { timeout: 2000 })).toBeInTheDocument();
   });
 });
