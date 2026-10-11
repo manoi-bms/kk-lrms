@@ -71,7 +71,7 @@ describe('BedTileFull', () => {
     expect(screen.getByText(/นาง ทดสอบ ร\./)).toBeInTheDocument();
     expect(screen.getByText('AN1')).toBeInTheDocument();
     expect(screen.getByText('HN1')).toBeInTheDocument();
-    expect(screen.getByText('Allergy')).toBeInTheDocument();
+    expect(screen.getByText('แพ้ยา')).toBeInTheDocument();
     expect(screen.getByText('O')).toBeInTheDocument();
     expect(screen.getByText('ดร.X')).toBeInTheDocument();
     expect(screen.getByText('ประกันสุขภาพถ้วนหน้า')).toBeInTheDocument();
@@ -96,6 +96,41 @@ describe('BedTileFull', () => {
     // so PatientPhoto renders its neutral placeholder rather than fetching.
     render(<BedTileFull bedno="01" bedLock="N" occupant={occupant} now={now} />);
     expect(screen.getByTestId('patient-photo-placeholder')).toBeInTheDocument();
+  });
+
+  it('prolonged latent is the only tile alarm; the FHR dot is brand, motion-safe, and only with a reading', () => {
+    const { rerender } = render(
+      <BedTileFull bedno="01" bedLock="N" occupant={{ ...occupant, regtime: '01:00:00', last_cervix_cm: 3 }} now={now} />,
+    );
+    const crit = screen.getByTestId('bed-01');
+    expect(crit.dataset.stage).toBe('prolongedLatent');
+    expect(crit.className).toContain('border-danger');
+    const dot = screen.getByTestId('fhr-pulse');
+    expect(dot.className).toContain('bg-brand');
+    expect(dot.className).toContain('motion-safe:');
+    rerender(<BedTileFull bedno="01" bedLock="N" occupant={{ ...occupant, last_fhr: null }} now={now} />);
+    expect(screen.queryByTestId('fhr-pulse')).toBeNull();
+  });
+
+  it('labels are Thai; clinical abbreviations stay', () => {
+    render(<BedTileFull bedno="01" bedLock="N" occupant={occupant} now={now} />);
+    for (const t of [
+      'เตียง 01',
+      'สัญญาณชีพ (บันทึกพยาบาล)',
+      'ความก้าวหน้าการคลอด (พาร์โทกราฟ)',
+      'การหดรัดตัว',
+      'สารน้ำและยา',
+      'แพทย์',
+      'สิทธิ',
+      'อาการแรกรับ',
+      '4 ซม.',
+      '3/10 นาที · 45 วินาที · moderate',
+    ]) {
+      expect(screen.getByText(t)).toBeInTheDocument();
+    }
+    for (const t of ['BED', 'Vitals', 'Labour Progress', 'Interventions', 'Doctor', 'NKDA', 'Admit']) {
+      expect(screen.queryByText(t)).toBeNull();
+    }
   });
 
   it('B1: a patient on a locked bed stays visible, flagged as locked in HOSxP', () => {
@@ -143,7 +178,7 @@ describe('BedTileFull — maternal-screen pills (Task H4)', () => {
     render(<BedTileFull bedno="01" bedLock="N" occupant={occupant} now={now} />);
     expect(screen.queryByTestId('bed-maternal-screen')).not.toBeInTheDocument();
     // Existing identity-row pills (Allergy/blood group) and core fields still render.
-    expect(screen.getByText('Allergy')).toBeInTheDocument();
+    expect(screen.getByText('แพ้ยา')).toBeInTheDocument();
     expect(screen.getByText('O')).toBeInTheDocument();
     expect(screen.getByText('AN1')).toBeInTheDocument();
     expect(screen.getByTestId('bed-01')).toBeInTheDocument();
@@ -212,20 +247,16 @@ describe('BedTileFull — maternal-screen pills (Task H4)', () => {
   });
 
   it('an EMERGENCY summary on a non-crit occupant does NOT alter the tile-level border/shadow (GC-H3 red is reserved for the crit alarm)', () => {
-    render(
-      <BedTileFull
-        bedno="01"
-        bedLock="N"
-        occupant={occupant}
-        now={now}
-        maternalScreenSummary={severeSummary}
-      />,
+    const { rerender } = render(<BedTileFull bedno="01" bedLock="N" occupant={occupant} now={now} />);
+    const plain = screen.getByTestId('bed-01');
+    const before = { className: plain.className, style: plain.getAttribute('style') };
+    rerender(
+      <BedTileFull bedno="01" bedLock="N" occupant={occupant} now={now} maternalScreenSummary={severeSummary} />,
     );
     const article = screen.getByTestId('bed-01');
-    // Non-crit article border/shadow, exactly as classify() would produce
-    // with no maternalScreenSummary at all (occupant is Stage I Active, not crit).
-    // jsdom normalizes hex to rgb() when serializing the style attribute.
-    expect(article.style.border).toBe('1.5px solid rgb(203, 213, 225)');
-    expect(article.style.boxShadow).toBe('0 1px 3px rgba(15, 23, 42, 0.06)');
+    expect(article.className).toBe(before.className);
+    expect(article.getAttribute('style')).toBe(before.style);
+    expect(article.dataset.stage).toBe('active');
+    expect(article.className).not.toContain('border-danger'); // red stays reserved for the stage alarm (GC-H3)
   });
 });

@@ -1,6 +1,7 @@
 // tests/unit/config/ward-display.test.ts
 import { describe, it, expect } from 'vitest';
-import { BED_MOVE_ALERTS, WARD_FEED_STATUS } from '@/config/ward-display';
+import { BED_MOVE_ALERTS, LABOUR_STAGE_DISPLAY, WARD_FEED_STATUS, formatRoomSummary } from '@/config/ward-display';
+import { LABOUR_PHASE_LABEL_TH } from '@/config/obstetric-display';
 
 describe('ward-display', () => {
   it('feed status: Thai label + tone per health', () => {
@@ -25,3 +26,30 @@ describe('ward-display', () => {
     });
   });
 });
+
+describe('ward-display — stage pill + room summary', () => {
+  it('stage labels reuse the shared Thai phase words; tones follow spec D4', () => {
+    expect(LABOUR_PHASE_LABEL_TH).toEqual({ latent: 'ระยะแฝง', active: 'ระยะเร่ง', transition: 'ระยะเปลี่ยนผ่าน' });
+    expect(LABOUR_STAGE_DISPLAY.prolongedLatent).toMatchObject({
+      labelTh: 'ระยะแฝงนาน · ประเมินด่วน',
+      className: 'bg-danger text-white',
+      hint: 'รับเข้า ≥12 ชม. และปากมดลูก <4 ซม. หรือยังไม่มีบันทึก',
+    });
+    expect(LABOUR_STAGE_DISPLAY.transition).toMatchObject({
+      labelTh: 'ระยะที่ 1 · ระยะเปลี่ยนผ่าน',
+      className: 'bg-warn-tint text-warn-text',
+    });
+    expect(LABOUR_STAGE_DISPLAY.active).toMatchObject({ labelTh: 'ระยะที่ 1 · ระยะเร่ง', className: 'bg-ok-tint text-ok-text' });
+    expect(LABOUR_STAGE_DISPLAY.latent).toMatchObject({
+      labelTh: 'ระยะที่ 1 · ระยะแฝง',
+      className: 'bg-brand-soft text-brand-strong',
+    });
+  });
+
+  it('room summary: unpadded counts, locked only when present', () => {
+    const base = { totalBeds: 5, occupied: 3, free: 2, lockedEmpty: 0, lockedOccupied: 0, prolongedLatent: 0, occupancyPct: 60 };
+    expect(formatRoomSummary(base)).toBe('5 เตียง · มีผู้คลอด 3 · ว่าง 2');
+    expect(formatRoomSummary({ ...base, lockedEmpty: 2 })).toBe('5 เตียง · มีผู้คลอด 3 · ว่าง 2 · ปิดใช้งาน 2');
+  });
+});
+

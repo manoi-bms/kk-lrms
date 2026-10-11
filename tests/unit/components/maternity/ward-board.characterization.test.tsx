@@ -14,16 +14,14 @@ import { HOUR, localParts, makeOccupant, wardScenario } from '../../../helpers/w
 
 const COPY = {
   stage: {
-    prolongedLatent: 'Action · Partogram +2h',
-    transition: 'Stage I · Transition',
-    active: 'Stage I · Active',
-    latent: 'Stage I · Latent',
+    prolongedLatent: 'ระยะแฝงนาน · ประเมินด่วน',
+    transition: 'ระยะที่ 1 · ระยะเปลี่ยนผ่าน',
+    active: 'ระยะที่ 1 · ระยะเร่ง',
+    latent: 'ระยะที่ 1 · ระยะแฝง',
   },
-  roomCode: (roomno: string) => `Room ${roomno}`,
-  roomSummary: (r: { total: number; occupied: number; free: number; locked: number }) => {
-    const p = (n: number) => String(n).padStart(2, '0');
-    return `${p(r.total)} BEDS · ${p(r.occupied)} OCC · ${p(r.free)} FREE${r.locked > 0 ? ` · ${p(r.locked)} LOCKED` : ''}`;
-  },
+  roomCode: (roomno: string) => `รหัสห้อง ${roomno}`,
+  roomSummary: (r: { total: number; occupied: number; free: number; locked: number }) =>
+    `${r.total} เตียง · มีผู้คลอด ${r.occupied} · ว่าง ${r.free}${r.locked > 0 ? ` · ปิดใช้งาน ${r.locked}` : ''}`,
   emptyBody: 'ว่าง',
   lockedBody: 'ปิดบำรุง',
 };
@@ -66,6 +64,17 @@ describe('WardLayoutViewFull — characterization', () => {
     );
     fireEvent.click(container.querySelector('article[data-testid="bed-02"]')!);
     expect(onBedClick).toHaveBeenCalledWith('AN-ACT');
+  });
+
+  it('rooms are labelled sections on a 320px-min grid; every tile carries data-stage', () => {
+    const { container } = render(<WardLayoutViewFull beds={[...s.beds]} occupancy={[...s.occupancy]} now={NOW} />);
+    const room = container.querySelector<HTMLElement>('[data-testid="ward-room-LR1"]')!;
+    expect(room.tagName).toBe('SECTION');
+    expect(within(room).getByRole('heading', { level: 2, name: 'ห้องรอคลอด 1' })).toBeInTheDocument();
+    expect(within(room).getByTestId('ward-room-grid').className).toContain(
+      'grid-cols-[repeat(auto-fill,minmax(320px,1fr))]',
+    );
+    expect(articles(container).every((a) => Boolean(a.dataset.stage))).toBe(true);
   });
 
   it('only occupied beds are draggable', () => {

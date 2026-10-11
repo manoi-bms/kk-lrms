@@ -280,7 +280,7 @@ describe('Hospital maternity ward page (full render)', () => {
       timeout: 2000,
     });
     expect(screen.getByText('AN AN1')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Partograph' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'พาร์โทกราฟ' })).toBeInTheDocument();
   });
 
   it('shows error UI when ward query fails', async () => {
