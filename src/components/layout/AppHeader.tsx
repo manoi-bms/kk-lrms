@@ -63,7 +63,7 @@ export function AppHeader({
         <div className="ml-auto flex shrink-0 items-center gap-3">
           <OnlineUsersBadge />
           {hospitalName && (
-            <span className="hidden rounded-full bg-brand-soft px-3 py-0.5 text-label text-brand-strong md:inline">
+            <span className="hidden rounded-full bg-brand-soft px-3 py-0.5 text-label text-brand-strong xl:inline">
               {hospitalName}
             </span>
           )}
@@ -71,18 +71,19 @@ export function AppHeader({
             href="/profile"
             aria-label="การตั้งค่าการแจ้งเตือน"
             title="การตั้งค่าการแจ้งเตือน"
-            className="rounded-lg p-1.5 text-brand hover:bg-brand-soft md:p-0 md:text-label md:hover:bg-transparent md:hover:underline"
+            className="rounded-lg p-1.5 text-brand hover:bg-brand-soft xl:p-0 xl:text-label xl:hover:bg-transparent xl:hover:underline"
           >
-            <Bell className="h-4 w-4 md:hidden" />
-            <span className="hidden md:inline">การตั้งค่าการแจ้งเตือน</span>
+            <Bell className="h-4 w-4 xl:hidden" />
+            <span className="hidden xl:inline">การตั้งค่าการแจ้งเตือน</span>
           </Link>
           <CallDirectoryButton />
-          <span className="hidden flex-col items-end leading-tight md:flex">
+          <span className="hidden flex-col items-end leading-tight xl:flex">
             <span className="text-label text-ink">{userName}</span>
             {roleLabel && <span className="text-caption text-ink-muted">{roleLabel}</span>}
           </span>
           <span
             aria-hidden="true"
+            title={[userName, roleLabel, hospitalName].filter(Boolean).join(' · ')}
             className="grid h-8 w-8 place-items-center rounded-full bg-brand-soft text-caption font-bold text-brand"
           >
             {initials}
