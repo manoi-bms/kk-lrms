@@ -12,6 +12,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { LogOut, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS, ROLE_LABELS, filterNavByRole } from '@/config/nav';
+import { usePresenceHeartbeat } from '@/hooks/usePresenceHeartbeat';
 import { CallDirectoryButton } from '@/components/calls/CallDirectoryButton';
 
 export type TopNavBarVariant = 'hospital' | 'provincial';
@@ -55,32 +56,7 @@ export function TopNavBar({ variant = 'provincial' }: TopNavBarProps = {}) {
   const roleLabel = userRole ? (ROLE_LABELS[userRole] ?? userRole) : '';
   const userId = session?.user?.id;
 
-  useEffect(() => {
-    if (!userId) return;
-
-    const sendHeartbeat = () => {
-      if (document.visibilityState === 'hidden') return;
-      fetch('/api/presence/heartbeat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: pathname || '/' }),
-        keepalive: true,
-      }).catch(() => {
-        // Presence is best-effort and should not interrupt clinical workflows.
-      });
-    };
-
-    sendHeartbeat();
-    const interval = window.setInterval(sendHeartbeat, 30_000);
-    window.addEventListener('focus', sendHeartbeat);
-    document.addEventListener('visibilitychange', sendHeartbeat);
-
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener('focus', sendHeartbeat);
-      document.removeEventListener('visibilitychange', sendHeartbeat);
-    };
-  }, [pathname, userId]);
+  usePresenceHeartbeat(pathname, userId);
 
   const isActive = useCallback(
     (href: string) => {
