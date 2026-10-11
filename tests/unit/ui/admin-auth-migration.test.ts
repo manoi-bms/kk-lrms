@@ -16,6 +16,7 @@ export const MIGRATED: string[] = [
   'src/components/about/AboutHeader.tsx',
   'src/components/about/about-blocks.tsx',
   'src/components/about/WebhookApiSection.tsx',
+  'src/components/about/about-tables.tsx',
   'src/app/(hospital)/profile/page.tsx',
   'src/components/profile/NotificationPreferenceCard.tsx',
   'src/app/(provincial)/admin/page.tsx',

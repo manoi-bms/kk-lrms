@@ -14,6 +14,7 @@ import {
   Stethoscope,
 } from 'lucide-react';
 import { AboutHeader } from '@/components/about/AboutHeader';
+import { CpdFactorTable, UserGroupTable } from '@/components/about/about-tables';
 import { WebhookApiContent } from '@/components/about/WebhookApiSection';
 import {
   FactTile,
@@ -22,7 +23,6 @@ import {
   RiskLevelCard,
   StepItem,
 } from '@/components/about/about-blocks';
-import { DataTable } from '@/components/shared/DataTable';
 import { SectionCard } from '@/components/shared/SectionCard';
 import { KK_HOSPITALS } from '@/config/hospitals';
 import { CPD_FACTOR_WEIGHTS, RISK_LEVELS, type RiskLevelConfig } from '@/config/risk-levels';
@@ -60,56 +60,6 @@ const SECTIONS = [
 ] as const;
 type SectionId = (typeof SECTIONS)[number]['id'];
 const title = (id: SectionId) => SECTIONS.find((s) => s.id === id)!.title;
-
-const CPD_FACTOR_ROWS = [
-  { factor: 'จำนวนครรภ์ (Gravida)', criteria: 'ท้องแรก (Primigravida)', max: '2 คะแนน' },
-  { factor: 'จำนวน ANC', criteria: 'ฝากครรภ์น้อยกว่า 4 ครั้ง', max: '1.5 คะแนน' },
-  { factor: 'อายุครรภ์ (GA)', criteria: 'ตั้งแต่ 40 สัปดาห์ขึ้นไป', max: '1.5 คะแนน' },
-  {
-    factor: 'ส่วนสูงมารดา',
-    criteria: 'น้อยกว่า 150 ซม. (2 คะแนน) หรือ 150-155 ซม. (1 คะแนน)',
-    max: '2 คะแนน',
-  },
-  {
-    factor: 'ส่วนต่างน้ำหนัก',
-    criteria: 'มากกว่า 20 กก. (2 คะแนน) หรือ 15-20 กก. (1 คะแนน)',
-    max: '2 คะแนน',
-  },
-  {
-    factor: 'ยอดมดลูก',
-    criteria: 'มากกว่า 36 ซม. (2 คะแนน) หรือ 34-36 ซม. (1 คะแนน)',
-    max: '2 คะแนน',
-  },
-  {
-    factor: 'น้ำหนักเด็ก (U/S)',
-    criteria: 'มากกว่า 3,500 กรัม (2 คะแนน) หรือ 3,000-3,500 กรัม (1 คะแนน)',
-    max: '2 คะแนน',
-  },
-  { factor: 'Hematocrit', criteria: 'น้อยกว่า 30%', max: '1.5 คะแนน' },
-];
-
-const USER_GROUP_ROWS = [
-  {
-    role: 'สูติแพทย์',
-    position: 'แพทย์เฉพาะทาง รพ.ขอนแก่น / รพ.ศรีนครินทร์',
-    usage: 'Monitor Case ให้คำแนะนำส่งต่อ ประเมินความเสี่ยง',
-  },
-  {
-    role: 'พยาบาลห้องคลอด รพ.แม่ข่าย',
-    position: 'พยาบาลวิชาชีพ รพ.ขอนแก่น / รพ.ศรีนครินทร์',
-    usage: 'ติดตาม Partogram รับแจ้งเตือน ประสานงานส่งต่อ',
-  },
-  {
-    role: 'พยาบาล รพช.',
-    position: 'พยาบาลวิชาชีพ รพช. ในจังหวัดขอนแก่น',
-    usage: 'บันทึกข้อมูลผู้คลอดใน HOSxP อัปเดตสถานะ',
-  },
-  {
-    role: 'ผู้ดูแลระบบ',
-    position: 'IT Admin สสจ.ขอนแก่น',
-    usage: 'ตั้งค่าการเชื่อมต่อ HOSxP จัดการสิทธิ์ผู้ใช้งาน',
-  },
-];
 
 export default function AboutPage() {
   return (
@@ -234,25 +184,7 @@ export default function AboutPage() {
               คือภาวะที่ศีรษะทารกไม่สามารถผ่านช่องเชิงกราน ของมารดาได้ เป็นสาเหตุสำคัญของการคลอดยาก
               ระบบ KK-LRMS คำนวณคะแนนความเสี่ยง CPD อัตโนมัติจาก <strong>8 ปัจจัย</strong> ดังนี้:
             </p>
-            <DataTable
-              caption="ปัจจัยเสี่ยง CPD"
-              rowKey={(r) => r.factor}
-              rows={CPD_FACTOR_ROWS}
-              columns={[
-                {
-                  key: 'factor',
-                  header: 'ปัจจัย',
-                  cell: (r) => <span className="font-medium">{r.factor}</span>,
-                },
-                { key: 'criteria', header: 'เกณฑ์ที่เพิ่มความเสี่ยง', cell: (r) => r.criteria },
-                {
-                  key: 'max',
-                  header: 'คะแนนสูงสุด',
-                  numeric: true,
-                  cell: (r) => <span className="font-mono font-semibold">{r.max}</span>,
-                },
-              ]}
-            />
+            <CpdFactorTable />
             <h3 className="text-body-lg text-ink pt-4">ระดับความเสี่ยง</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {ABOUT_RISK_LEVELS.map((level) => (
@@ -346,20 +278,7 @@ export default function AboutPage() {
           <WebhookApiContent />
         </SectionCard>
         <SectionCard id="users" title={title('users')}>
-          <DataTable
-            caption="กลุ่มผู้ใช้งาน"
-            rowKey={(r) => r.role}
-            rows={USER_GROUP_ROWS}
-            columns={[
-              {
-                key: 'role',
-                header: 'บทบาท',
-                cell: (r) => <span className="font-medium">{r.role}</span>,
-              },
-              { key: 'position', header: 'ตำแหน่ง', cell: (r) => r.position },
-              { key: 'usage', header: 'การใช้งานหลัก', cell: (r) => r.usage },
-            ]}
-          />
+          <UserGroupTable />
         </SectionCard>
         <SectionCard id="security" title={title('security')}>
           <p className="text-ink-muted">
