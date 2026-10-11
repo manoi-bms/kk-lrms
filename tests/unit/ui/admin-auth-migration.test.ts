@@ -16,6 +16,8 @@ export const MIGRATED: string[] = [
   'src/components/about/AboutHeader.tsx',
   'src/components/about/about-blocks.tsx',
   'src/components/about/WebhookApiSection.tsx',
+  'src/app/(hospital)/profile/page.tsx',
+  'src/components/profile/NotificationPreferenceCard.tsx',
 ];
 
 type Rule = [name: string, offends: (line: string) => boolean];
