@@ -93,7 +93,7 @@ function MaternalHrChart({ vitals }: { vitals: VitalSignEntry[] }) {
   return (
     <ChartCard title="อัตราการเต้นหัวใจมารดา (MHR)">
       <ResponsiveContainer width="100%" height={220}>
-        <AreaChart data={data} margin={{ top: 5, right: 15, bottom: 5, left: -10 }}>
+        <AreaChart data={data} margin={{ top: 5, right: 60, bottom: 5, left: -10 }}>
           <defs>
             <linearGradient id="gradMhr" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#475569" stopOpacity={0.3} />
@@ -151,7 +151,7 @@ function FetalHrChart({ vitals }: { vitals: VitalSignEntry[] }) {
   return (
     <ChartCard title="อัตราการเต้นหัวใจทารก (FHR)">
       <ResponsiveContainer width="100%" height={220}>
-        <AreaChart data={data} margin={{ top: 5, right: 15, bottom: 5, left: -10 }}>
+        <AreaChart data={data} margin={{ top: 5, right: 60, bottom: 5, left: -10 }}>
           <defs>
             <linearGradient id="gradFhr" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3} />
@@ -209,7 +209,7 @@ function BpTrendChart({ vitals }: { vitals: VitalSignEntry[] }) {
   return (
     <ChartCard title="ความดันโลหิต (BP)">
       <ResponsiveContainer width="100%" height={220}>
-        <AreaChart data={data} margin={{ top: 5, right: 15, bottom: 5, left: -10 }}>
+        <AreaChart data={data} margin={{ top: 5, right: 60, bottom: 5, left: -10 }}>
           <defs>
             <linearGradient id="gradSbp" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
@@ -278,7 +278,7 @@ function PphTrendChart({ vitals }: { vitals: VitalSignEntry[] }) {
   return (
     <ChartCard title="ปริมาณเลือดออก (PPH)">
       <ResponsiveContainer width="100%" height={220}>
-        <AreaChart data={data} margin={{ top: 5, right: 15, bottom: 5, left: -10 }}>
+        <AreaChart data={data} margin={{ top: 5, right: 60, bottom: 5, left: -10 }}>
           <defs>
             <linearGradient id="gradPph" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={COLOR.riskHigh} stopOpacity={0.3} />

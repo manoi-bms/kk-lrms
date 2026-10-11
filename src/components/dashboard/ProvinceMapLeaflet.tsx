@@ -485,7 +485,12 @@ export default function ProvinceMapLeaflet({
              Tooltip direction is picked dynamically per pin so the popup
              never gets clipped by the map div edge — see HospitalMarker. */}
         {hospitalPins.map((pin) => (
-          <HospitalMarker key={pin.hcode} pin={pin} onClick={handleMarkerClick} />
+          <HospitalMarker
+            key={pin.hcode}
+            pin={pin}
+            onClick={handleMarkerClick}
+            kiosk={mode === 'kiosk'}
+          />
         ))}
 
         <ZoomControl position="bottomright" />
@@ -504,7 +509,15 @@ export default function ProvinceMapLeaflet({
 // tooltip is ~280 × ~150 px, so we estimate the half-extents below and
 // re-pick a direction whenever the pointer enters the marker. Re-picking
 // on hover (not on every map move) keeps the cost trivial.
-function HospitalMarker({ pin, onClick }: { pin: PinEntry; onClick: (hcode: string) => void }) {
+function HospitalMarker({
+  pin,
+  onClick,
+  kiosk,
+}: {
+  pin: PinEntry;
+  onClick: (hcode: string) => void;
+  kiosk: boolean;
+}) {
   const map = useMap();
   const [direction, setDirection] = useState<'top' | 'bottom' | 'left' | 'right'>('top');
 
@@ -564,7 +577,7 @@ function HospitalMarker({ pin, onClick }: { pin: PinEntry; onClick: (hcode: stri
       }}
     >
       <Tooltip direction={direction} offset={offset} sticky className="kk-map-tooltip">
-        <HospitalTooltip pin={pin} />
+        <HospitalTooltip pin={pin} kiosk={kiosk} />
       </Tooltip>
     </Marker>
   );
@@ -575,7 +588,7 @@ function HospitalMarker({ pin, onClick }: { pin: PinEntry; onClick: (hcode: stri
 // verdict, labor floor breakdown, ANC registry, last-sync freshness.
 // Keeps Thai-first copy for the floor staff while leaving structural
 // labels (LABOR / ANC / SYNC) in mono caps for at-a-glance scanning.
-function HospitalTooltip({ pin }: { pin: PinEntry }) {
+function HospitalTooltip({ pin, kiosk }: { pin: PinEntry; kiosk: boolean }) {
   const { live, name, level, hcode } = pin;
   // Tooltip backdrop is forced dark via .kk-map-tooltip CSS so the same
   // white-on-navy palette works in both light and kiosk app modes.
@@ -627,7 +640,7 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
     <div
       style={{
         color: ink,
-        fontSize: MIN_TEXT_PX,
+        fontSize: kiosk ? 12 : MIN_TEXT_PX,
         lineHeight: 1.35,
         minWidth: 220,
         maxWidth: 280,
@@ -638,7 +651,7 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
         <strong style={{ fontSize: 13 }}>{name}</strong>
       </div>
-      <div style={{ color: muted, fontSize: MIN_TEXT_PX, marginTop: 1 }}>
+      <div style={{ color: muted, fontSize: kiosk ? 10 : MIN_TEXT_PX, marginTop: 1 }}>
         <span
           style={{
             border: `1px solid ${ruleColor}`,
@@ -673,10 +686,12 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
             flexShrink: 0,
           }}
         />
-        <span style={{ fontWeight: 600, fontSize: MIN_TEXT_PX, letterSpacing: '0.04em' }}>
+        <span
+          style={{ fontWeight: 600, fontSize: kiosk ? 11 : MIN_TEXT_PX, letterSpacing: '0.04em' }}
+        >
           {statusLabel}
         </span>
-        <span style={{ color: muted, fontSize: MIN_TEXT_PX }}>· {statusDetail}</span>
+        <span style={{ color: muted, fontSize: kiosk ? 11 : MIN_TEXT_PX }}>· {statusDetail}</span>
       </div>
 
       {/* LABOR + ANC two-column grid */}
@@ -693,7 +708,7 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
         <div>
           <div
             style={{
-              fontSize: MIN_TEXT_PX,
+              fontSize: kiosk ? 9 : MIN_TEXT_PX,
               color: muted,
               letterSpacing: '0.12em',
               fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
@@ -703,11 +718,13 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
           </div>
           <div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.1 }}>
             {labor.total}
-            <span style={{ fontSize: MIN_TEXT_PX, color: muted, marginLeft: 3 }}>ราย</span>
+            <span style={{ fontSize: kiosk ? 10 : MIN_TEXT_PX, color: muted, marginLeft: 3 }}>
+              ราย
+            </span>
           </div>
           <div
             style={{
-              fontSize: MIN_TEXT_PX,
+              fontSize: kiosk ? 10 : MIN_TEXT_PX,
               fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
               marginTop: 2,
             }}
@@ -722,7 +739,7 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
         <div>
           <div
             style={{
-              fontSize: MIN_TEXT_PX,
+              fontSize: kiosk ? 9 : MIN_TEXT_PX,
               color: muted,
               letterSpacing: '0.12em',
               fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
@@ -732,12 +749,14 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
           </div>
           <div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.1 }}>
             {anc.total}
-            <span style={{ fontSize: MIN_TEXT_PX, color: muted, marginLeft: 3 }}>ราย</span>
+            <span style={{ fontSize: kiosk ? 10 : MIN_TEXT_PX, color: muted, marginLeft: 3 }}>
+              ราย
+            </span>
           </div>
           {anc.hr3 > 0 ? (
             <div
               style={{
-                fontSize: MIN_TEXT_PX,
+                fontSize: kiosk ? 10 : MIN_TEXT_PX,
                 fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
                 marginTop: 2,
                 color: COLOR.riskHigh,
@@ -747,7 +766,7 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
               HR3 {anc.hr3}
             </div>
           ) : (
-            <div style={{ fontSize: MIN_TEXT_PX, color: muted, marginTop: 2 }}>—</div>
+            <div style={{ fontSize: kiosk ? 10 : MIN_TEXT_PX, color: muted, marginTop: 2 }}>—</div>
           )}
         </div>
       </div>
@@ -761,20 +780,22 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'baseline',
-          fontSize: MIN_TEXT_PX,
+          fontSize: kiosk ? 10 : MIN_TEXT_PX,
           color: muted,
           fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
         }}
       >
         <span>SYNC · {lastSyncRel}</span>
-        {lastSyncAbs && <span style={{ fontSize: MIN_TEXT_PX, opacity: 0.8 }}>{lastSyncAbs}</span>}
+        {lastSyncAbs && (
+          <span style={{ fontSize: kiosk ? 9 : MIN_TEXT_PX, opacity: 0.8 }}>{lastSyncAbs}</span>
+        )}
       </div>
 
       {/* Click hint */}
       <div
         style={{
           marginTop: 4,
-          fontSize: MIN_TEXT_PX,
+          fontSize: kiosk ? 9 : MIN_TEXT_PX,
           color: muted,
           fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
           letterSpacing: '0.08em',
@@ -829,7 +850,7 @@ function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
     >
       <div
         style={{
-          fontSize: MIN_TEXT_PX,
+          fontSize: isKiosk ? 9 : MIN_TEXT_PX,
           letterSpacing: '0.14em',
           color: inkMuted,
           marginBottom: 4,
@@ -851,8 +872,12 @@ function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
                 flexShrink: 0,
               }}
             />
-            <span style={{ fontSize: MIN_TEXT_PX, fontWeight: 600 }}>{it.label}</span>
-            <span style={{ fontSize: MIN_TEXT_PX, color: inkMuted }}>·&nbsp;{it.sub}</span>
+            <span style={{ fontSize: isKiosk ? 10 : MIN_TEXT_PX, fontWeight: 600 }}>
+              {it.label}
+            </span>
+            <span style={{ fontSize: isKiosk ? 10 : MIN_TEXT_PX, color: inkMuted }}>
+              ·&nbsp;{it.sub}
+            </span>
           </div>
         ))}
       </div>

@@ -13,7 +13,8 @@ const files = execSync("git ls-files 'src/**/*.tsx' 'src/**/*.ts'", { encoding: 
 // fontSize: 10 | fontSize: '11px' | font-size: 12px (inside HTML strings)
 const NUMERIC = /fontSize\s*[:=]\s*\{?\s*['"]?(\d+(?:\.\d+)?)(?:px)?['"]?/g;
 const CSS_STRING = /font-size:\s*(\d+(?:\.\d+)?)px/g;
-// The non-kiosk arm of `isKiosk ? A : B` is B; kiosk arms are allowed.
+// Kiosk arms (A) are never matched by NUMERIC (it needs a digit right after
+// `fontSize:`), so only the non-kiosk arm (B) is checked, explicitly, below.
 const KIOSK_TERNARY = /isKiosk\s*\?\s*(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)/g;
 
 describe('13px floor — inline font sizes outside kiosk', () => {
@@ -21,13 +22,10 @@ describe('13px floor — inline font sizes outside kiosk', () => {
     const offenders: string[] = [];
     for (const f of files) {
       const src = readFileSync(f, 'utf8');
-      const kioskArms = new Set<number>();
-      for (const m of src.matchAll(KIOSK_TERNARY)) kioskArms.add(m.index! + m[0].indexOf(m[1]));
       for (const re of [NUMERIC, CSS_STRING]) {
         for (const m of src.matchAll(re)) {
           const px = Number(m[1]);
-          const at = m.index! + m[0].lastIndexOf(m[1]);
-          if (px < MIN_TEXT_PX && !kioskArms.has(at)) {
+          if (px < MIN_TEXT_PX) {
             const line = src.slice(0, m.index).split('\n').length;
             offenders.push(`${f}:${line} ${m[0]}`);
           }
