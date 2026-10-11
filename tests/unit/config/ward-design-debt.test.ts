@@ -15,7 +15,18 @@ const WARD_FILES = [
   'src/components/maternity/BedMoveReasonModal.tsx',
   ...readdirSync(path.join(root, wardDir)).map((f) => `${wardDir}/${f}`),
 ];
-const PATIENT_FILES: string[] = []; // Tasks 6 and 7 add their files here
+const PATIENT_FILES: string[] = [
+  'src/components/patient/PatientHeader.tsx',
+  'src/components/patient/StickyPatientHeader.tsx',
+  'src/components/patient/ReferralBanner.tsx',
+  'src/components/patient/QuickStatsBar.tsx',
+  'src/components/patient/CurrentVitalsPanel.tsx',
+  'src/components/patient/LaborProgressCard.tsx',
+  'src/components/patient/ClinicalData.tsx',
+  'src/components/patient/CpdFactorBreakdown.tsx',
+  'src/components/patient/AlertSummaryPanel.tsx',
+]; // Task 7 adds the page and src/components/patient/detail/*
+
 
 const BANNED: Array<[string, RegExp]> = [
   ['hex literal', /#[0-9a-fA-F]{3,8}\b/],

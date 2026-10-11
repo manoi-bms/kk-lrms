@@ -15,21 +15,17 @@ const HOUR = 3_600_000;
 const ago = (h: number) => new Date(Date.now() - h * HOUR).toISOString();
 
 const COPY = {
-  vitalTile: (label: string) => screen.getByText(label).parentElement!.parentElement as HTMLElement,
-  emptyVitalTile: (label: string) => screen.getByText(label).parentElement as HTMLElement,
-  criticalCount: (n: number) => `${n} CRITICAL`,
-  phase: {
-    latent: 'Latent Phase (ระยะแฝง)',
-    active: 'Active Phase (ระยะเร่ง)',
-    transition: 'Transition (ระยะเปลี่ยนผ่าน)',
-  },
+  vitalTile: (label: string) => screen.getByText(label).closest('[data-vital-tile]') as HTMLElement,
+  emptyVitalTile: (label: string) => screen.getByText(label).closest('[data-vital-tile]') as HTMLElement,
+  criticalCount: (n: number) => `ผิดปกติ ${n} รายการ`,
+  phase: { latent: 'ระยะแฝง', active: 'ระยะเร่ง', transition: 'ระยะเปลี่ยนผ่าน' },
   sub: (text: string) => `· ${text}`,
-  gaTerm: 'Term',
-  cervixPhaseActive: 'Active',
-  vitalStale: 'STALE',
-  cpdRiskLine: 'เสี่ยงสูง · HIGH',
-  cpdTotal: (score: number, max: number) => `Cephalopelvic Disproportion · คะแนนรวม ${score} / ${max}`,
-  cpdFooterTag: 'CPD score · Khon Kaen province',
+  gaTerm: 'ครบกำหนด',
+  cervixPhaseActive: 'ระยะเร่ง',
+  vitalStale: 'ข้อมูลเก่า',
+  cpdRiskLine: 'เสี่ยงสูง',
+  cpdTotal: (score: number, max: number) => `คะแนนรวม ${score} / ${max}`,
+  cpdFooterTag: 'คะแนน CPD · จังหวัดขอนแก่น',
 };
 
 describe('CurrentVitalsPanel — characterization', () => {

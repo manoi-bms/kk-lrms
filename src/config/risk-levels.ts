@@ -127,3 +127,19 @@ export function getRiskConfig(level: RiskLevel): RiskLevelConfig {
 export function isHighRisk(score: number): boolean {
   return classifyRiskLevel(score) === RiskLevel.HIGH;
 }
+
+/** Maximum contribution of each CPD factor, i.e. the top band of its
+ *  `evaluate()` in CPD_FACTOR_WEIGHTS. Test-pinned against evaluate(). */
+export const CPD_FACTOR_MAX_SCORES = {
+  gravida: 2,
+  ancCount: 1.5,
+  gaWeeks: 1.5,
+  heightCm: 2,
+  weightDiffKg: 2,
+  fundalHeightCm: 2,
+  usWeightG: 2,
+  hematocritPct: 1.5,
+} as const;
+
+/** Highest possible CPD score (shown as "/ 14.5" next to a patient's score). */
+export const CPD_MAX_SCORE = Object.values(CPD_FACTOR_MAX_SCORES).reduce((s, v) => s + v, 0);

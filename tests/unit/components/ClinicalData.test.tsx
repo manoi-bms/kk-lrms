@@ -20,7 +20,7 @@ describe('ClinicalData', () => {
     // Tiles render value+unit in separate spans; check the numeric values are present
     expect(screen.getByText('G2')).toBeTruthy();
     expect(screen.getByText('38')).toBeTruthy();
-    expect(screen.getByText('wk')).toBeTruthy();
+    expect(screen.getByText('สัปดาห์')).toBeTruthy();
     expect(screen.getByText('6')).toBeTruthy();
     // Unit "ครั้ง" is used for the ANC tile and (implicitly) for the GA tile; pick one
     expect(screen.getAllByText('ครั้ง').length).toBeGreaterThanOrEqual(1);
@@ -106,7 +106,7 @@ describe('ClinicalData', () => {
     const { container } = render(<ClinicalData {...completeData} weightKg={70} />);
     const diff = [...container.querySelectorAll('span')].find((el) => el.textContent === '+12');
     expect(diff).toBeTruthy();
-    expect(diff?.getAttribute('style')).toMatch(/--risk-low/);
+    expect(diff?.className).toContain('text-ok-text');
   });
 
   it('colors weight diff with risk-medium token when gain > 15 and <= 20', () => {
@@ -115,7 +115,7 @@ describe('ClinicalData', () => {
     );
     const diff = [...container.querySelectorAll('span')].find((el) => el.textContent === '+18');
     expect(diff).toBeTruthy();
-    expect(diff?.getAttribute('style')).toMatch(/--risk-medium/);
+    expect(diff?.className).toContain('text-warn-text');
   });
 
   it('colors weight diff with risk-high token when gain > 20', () => {
@@ -124,6 +124,6 @@ describe('ClinicalData', () => {
     );
     const diff = [...container.querySelectorAll('span')].find((el) => el.textContent === '+25');
     expect(diff).toBeTruthy();
-    expect(diff?.getAttribute('style')).toMatch(/--risk-high/);
+    expect(diff?.className).toContain('text-danger-text');
   });
 });

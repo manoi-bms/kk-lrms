@@ -1,5 +1,5 @@
 {
-  "maxEntries": 11,
+  "maxEntries": 8,
   "files": {
     "src/app/(provincial)/pregnancies/[journeyId]/page.tsx": "pastel #f4f6fb gradient stop in the journey banner has no surface token; migrate with sub-projects 2-5 (provincial pages)",
     "src/app/about/page.tsx": "decorative amber/rose stat tiles are categorical colours, not risk semantics (ruling R19); migrate with sub-projects 2-5 (public pages)",
@@ -8,9 +8,6 @@
     "src/components/dashboard/KioskHeader.tsx": "kiosk keeps its own larger type scale and dark palette (spec §1); not migrated",
     "src/components/dashboard/MaternalScreenCell.tsx": "kiosk branch text-[11px] is kiosk-only; kiosk keeps its own scale (spec §1)",
     "src/components/dashboard/OnlineUsersBadge.tsx": "dark navy badge palette (#0b1b2e/#e6ecf5) is a one-off with no token; migrate with sub-projects 2-5 (dashboard)",
-    "src/components/dashboard/SimulationControl.tsx": "admin-only simulation panel uses a one-off warm off-white #fffdfa with no token; migrate with sub-projects 2-5 (dashboard)",
-    "src/components/patient/CurrentVitalsPanel.tsx": "neutral grey #6b7693 used in colour-mix tint has no token; migrate with sub-projects 2-5 (patient page)",
-    "src/components/patient/LaborProgressCard.tsx": "neutral grey #6b7693 used in colour-mix tint has no token; migrate with sub-projects 2-5 (patient page)",
-    "src/components/patient/PatientHeader.tsx": "dark navy hero gradient and pastel green weight-tone fallback (#bbf7d0) have no tokens; migrate with sub-projects 2-5 (patient page)"
+    "src/components/dashboard/SimulationControl.tsx": "admin-only simulation panel uses a one-off warm off-white #fffdfa with no token; migrate with sub-projects 2-5 (dashboard)"
   }
 }
