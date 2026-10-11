@@ -10,6 +10,8 @@
 
 import { NETWORK_RETRY_REMEDY } from '@/lib/actionable-errors';
 import { COLOR } from '@/config/design-tokens';
+import { RISK_LEVELS } from '@/config/risk-levels';
+import type { RiskLevel } from '@/types/domain';
 import { use, useRef, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -232,7 +234,7 @@ function laborConcerns(p: LaborPatient): Array<{ label: string; warn?: boolean }
     }
   }
   const hrs = hoursSince(p.admit_date);
-  if (hrs != null && hrs >= 12) out.push({ label: `${Math.floor(hrs)}h admit`, warn: true });
+  if (hrs != null && hrs >= 12) out.push({ label: `รับมา ${Math.floor(hrs)} ชม.`, warn: true });
   if ((p.cpd_score ?? 0) >= 40) out.push({ label: 'CPD↑' });
   // Long-stay prompt — the usual cause is a skipped HOSxP discharge entry
   // (dchdate never filled in), so name that action instead of just the age.
@@ -249,7 +251,7 @@ function laborConcerns(p: LaborPatient): Array<{ label: string; warn?: boolean }
     p.labor_status === 'ACTIVE' &&
     needsPartographNudge(p.admit_date, p.partograph_alert_count ?? null)
   ) {
-    out.push({ label: 'NO PARTO', warn: true });
+    out.push({ label: 'ยังไม่มีพาร์โทกราฟ', warn: true });
   }
   return out;
 }
@@ -258,6 +260,9 @@ function laborConcerns(p: LaborPatient): Array<{ label: string; warn?: boolean }
 // The /hospitals board scores charting coverage; this panel names the actual
 // uncharted admissions in the window so the provincial team can cite specific
 // cases when following up with the ward.
+const cpdRiskLabelTh = (level: string | null | undefined): string =>
+  level && level in RISK_LEVELS ? RISK_LEVELS[level as RiskLevel].labelTh : '—';
+
 const AUDIT_STATUS_TH: Record<string, string> = {
   ACTIVE: 'รอคลอด',
   DELIVERED: 'คลอดแล้ว',
@@ -297,7 +302,7 @@ function PartographAuditPanel({ audit }: { audit: PartographAudit | null | undef
             <div className="cursor-help font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]" />
           }
         >
-          PARTOGRAPH QUALITY · {audit.windowDays}D
+          คุณภาพการบันทึกพาร์โทกราฟ · {audit.windowDays} วัน
         </KpiTip>
         <span className="font-mono text-label font-semibold tabular-nums" style={{ color }}>
           {pct}%{' '}
@@ -326,7 +331,7 @@ function PartographAuditPanel({ audit }: { audit: PartographAudit | null | undef
               </span>
               <span className="text-[var(--ink-navy)]">{maskName(a.name)}</span>
               <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
-                AN {a.an} · ADMIT {fmtAuditDate(a.admitDate)} ·{' '}
+                AN {a.an} · รับเมื่อ {fmtAuditDate(a.admitDate)} ·{' '}
                 {AUDIT_STATUS_TH[a.laborStatus] ?? a.laborStatus}
               </span>
             </div>
@@ -381,7 +386,7 @@ function Sig({ label, value, unit, sub, alarm, warn }: SigProps) {
   const color = alarm ? COLOR.riskHighText : warn ? COLOR.riskMediumText : 'var(--ink-navy)';
   return (
     <div className="border-r border-[var(--rule-strong)] px-3 py-2.5 last:border-r-0">
-      <div className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+      <div className="text-caption text-[var(--ink-navy-muted)]">
         {label}
       </div>
       <div
@@ -456,8 +461,8 @@ function LaborRow({ p, isSelected, onSelect, onReveal, onOpen }: LaborRowProps) 
         {p.ga_weeks != null ? `${p.ga_weeks}w` : '—'}
       </div>
       <div className="flex flex-col">
-        <span className="font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
-          CERVIX
+        <span className="text-caption text-[var(--ink-navy-muted)]">
+          ปากมดลูก
         </span>
         <span className="font-mono text-caption font-semibold text-[var(--ink-navy)]">
           {cervix != null ? `${cervix} cm` : '—'}
@@ -528,16 +533,16 @@ function AncRow({ j, isSelected, onSelect, onReveal, onOpen }: AncRowProps) {
         <span className="opacity-60">w</span>
       </div>
       <div className="flex flex-col">
-        <span className="font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
-          VISITS
+        <span className="text-caption text-[var(--ink-navy-muted)]">
+          ฝากครรภ์
         </span>
         <span className="font-mono text-caption font-semibold text-[var(--ink-navy)]">
           {j.ancVisitCount}/8
         </span>
       </div>
       <div className="flex flex-col">
-        <span className="font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
-          LAST ANC
+        <span className="text-caption text-[var(--ink-navy-muted)]">
+          ANC ล่าสุด
         </span>
         <span
           className="font-mono text-caption"
@@ -654,28 +659,28 @@ function LaborPreview({ patient, hcode }: { patient: LaborPatient; hcode: string
           }}
         >
           <Sig
-            label="BP"
+            label="ความดัน (BP)"
             value={v?.sbp != null && v?.dbp != null ? `${v.sbp}/${v.dbp}` : '—'}
             alarm={bpAlarm}
             warn={bpWarn}
-            sub={bpAlarm ? '↑↑ severe-PE' : bpWarn ? '↑ borderline' : 'normal'}
+            sub={bpAlarm ? '↑↑ สูงรุนแรง' : bpWarn ? '↑ สูงเล็กน้อย' : 'ปกติ'}
           />
           <Sig
-            label="MHR"
+            label="ชีพจรแม่ (MHR)"
             value={v?.maternal_hr != null ? String(v.maternal_hr) : '—'}
             unit="bpm"
           />
           <Sig
-            label="FHR"
+            label="หัวใจทารก (FHR)"
             value={v?.fetal_hr ?? '—'}
             unit="bpm"
             alarm={fhrAlarm}
-            sub={fhrAlarm ? (fhr! > 160 ? '↑ tachy' : '↓ brady') : 'normal'}
+            sub={fhrAlarm ? (fhr! > 160 ? '↑ เร็ว' : '↓ ช้า') : 'ปกติ'}
           />
           <Sig
             label="CPD"
             value={patient.cpd_score != null ? `${patient.cpd_score}%` : '—'}
-            sub={patient.cpd_risk_level ?? '—'}
+            sub={cpdRiskLabelTh(patient.cpd_risk_level)}
             alarm={tier === 'high'}
             warn={tier === 'medium'}
           />
@@ -688,10 +693,10 @@ function LaborPreview({ patient, hcode }: { patient: LaborPatient; hcode: string
           style={{ borderColor: 'var(--rule-strong)' }}
         >
           <div className="font-mono text-caption font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
-            <span className="text-[var(--ink-navy-muted)] mr-1.5">02</span>STAGE / PROGRESS
+            <span className="text-[var(--ink-navy-muted)] mr-1.5">02</span>ระยะ / ความก้าวหน้า
           </div>
-          <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
-            {patient.labor_status}
+          <div className="text-caption text-[var(--ink-navy-muted)]">
+            {AUDIT_STATUS_TH[patient.labor_status] ?? patient.labor_status}
           </div>
         </div>
         <div
@@ -702,23 +707,23 @@ function LaborPreview({ patient, hcode }: { patient: LaborPatient; hcode: string
           }}
         >
           <Sig
-            label="GA"
+            label="อายุครรภ์"
             value={patient.ga_weeks != null ? String(patient.ga_weeks) : '—'}
-            unit="w"
+            unit="สัปดาห์"
           />
           <Sig
-            label="ANC"
+            label="ฝากครรภ์ (ANC)"
             value={patient.anc_count != null ? String(patient.anc_count) : '—'}
             unit="/8"
             warn={(patient.anc_count ?? 0) < 5}
           />
           <Sig
-            label="CERVIX"
+            label="ปากมดลูก"
             value={patient.latest_cervix_cm != null ? String(patient.latest_cervix_cm) : '—'}
             unit="cm"
           />
           <Sig
-            label="ADMIT"
+            label="รับมาแล้ว"
             value={admitH != null ? `${Math.floor(admitH)}` : '—'}
             unit="ชม."
             warn={admitH != null && admitH >= 12}
@@ -823,23 +828,23 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
           }}
         >
           <Sig
-            label="RISK"
+            label="ความเสี่ยง"
             value={journey.ancRiskLevel ?? 'LOW'}
             alarm={tier === 'high'}
             warn={tier === 'medium'}
-            sub={`${risk?.triggeredRules?.length ?? 0} rules`}
+            sub={`${risk?.triggeredRules?.length ?? 0} เกณฑ์`}
           />
           <Sig
-            label="GA"
+            label="อายุครรภ์"
             value={journey.gaWeeks != null ? String(journey.gaWeeks) : '—'}
-            unit="w"
+            unit="สัปดาห์"
           />
-          <Sig label="VISITS" value={`${journey.ancVisitCount}`} unit="/8" />
+          <Sig label="ฝากครรภ์" value={`${journey.ancVisitCount}`} unit="/8" />
           <Sig
-            label="LAST"
+            label="ANC ล่าสุด"
             value={lastAncRel}
             alarm={overdue}
-            sub={overdue ? 'ขาดนัด' : 'on track'}
+            sub={overdue ? 'ขาดนัด' : 'ตามนัด'}
           />
         </div>
       </div>
@@ -851,7 +856,7 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
           style={{ borderColor: 'var(--rule-strong)' }}
         >
           <div className="font-mono text-caption font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
-            <span className="text-[var(--ink-navy-muted)] mr-1.5">02</span>PREGNANCY TIMELINE
+            <span className="text-[var(--ink-navy-muted)] mr-1.5">02</span>ไทม์ไลน์การตั้งครรภ์
           </div>
           <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
             {journey.lmp ? `LMP ${journey.lmp.slice(0, 10)}` : 'LMP —'}
@@ -892,7 +897,7 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
             <span>T1 12w</span>
             <span>T2 27w</span>
             <span>T3 36w</span>
-            <span>EDC 40w</span>
+            <span>EDC 40 สัปดาห์</span>
           </div>
         </div>
       </div>
@@ -906,7 +911,7 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
           >
             <div className="font-mono text-caption font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
               <span className="text-[var(--ink-navy-muted)] mr-1.5">03</span>
-              RISK RULES TRIGGERED
+              เกณฑ์ความเสี่ยงที่พบ
             </div>
             <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
               screened {risk.screenedAt.slice(0, 10)}
@@ -967,7 +972,7 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
           >
             <div className="font-mono text-caption font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
               <span className="text-[var(--ink-navy-muted)] mr-1.5">04</span>
-              ANC VISIT TIMELINE · BP
+              ประวัติการฝากครรภ์ · ความดัน (BP)
             </div>
             <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
               {visitsChrono.length} visits · {journey.ancVisitCount} expected
@@ -990,7 +995,7 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
         >
           <div className="font-mono text-caption font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
             <span className="text-[var(--ink-navy-muted)] mr-1.5">05</span>
-            LAB SNAPSHOT
+            ผลตรวจล่าสุด
           </div>
           <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
             booking + latest
@@ -1004,7 +1009,7 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
           }}
         >
           <LabCell
-            label="GROUP"
+            label="หมู่เลือด"
             value={
               journey.bloodGroup
                 ? `${journey.bloodGroup} ${journey.rhFactor === 'NEG' ? 'Rh-' : journey.rhFactor === 'POS' ? 'Rh+' : ''}`.trim()
@@ -1044,7 +1049,7 @@ function LabCell({
         borderBottom: '1px solid var(--rule-hair)',
       }}
     >
-      <div className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+      <div className="text-caption text-[var(--ink-navy-muted)]">
         {label}
       </div>
       <div

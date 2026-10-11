@@ -174,3 +174,37 @@ describe('HospitalConsolePage — sub-project 4 chrome', () => {
     expect(await screen.findByRole('region', { name: /ผู้คลอดที่จะส่งต่อมา/ })).toBeInTheDocument();
   });
 });
+
+describe('HospitalConsolePage — nurse-facing labels are Thai', () => {
+  // Clinical abbreviations nurses use (BP, FHR, CPD, ANC, GA, AN, HN) stay; plain English words go.
+  const BANNED = [
+    'NO PARTO', 'CERVIX', 'PARTOGRAPH QUALITY', 'STAGE / PROGRESS', 'severe-PE', 'borderline',
+    'tachy', 'brady', 'ADMIT', 'VISITS', 'LAST ANC', 'on track', 'LAB SNAPSHOT', 'RISK RULES', 'TIMELINE',
+    '\\d+h admit',
+  ];
+
+  async function openFirstLabourPreview() {
+    await renderConsole();
+    await screen.findByRole('heading', { level: 1, name: 'รพ.ขอนแก่น' });
+    fireEvent.mouseEnter((await screen.findAllByRole('button', { name: /นาง สายฝน/ }))[0]);
+  }
+
+  it('labour roster, concern chips and preview use Thai labels', async () => {
+    await openFirstLabourPreview();
+    const text = document.body.textContent ?? '';
+    for (const en of BANNED) expect(text).not.toMatch(new RegExp(en));
+    expect(text).toContain('ปากมดลูก');
+    expect(text).toContain('ระยะ / ความก้าวหน้า');
+    expect(text).toContain('BP'); // clinical abbreviation kept next to Thai
+    expect(text).toContain('FHR');
+    expect(text).toContain('CPD');
+  });
+
+  it('the ANC registry rows use Thai column labels', async () => {
+    await renderConsole();
+    fireEvent.click(await screen.findByRole('button', { name: /ทะเบียนฝากครรภ์/ }));
+    await screen.findAllByRole('button', { name: /นาง ดาว/ });
+    const text = document.body.textContent ?? '';
+    for (const en of BANNED) expect(text).not.toMatch(new RegExp(en));
+  });
+});
