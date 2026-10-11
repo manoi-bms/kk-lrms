@@ -19,10 +19,15 @@ export interface AlertDefinition {
   kioskLabel: string;
   /** Kiosk ribbon detail line when the count is above zero. */
   kioskDetail: string;
-  /** Shown in both modes when the count is zero. */
+  /** Kiosk ribbon text when the count is zero (frozen). */
   zeroLabel: string;
+  /** Normal-mode text when the count is zero — says what was checked. */
+  zeroLabelTh: string;
   tooltipTitle: string;
+  /** Kiosk tooltip body (frozen). */
   tooltipBody: ReactNode;
+  /** Normal-mode tooltip body: states what the number counts, no release notes. */
+  tooltipBodyTh: ReactNode;
   /** `alarm` counts toward the alert total and turns red; `workload` is
    *  upcoming work (amber) and never raises the total on its own. */
   kind: 'alarm' | 'workload';
@@ -37,6 +42,7 @@ export const ALERT_DEFINITIONS: readonly AlertDefinition[] = [
     kioskLabel: 'REFERRAL ACTION',
     kioskDetail: 'เกิน SLA / ฉุกเฉินยังไม่ถึง',
     zeroLabel: 'ไม่มีส่งต่อค้างเกิน SLA',
+    zeroLabelTh: 'ไม่มีส่งต่อค้างเกิน SLA',
     tooltipTitle: 'เคสส่งต่อที่ต้องเร่งจัดการ',
     tooltipBody: (
       <>
@@ -44,6 +50,14 @@ export const ALERT_DEFINITIONS: readonly AlertDefinition[] = [
         <strong>{REFERRAL_SLA.overdueAfterHours} ชั่วโมง</strong> รวมกับเคส{' '}
         <strong>ฉุกเฉิน (EMERGENCY)</strong> ที่ยังไม่ถึงปลายทาง. ต่างจากเดิมที่นับเคสรอทั้งหมด
         (ตัวเลขไม่เคยลด) — ช่องนี้จะเป็นศูนย์ได้เมื่อจัดการทัน. คลิกเพื่อเปิดรายการที่กรองแล้ว.
+      </>
+    ),
+    tooltipBodyTh: (
+      <>
+        เคสส่งต่อสถานะ <strong>INITIATED</strong> ค้างเกิน{' '}
+        <strong>{REFERRAL_SLA.overdueAfterHours} ชั่วโมง</strong> รวมกับเคส{' '}
+        <strong>ฉุกเฉิน (EMERGENCY)</strong> ที่ยังไม่ถึงปลายทาง. ช่องนี้เป็นศูนย์ได้เมื่อจัดการทัน.
+        คลิกเพื่อเปิดรายการที่กรองแล้ว.
       </>
     ),
     kind: 'alarm',
@@ -56,8 +70,17 @@ export const ALERT_DEFINITIONS: readonly AlertDefinition[] = [
     kioskLabel: 'OVERDUE ANC',
     kioskDetail: `ขาดนัดเกิน ${ANC_OPS.followupWarnDays} วัน`,
     zeroLabel: 'ANC ครบทุกราย',
+    zeroLabelTh: `ไม่มีขาดนัดเกิน ${ANC_OPS.followupWarnDays} วัน`,
     tooltipTitle: 'หญิงตั้งครรภ์ขาดนัด ANC เกินเกณฑ์',
     tooltipBody: (
+      <>
+        นับเฉพาะทะเบียนครรภ์ที่ยัง active (ตัดรายคลอดแล้ว/หลุดติดตามออก เช่นเดียวกับหน้า
+        ฝากครรภ์) ที่นัดล่าสุดผ่านมาเกิน <strong>{ANC_OPS.followupWarnDays} วัน</strong> —
+        ตัวเลขเดียวกับช่อง MISSED ANC ของหน้าฝากครรภ์. ปฏิบัติ:
+        ติดตามให้กลับมาตรวจครรภ์ก่อนหลุดการติดตามที่ {ANC_LAST_VISIT_MAX_AGE_DAYS} วัน.
+      </>
+    ),
+    tooltipBodyTh: (
       <>
         นับเฉพาะทะเบียนครรภ์ที่ยัง active (ตัดรายคลอดแล้ว/หลุดติดตามออก เช่นเดียวกับหน้า
         ฝากครรภ์) ที่นัดล่าสุดผ่านมาเกิน <strong>{ANC_OPS.followupWarnDays} วัน</strong> —
@@ -75,12 +98,19 @@ export const ALERT_DEFINITIONS: readonly AlertDefinition[] = [
     kioskLabel: `DUE ≤${ANC_OPS.dueSoonDays} DAYS`,
     kioskDetail: 'ใกล้ครบกำหนดคลอด',
     zeroLabel: 'ไม่มีครรภ์ใกล้คลอด',
+    zeroLabelTh: 'ไม่มีครรภ์ใกล้คลอด',
     tooltipTitle: `ครรภ์ครบกำหนดภายใน ${ANC_OPS.dueSoonDays} วัน`,
     tooltipBody: (
       <>
         หญิงตั้งครรภ์ในทะเบียน active ที่ EDC อยู่ภายใน <strong>{ANC_OPS.dueSoonDays} วัน</strong>{' '}
         (รวมที่เลยกำหนดแล้ว) — ภาระงานคลอดที่กำลังมาถึงของทั้งจังหวัด ใช้วางแผนเตียง/ส่งต่อ.
         แทนที่ช่อง IN-TRANSIT เดิมซึ่งเป็นศูนย์ตลอดเพราะสถานะส่งต่อไม่ถูกอัปเดตจากต้นทาง.
+      </>
+    ),
+    tooltipBodyTh: (
+      <>
+        หญิงตั้งครรภ์ในทะเบียน active ที่ EDC อยู่ภายใน <strong>{ANC_OPS.dueSoonDays} วัน</strong>{' '}
+        (รวมที่เลยกำหนดแล้ว) — ภาระงานคลอดที่กำลังมาถึงของทั้งจังหวัด ใช้วางแผนเตียง/ส่งต่อ.
       </>
     ),
     kind: 'workload',

@@ -34,8 +34,8 @@ export function AlertsSection({ alerts }: { alerts: DashboardAlerts }) {
               count={value}
               href={def.href}
               tone={toneFor(def, value)}
-              sub={value > 0 ? 'กดเพื่อเปิดรายชื่อ' : def.zeroLabel}
-              hint={{ title: def.tooltipTitle, body: def.tooltipBody }}
+              sub={value > 0 ? 'กดเพื่อเปิดรายชื่อ' : def.zeroLabelTh}
+              hint={{ title: def.tooltipTitle, body: def.tooltipBodyTh }}
             />
           );
         })}

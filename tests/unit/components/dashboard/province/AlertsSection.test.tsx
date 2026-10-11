@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { render, screen, within } from '@testing-library/react';
 import { AlertsSection } from '@/components/dashboard/province/AlertsSection';
 import { ALERT_DEFINITIONS, alarmTotal } from '@/components/dashboard/province/alert-definitions';
@@ -53,5 +54,25 @@ describe('AlertsSection', () => {
     render(<AlertsSection alerts={hot} />);
     const hint = screen.getByRole('button', { name: 'คำอธิบาย: ส่งต่อที่ต้องเร่งจัดการ' });
     expect(within(screen.getByTestId('alert-referrals')).getByRole('link').contains(hint)).toBe(false);
+  });
+});
+
+describe('AlertsSection normal-mode copy (I2)', () => {
+  it('has no release-note wording and does not overstate the zero state', () => {
+    const body = (d: (typeof ALERT_DEFINITIONS)[number]) =>
+      renderToStaticMarkup(<>{d.tooltipBodyTh}</>).replace(/<[^>]+>/g, '');
+    for (const d of ALERT_DEFINITIONS) {
+      expect(body(d)).not.toMatch(/ต่างจากเดิม|IN-TRANSIT|เดิม/);
+      expect(d.zeroLabelTh).not.toBe('ANC ครบทุกราย');
+    }
+    const anc = ALERT_DEFINITIONS.find((d) => d.key === 'overdueAnc')!;
+    expect(anc.zeroLabelTh).toBe(`ไม่มีขาดนัดเกิน ${ANC_OPS.followupWarnDays} วัน`);
+  });
+  it('normal mode renders the Thai fields; kiosk strings are untouched', () => {
+    render(<AlertsSection alerts={{ referralAlerts: 0, overdueAnc: 0, dueSoon: 0 }} />);
+    expect(screen.getByTestId('alert-overdue-anc')).toHaveTextContent(`ไม่มีขาดนัดเกิน ${ANC_OPS.followupWarnDays} วัน`);
+    const anc = ALERT_DEFINITIONS.find((d) => d.key === 'overdueAnc')!;
+    expect(anc.zeroLabel).toBe('ANC ครบทุกราย');
+    expect(anc.kioskLabel).toBe('OVERDUE ANC');
   });
 });

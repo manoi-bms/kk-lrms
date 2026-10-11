@@ -40,4 +40,10 @@ describe('LaborVitalsSection', () => {
       expect(text).not.toContain('แถบสีด้านล่าง');
     }
   });
+  it('axis starts at the first bucket (23 h before the current hour), not -24', () => {
+    render(<LaborVitalsSection summary={makeSummary()} trends={makeTrends()} />);
+    const adm = screen.getByTestId('admissions-24h');
+    expect(within(adm).getByText('−23 ชม.')).toBeInTheDocument();
+    expect(within(adm).queryByText('−24 ชม.')).toBeNull();
+  });
 });

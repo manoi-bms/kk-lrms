@@ -10,7 +10,8 @@ import { HintButton } from '@/components/shared/HintButton';
 import { BarStrip, RiskBar } from '@/components/dashboard/shared';
 import { LABOR_TILE_HINTS, laborAdmissionsHint } from './metric-hints';
 
-const AXIS = ['−24 ชม.', '−18', '−12', '−6', 'ตอนนี้'] as const;
+// Bucket 0 starts 23 h before the start of the current hour (getDashboardTrends).
+const AXIS = ['−23 ชม.', '−18', '−12', '−6', 'ตอนนี้'] as const;
 const fmt = (n: number) => n.toLocaleString('en-US');
 
 export function LaborVitalsSection({ summary, trends }: { summary: DashboardSummary; trends: DashboardTrends }) {
