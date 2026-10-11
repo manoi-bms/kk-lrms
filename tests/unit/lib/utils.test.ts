@@ -45,6 +45,11 @@ describe('utils', () => {
     it.each(Object.keys(TYPE_SCALE))('keeps text-%s when a text colour follows', (token) => {
       expect(cn(`text-${token}`, 'text-brand')).toBe(`text-${token} text-brand`);
     });
+
+    it('treats the custom shadow-soft token as a shadow so shadow-none overrides it', () => {
+      expect(cn('shadow-soft', 'shadow-none')).toBe('shadow-none');
+      expect(cn('shadow-none', 'shadow-soft')).toBe('shadow-soft');
+    });
   });
 
   describe('formatThaiDate', () => {

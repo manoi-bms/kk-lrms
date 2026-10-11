@@ -13,6 +13,9 @@ const twMerge = extendTailwindMerge({
   extend: {
     classGroups: {
       'font-size': [{ text: Object.keys(TYPE_SCALE) }],
+      // --shadow-soft is a custom @theme shadow; without it shadow-none cannot
+      // override it and both classes survive.
+      shadow: [{ shadow: ['soft'] }],
     },
   },
 });
