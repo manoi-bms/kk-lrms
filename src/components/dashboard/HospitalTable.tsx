@@ -12,6 +12,12 @@ import { RiskBar } from './shared';
 import { cn } from '@/lib/utils';
 import { formatRelativeAge } from '@/lib/relative-time';
 import { combinedWorkload } from '@/config/hospital-network';
+import {
+  classifyHospitalLink,
+  HOSPITAL_LINK_STATUS,
+  hospitalLinkText,
+  kioskLinkText,
+} from '@/config/hospital-status';
 
 interface HospitalTableProps {
   hospitals: DashboardHospital[];
@@ -198,15 +204,8 @@ export function HospitalTable({
           // misled operators into thinking sync was healthy.
           const isBlocked = h.syncStatus === 'BLOCKED';
           const isNeverSynced = h.syncStatus === 'NEVER_SYNCED';
-          const statusLabel = isBlocked
-            ? 'BLOCKED'
-            : isNeverSynced && !isOffline
-              ? 'NO SYNC'
-              : isOnline
-                ? 'ONLINE'
-                : isOffline
-                  ? 'OFFLINE'
-                  : 'UNKNOWN';
+          const link = classifyHospitalLink(h.connectionStatus, h.syncStatus);
+          const statusLabel = isKiosk ? HOSPITAL_LINK_STATUS[link].kioskLabel : HOSPITAL_LINK_STATUS[link].labelTh;
           const statusColor = isBlocked
             ? 'var(--risk-medium)'
             : isOnline && !isNeverSynced
@@ -214,11 +213,9 @@ export function HospitalTable({
               : isOffline
                 ? 'var(--risk-high)'
                 : inkMuted;
-          const statusTitle = isBlocked
-            ? `Sync ถูกระงับ — ${h.syncBlockedReason ?? 'unknown reason'}`
-            : isNeverSynced
-              ? 'ยังไม่เคยมีการเชื่อมต่อ Sync — รอผู้ใช้จากโรงพยาบาลนี้เปิด KK-LRMS ครั้งแรก'
-              : '';
+          const statusTitle = isKiosk
+            ? kioskLinkText(h.connectionStatus, h.syncStatus, h.syncBlockedReason).tableTitle
+            : hospitalLinkText(link, h.syncBlockedReason).detail;
           const sev =
             h.counts.high > 0
               ? 'var(--risk-high)'
@@ -283,7 +280,10 @@ export function HospitalTable({
                   {h.level}
                 </span>
                 <span
-                  className="inline-flex shrink-0 items-center gap-1 font-mono text-caption uppercase tracking-wide"
+                  className={cn(
+                    'inline-flex shrink-0 items-center gap-1 font-mono text-caption',
+                    isKiosk && 'uppercase tracking-wide',
+                  )}
                   style={{ color: statusColor }}
                   aria-label={`สถานะ: ${statusLabel}`}
                   title={statusTitle || undefined}

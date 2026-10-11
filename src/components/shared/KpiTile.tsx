@@ -18,29 +18,36 @@ const TONE: Record<KpiTone, { box: string; label: string; value: string; sub: st
   ok: { box: 'bg-ok-tint border border-ok/40', label: 'text-ok-text', value: 'text-ok-text', sub: 'text-ok-text' },
 };
 
-export interface KpiTileProps {
+type TileAction =
+  | { href: string; onSelect?: undefined; selected?: undefined }
+  | { onSelect: () => void; selected: boolean; href?: undefined }
+  | { href?: undefined; onSelect?: undefined; selected?: undefined };
+
+export type KpiTileProps = {
   label: string;
-  count: number;
+  /** Server aggregate; null/undefined renders "—" (not yet loaded). */
+  count: number | null | undefined;
   unit?: string;
   tone?: KpiTone;
-  href?: string;
   hint?: { title: string; body: ReactNode };
   /** Secondary line under the number, e.g. "รับใหม่ 3 รายใน 24 ชม.". */
   sub?: ReactNode;
   testId?: string;
   className?: string;
-}
+} & TileAction;
 
-export function KpiTile({ label, count, unit, tone = 'default', href, hint, sub, testId, className }: KpiTileProps) {
+export function KpiTile({ label, count, unit, tone = 'default', href, onSelect, selected, hint, sub, testId, className }: KpiTileProps) {
   const t = TONE[tone];
-  const shown = Number.isFinite(count) ? count.toLocaleString('en-US') : '—';
+  const shown = typeof count === 'number' && Number.isFinite(count) ? count.toLocaleString('en-US') : '—';
   return (
     <div
       data-testid={testId}
+      data-selected={selected ? 'true' : undefined}
       className={cn(
         'relative flex min-w-0 flex-col gap-1 rounded-2xl px-4 py-4',
         t.box,
-        href && 'transition-transform hover:-translate-y-0.5',
+        (href || onSelect) && 'transition-transform hover:-translate-y-0.5',
+        selected && 'ring-2 ring-brand ring-offset-2',
         className,
       )}
     >
@@ -48,6 +55,15 @@ export function KpiTile({ label, count, unit, tone = 'default', href, hint, sub,
         <Link
           href={href}
           aria-label={`${label} ${shown}`}
+          className="absolute inset-0 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+        />
+      )}
+      {onSelect && (
+        <button
+          type="button"
+          aria-pressed={selected}
+          aria-label={`${label} ${shown}`}
+          onClick={onSelect}
           className="absolute inset-0 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         />
       )}
@@ -59,7 +75,7 @@ export function KpiTile({ label, count, unit, tone = 'default', href, hint, sub,
       </div>
       <div data-kpi-value className={cn('whitespace-nowrap text-kpi tabular-nums', t.value)}>
         {shown}
-        {unit && <span className="ml-1 text-body">{unit}</span>}
+        {unit && shown !== '—' && <span className="ml-1 text-body">{unit}</span>}
       </div>
       {sub && <div className={cn('text-caption', t.sub)}>{sub}</div>}
     </div>

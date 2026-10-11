@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 import { SectionCard } from '@/components/shared/SectionCard';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { KpiTile } from '@/components/shared/KpiTile';
@@ -113,5 +113,46 @@ describe('PageHeader freshness label', () => {
       />,
     );
     expect(screen.getByRole('status')).toHaveTextContent('ข้อมูลหน้านี้ ณ');
+  });
+});
+
+describe('KpiTile — toggle mode (sub-project 4)', () => {
+  it('onSelect makes a stretched pressed-state button; the hint stays a sibling', () => {
+    const onSelect = vi.fn();
+    render(
+      <KpiTile
+        label="ครบกำหนดคลอดใน 14 วัน"
+        count={172}
+        onSelect={onSelect}
+        selected={false}
+        hint={{ title: 'ใกล้คลอด', body: 'อธิบาย' }}
+        testId="kpi-due-soon"
+      />,
+    );
+    const toggle = screen.getByRole('button', { name: 'ครบกำหนดคลอดใน 14 วัน 172' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(toggle.querySelector('button')).toBeNull();
+    fireEvent.click(toggle);
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: /คำอธิบาย/ }).closest('[aria-pressed]')).toBeNull();
+  });
+
+  it('selected tile is marked and outlined', () => {
+    render(<KpiTile label="HR3" count={3} onSelect={() => {}} selected testId="t" />);
+    expect(screen.getByRole('button', { name: 'HR3 3' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('t')).toHaveAttribute('data-selected', 'true');
+    expect(screen.getByTestId('t').className).toContain('ring-2');
+  });
+
+  it('null / undefined count renders an em dash, not 0', () => {
+    render(<KpiTile label="หญิงตั้งครรภ์" count={null} testId="n" />);
+    expect(screen.getByTestId('n').querySelector('[data-kpi-value]')!.textContent).toBe('—');
+  });
+});
+
+describe('SectionCard testId', () => {
+  it('puts the test id on the section', () => {
+    render(<SectionCard title="เส้นทางส่งต่อหลัก" testId="corridors-panel">x</SectionCard>);
+    expect(screen.getByTestId('corridors-panel')).toHaveAttribute('aria-label', 'เส้นทางส่งต่อหลัก');
   });
 });

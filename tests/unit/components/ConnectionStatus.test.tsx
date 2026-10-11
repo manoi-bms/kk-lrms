@@ -37,7 +37,7 @@ describe('ConnectionStatus', () => {
     const dot = container.querySelector('[aria-hidden="true"]') as HTMLElement;
     expect(dot.className).toContain('bg-gray-400');
     const label = screen.getByText('ไม่ทราบ');
-    expect(label.style.color).toBe('rgb(156, 163, 175)'); // #9ca3af
+    expect(label.style.color).toBe('rgb(107, 107, 133)'); // COLOR.inkSubtle #6B6B85 (AA; was #9ca3af)
   });
 
   it('shows last sync timestamp when provided', () => {

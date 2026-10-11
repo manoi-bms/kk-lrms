@@ -1,8 +1,7 @@
 {
-  "maxEntries": 10,
+  "maxEntries": 9,
   "files": {
     "src/app/(hospital)/hospital-maternity-ward/page.tsx": "neutral cool-grey/slate hex (#F4F7FB, #1E293B, #E2E8F0) have no token yet; migrate when sub-projects 2-5 add neutral tokens (hospital pages)",
-    "src/app/(provincial)/pregnancies/[journeyId]/page.tsx": "pastel #f4f6fb gradient stop in the journey banner has no surface token; migrate with sub-projects 2-5 (provincial pages)",
     "src/components/dashboard/KioskHeader.tsx": "kiosk keeps its own larger type scale and dark palette (spec §1); not migrated",
     "src/components/dashboard/MaternalScreenCell.tsx": "kiosk branch text-[11px] is kiosk-only; kiosk keeps its own scale (spec §1)",
     "src/components/dashboard/OnlineUsersBadge.tsx": "dark navy badge palette (#0b1b2e/#e6ecf5) is a one-off with no token; migrate with sub-projects 2-5 (dashboard)",

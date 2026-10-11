@@ -96,3 +96,58 @@ describe('DataTable', () => {
     expect(onRowClick).not.toHaveBeenCalled();
   });
 });
+
+describe('DataTable — list pages (sub-project 4)', () => {
+  type R = { id: string; name: string };
+  const data: R[] = [{ id: 'a', name: 'รพ.พล' }];
+  const cols: DataTableColumn<R>[] = [
+    {
+      key: 'name',
+      header: 'โรงพยาบาล',
+      cell: (r) => (
+        <span>
+          <a href={`/hospitals/${r.id}`} tabIndex={-1}>
+            {r.name}
+          </a>{' '}
+          <span>รหัส {r.id}</span> <button type="button">แก้ไข</button>
+        </span>
+      ),
+    },
+  ];
+
+  it('row click ignores clicks on nested links/buttons but not on plain cell text', async () => {
+    const onRowClick = vi.fn();
+    render(<DataTable columns={cols} rows={data} rowKey={(r) => r.id} onRowClick={onRowClick} rowLabel={(r) => `เปิด ${r.name}`} />);
+    await userEvent.click(screen.getByRole('button', { name: 'แก้ไข' }));
+    fireEvent.click(screen.getByText('รพ.พล'));
+    expect(onRowClick).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByText('รหัส a'));
+    expect(onRowClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('rowAttrs, isRowSelected and onRowPointerEnter decorate the <tr>', () => {
+    const onEnter = vi.fn();
+    render(
+      <DataTable
+        columns={cols}
+        rows={data}
+        rowKey={(r) => r.id}
+        rowAttrs={(r) => ({ 'data-testid': `row-${r.id}`, 'data-sync': 'ok' })}
+        isRowSelected={() => true}
+        onRowPointerEnter={onEnter}
+      />,
+    );
+    const tr = screen.getByTestId('row-a');
+    expect(tr.tagName).toBe('TR');
+    expect(tr).toHaveAttribute('data-sync', 'ok');
+    expect(tr).toHaveAttribute('data-selected', 'true');
+    expect(tr.className).toContain('bg-brand-soft');
+    fireEvent.pointerEnter(tr);
+    expect(onEnter).toHaveBeenCalledWith(data[0]);
+  });
+
+  it('cells wrap instead of forcing the table wider', () => {
+    render(<DataTable columns={cols} rows={data} rowKey={(r) => r.id} />);
+    expect(screen.getByText('รหัส a').closest('td')!.className).toContain('whitespace-normal');
+  });
+});

@@ -1,6 +1,13 @@
 'use client';
 import type { KeyboardEvent, MouseEvent, ReactNode } from 'react';
-import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { RiskLevel } from '@/types/domain';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +40,12 @@ export type DataTableProps<T> = {
    *  overflow-x wrapper a sticky <thead> would stick to a box that never
    *  scrolls vertically. */
   maxHeight?: number | string;
+  /** data-* attributes for the <tr> (test ids, classification hooks). */
+  rowAttrs?: (row: T) => Record<`data-${string}`, string | undefined>;
+  /** Highlights a row (e.g. the hospital picked on the map). */
+  isRowSelected?: (row: T) => boolean;
+  /** Hover sync with another view (map pin highlight). */
+  onRowPointerEnter?: (row: T) => void;
 } & RowActivation<T>;
 
 const RISK_ROW: Record<RiskLevel, string> = {
@@ -42,19 +55,6 @@ const RISK_ROW: Record<RiskLevel, string> = {
 };
 
 const SKELETON_ROWS = 3;
-
-// A click that starts on a nested control (edit/delete button, link, input)
-// belongs to that control. Without this guard the row's onRowClick fired too,
-// so "แก้ไข" inside a clickable row also navigated the row.
-const NESTED_INTERACTIVE = 'a,button,input,select,textarea,label,summary,[role="button"],[role="link"],[role="checkbox"]';
-
-function activateOnClick<T>(row: T, onRowClick: (row: T) => void) {
-  return (e: MouseEvent<HTMLTableRowElement>) => {
-    const hit = (e.target as Element).closest(NESTED_INTERACTIVE);
-    if (hit && hit !== e.currentTarget && e.currentTarget.contains(hit)) return;
-    onRowClick(row);
-  };
-}
 
 function activateOnKeys<T>(row: T, onRowClick: (row: T) => void) {
   return (e: KeyboardEvent<HTMLTableRowElement>) => {
@@ -66,8 +66,37 @@ function activateOnKeys<T>(row: T, onRowClick: (row: T) => void) {
   };
 }
 
+const NESTED_CONTROL =
+  'a[href],button,input,select,textarea,label,summary,[role="button"],[role="link"],[role="checkbox"]';
+
+/** A click that landed in a nested control (edit/delete button, link, input)
+ *  belongs to that control: the row must not also fire (a cell <Link> would
+ *  otherwise navigate twice; "แก้ไข" inside a clickable row would also open it).
+ *  Plain cell text (td/span targets) still activates the row. */
+function clickOnRow<T>(row: T, onRowClick: (row: T) => void) {
+  return (e: MouseEvent<HTMLTableRowElement>) => {
+    const hit = e.target instanceof Element ? e.target.closest(NESTED_CONTROL) : null;
+    if (hit && hit !== e.currentTarget && e.currentTarget.contains(hit)) return;
+    onRowClick(row);
+  };
+}
+
 export function DataTable<T>(props: DataTableProps<T>) {
-  const { columns, rows, rowKey, rowRisk, loading = false, empty, caption, maxHeight, onRowClick, rowLabel } = props;
+  const {
+    columns,
+    rows,
+    rowKey,
+    rowRisk,
+    loading = false,
+    empty,
+    caption,
+    maxHeight,
+    onRowClick,
+    rowLabel,
+    rowAttrs,
+    isRowSelected,
+    onRowPointerEnter,
+  } = props;
   const bounded = maxHeight !== undefined;
   return (
     <div
@@ -85,7 +114,10 @@ export function DataTable<T>(props: DataTableProps<T>) {
         <TableHeader className={cn('bg-surface-muted', bounded && 'sticky top-0 z-10')}>
           <TableRow>
             {columns.map((c) => (
-              <TableHead key={c.key} className={cn('text-label text-ink-muted', c.numeric && 'text-right')}>
+              <TableHead
+                key={c.key}
+                className={cn('text-label text-ink-muted', c.numeric && 'text-right')}
+              >
                 {c.header}
               </TableHead>
             ))}
@@ -104,7 +136,10 @@ export function DataTable<T>(props: DataTableProps<T>) {
             ))}
           {!loading && rows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={columns.length} className="py-8 text-center text-body text-ink-muted">
+              <TableCell
+                colSpan={columns.length}
+                className="py-8 text-center text-body text-ink-muted"
+              >
                 {empty ?? 'ไม่มีข้อมูล'}
               </TableCell>
             </TableRow>
@@ -113,23 +148,32 @@ export function DataTable<T>(props: DataTableProps<T>) {
             rows.map((row) => {
               const risk = rowRisk?.(row);
               const clickable = onRowClick && rowLabel;
+              const selected = isRowSelected?.(row) ?? false;
               return (
                 <TableRow
                   key={rowKey(row)}
+                  {...rowAttrs?.(row)}
+                  data-selected={selected ? 'true' : undefined}
                   className={cn(
                     risk && RISK_ROW[risk],
+                    selected && 'bg-brand-soft',
                     clickable &&
                       'cursor-pointer outline-none hover:brightness-[0.98] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand',
                   )}
                   tabIndex={clickable ? 0 : undefined}
                   aria-label={clickable ? rowLabel(row) : undefined}
-                  onClick={clickable ? activateOnClick(row, onRowClick) : undefined}
+                  onClick={clickable ? clickOnRow(row, onRowClick) : undefined}
                   onKeyDown={clickable ? activateOnKeys(row, onRowClick) : undefined}
+                  onPointerEnter={onRowPointerEnter ? () => onRowPointerEnter(row) : undefined}
                 >
                   {columns.map((c) => (
                     <TableCell
                       key={c.key}
-                      className={cn('text-body', c.numeric && 'text-right tabular-nums', c.className)}
+                      className={cn(
+                        'whitespace-normal align-top text-body',
+                        c.numeric && 'text-right tabular-nums',
+                        c.className,
+                      )}
                     >
                       {c.cell(row)}
                     </TableCell>
