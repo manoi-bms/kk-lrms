@@ -29,6 +29,9 @@ export const MIGRATED: string[] = [
   'src/components/admin/WebhookKeysTab.tsx',
   'src/components/admin/MophAlertsTab.tsx',
   'src/components/admin/BmsConfigTab.tsx',
+  'src/components/admin/HospitalEditDialog.tsx',
+  'src/components/admin/SimulationTab.tsx',
+  'src/components/dashboard/SimulationControl.tsx',
 ];
 
 type Rule = [name: string, offends: (line: string) => boolean];

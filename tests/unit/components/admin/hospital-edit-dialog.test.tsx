@@ -50,3 +50,15 @@ describe('HospitalEditDialog — characterization (must not change)', () => {
     await waitFor(() => expect(fetcher).toHaveBeenCalledWith('/api/admin/hospitals/10670/sync-progress?limit=20'));
   });
 });
+
+describe('HospitalEditDialog — Thai labels on the tokens', () => {
+  it('section tabs and header facts are Thai', async () => {
+    open();
+    for (const label of ['ข้อมูลทั่วไป', 'แพทย์ที่ปรึกษา', 'การเชื่อมต่อ BMS', 'บันทึกการซิงค์', 'คีย์ Webhook', 'ลบข้อมูล']) {
+      expect(await screen.findByRole('button', { name: new RegExp(label) })).toBeInTheDocument();
+    }
+    expect(screen.getByText('ข้อมูลการทำงานของโรงพยาบาล')).toBeInTheDocument();
+    expect(screen.getByText('ใช้งาน')).toBeInTheDocument();
+    expect(screen.queryByText(/Hospital Operations Profile|Danger Zone|LAST SYNC/)).toBeNull();
+  });
+});
