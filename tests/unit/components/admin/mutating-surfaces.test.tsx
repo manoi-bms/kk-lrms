@@ -299,7 +299,7 @@ describe('HospitalEditDialog consult doctors & webhooks — characterization (mu
     const fetchSpy = stubMutations();
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
     openSection('consult');
-    const del = await screen.findByRole('button', { name: /^ลบ$/ });
+    const del = await screen.findByRole('button', { name: 'ลบแพทย์ นพ.สมชาย' });
     await userEvent.click(del);
     expect(confirmSpy).toHaveBeenCalledWith('ลบแพทย์ consult นพ.สมชาย?');
     expect(fetchSpy).not.toHaveBeenCalled();
