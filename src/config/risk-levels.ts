@@ -11,6 +11,8 @@ export interface RiskLevelConfig {
   bgColor: string;
   textColor: string;
   labelTh: string;
+  /** Compact Thai label for dense chips (accessible name stays labelTh). */
+  shortLabelTh: string;
   labelEn: string;
   action: string;
 }
@@ -24,6 +26,7 @@ export const RISK_LEVELS: Record<RiskLevel, RiskLevelConfig> = {
     bgColor: COLOR.riskLowTint,
     textColor: COLOR.riskLowText,
     labelTh: 'เสี่ยงต่ำ',
+    shortLabelTh: 'ต่ำ',
     labelEn: 'Low Risk',
     action: 'ติดตามปกติ',
   },
@@ -35,6 +38,7 @@ export const RISK_LEVELS: Record<RiskLevel, RiskLevelConfig> = {
     bgColor: COLOR.riskMediumTint,
     textColor: COLOR.riskMediumText,
     labelTh: 'เสี่ยงปานกลาง',
+    shortLabelTh: 'ปานกลาง',
     labelEn: 'Medium Risk',
     action: 'เฝ้าระวังใกล้ชิด, เตรียมพร้อมส่งต่อ',
   },
@@ -46,6 +50,7 @@ export const RISK_LEVELS: Record<RiskLevel, RiskLevelConfig> = {
     bgColor: COLOR.riskHighTint,
     textColor: COLOR.riskHighText,
     labelTh: 'เสี่ยงสูง',
+    shortLabelTh: 'สูง',
     labelEn: 'High Risk',
     action: 'ควรประสานส่งต่อทันที!',
   },
