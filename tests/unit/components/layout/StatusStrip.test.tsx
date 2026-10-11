@@ -2,17 +2,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { FreshnessSummary } from '@/types/sync-freshness';
+import type { FreshnessSnapshot } from '@/hooks/useSyncFreshness';
+import { SYNC_FRESHNESS_POLL } from '@/config/hospital-network';
 
-const swrState: { data?: FreshnessSummary; error?: Error; isLoading: boolean; mutate: () => void } = {
+const swrState: { data?: FreshnessSnapshot; error?: Error; isLoading: boolean; mutate: () => void } = {
   isLoading: false,
   mutate: vi.fn(),
 };
 vi.mock('@/hooks/useSyncFreshness', () => ({ useSyncFreshness: () => swrState }));
+// Type-only import above is erased; the mock replaces the runtime module.
 
 import { StatusStrip } from '@/components/layout/StatusStrip';
 
-const summary: FreshnessSummary = {
+const summary: FreshnessSnapshot = {
+  receivedAt: Date.now(),
   generatedAt: '2026-10-11T05:40:00Z',
   province: { reporting: 27, fresh: 16, stale: 10, never: 1, highRisk: 2, lastSyncAt: '2026-10-11T05:38:00Z' },
   own: { hcode: '11000', name: 'รพ.น้ำพอง', lastSyncAt: '2026-10-11T05:38:00Z', health: 'ok', highRisk: 1 },
@@ -20,6 +23,7 @@ const summary: FreshnessSummary = {
 
 describe('StatusStrip', () => {
   beforeEach(() => {
+    summary.receivedAt = Date.now();
     swrState.data = undefined;
     swrState.error = undefined;
     swrState.isLoading = false;
@@ -87,6 +91,44 @@ describe('StatusStrip', () => {
     expect(screen.getByText('ไม่สามารถตรวจสอบสถานะข้อมูลได้')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'ลองใหม่' }));
     expect(swrState.mutate).toHaveBeenCalled();
+  });
+
+  describe('snapshot no longer current (refresh failing or hung)', () => {
+    it('hospital: refresh error with cached data → no green badge, no CPD number, retry + since-when', async () => {
+      swrState.data = summary; // own.health 'ok' in the cached payload
+      swrState.error = new Error('HTTP 503');
+      render(<StatusStrip variant="hospital" />);
+      expect(screen.getByText(/ตรวจสอบสถานะข้อมูลไม่ได้ตั้งแต่/)).toBeInTheDocument();
+      expect(screen.queryByRole('status')).not.toBeInTheDocument(); // no FreshnessBadge
+      expect(screen.queryByRole('link', { name: /CPD เสี่ยงสูง 1/ })).not.toBeInTheDocument();
+      expect(screen.getByText('CPD เสี่ยงสูง — (ข้อมูลไม่เป็นปัจจุบัน)')).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'ลองใหม่' }));
+      expect(swrState.mutate).toHaveBeenCalled();
+    });
+
+    it('hospital: snapshot older than max age without an error is also not current', () => {
+      swrState.data = { ...summary, receivedAt: Date.now() - SYNC_FRESHNESS_POLL.maxSnapshotAgeMs - 1_000 };
+      render(<StatusStrip variant="hospital" />);
+      expect(screen.getByText(/ตรวจสอบสถานะข้อมูลไม่ได้ตั้งแต่/)).toBeInTheDocument();
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
+
+    it('provincial: refresh error with cached data → stale counts and CPD number hidden', () => {
+      swrState.data = summary;
+      swrState.error = new Error('HTTP 500');
+      render(<StatusStrip variant="provincial" />);
+      expect(screen.getByText(/ตรวจสอบสถานะข้อมูลไม่ได้ตั้งแต่/)).toBeInTheDocument();
+      expect(screen.queryByText(/ข้อมูลสด/)).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /CPD เสี่ยงสูง 2/ })).not.toBeInTheDocument();
+      expect(screen.getByText('CPD เสี่ยงสูง — (ข้อมูลไม่เป็นปัจจุบัน)')).toBeInTheDocument();
+    });
+
+    it('recovers: a fresh snapshot without error renders normally again', () => {
+      swrState.data = { ...summary, receivedAt: Date.now() };
+      render(<StatusStrip variant="hospital" />);
+      expect(screen.queryByText(/ตรวจสอบสถานะข้อมูลไม่ได้ตั้งแต่/)).not.toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveAttribute('data-tone', 'ok');
+    });
   });
 
   it('loading renders a fixed-height placeholder (no layout jump)', () => {

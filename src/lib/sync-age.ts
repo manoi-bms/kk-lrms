@@ -1,7 +1,7 @@
 // Human-readable data freshness. Classification is delegated to
 // classifySyncHealth (the same 60-min / 24-h policy /api/health uses), so the
 // badge, the status strip and the health endpoint can never disagree.
-import { classifySyncHealth, type SyncHealthClass } from '@/config/hospital-network';
+import { classifySyncHealth, SYNC_FRESHNESS_POLL, type SyncHealthClass } from '@/config/hospital-network';
 
 export type FreshnessTone = 'ok' | 'warn' | 'danger';
 
@@ -58,4 +58,19 @@ export function describeSyncAge(
   else if (mins < DAY_MIN) relative = `${Math.floor(mins / 60)} ชั่วโมงที่แล้ว`;
   else relative = `${Math.floor(mins / DAY_MIN)} วันที่แล้ว`;
   return { health, tone: HEALTH_TONE[health], clock, relative };
+}
+
+/** Is a client-side freshness snapshot still trustworthy? `receivedAt` is the
+ *  client time the response arrived (client-vs-client, so no clock skew). */
+export function isSnapshotCurrent({
+  receivedAt,
+  hasError,
+  now = Date.now(),
+}: {
+  receivedAt: number;
+  hasError: boolean;
+  now?: number;
+}): boolean {
+  if (hasError || !Number.isFinite(receivedAt)) return false;
+  return now - receivedAt <= SYNC_FRESHNESS_POLL.maxSnapshotAgeMs;
 }

@@ -1,9 +1,11 @@
 // src/components/layout/StatusStrip.tsx
 'use client';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useSyncFreshness } from '@/hooks/useSyncFreshness';
 import { FreshnessBadge } from '@/components/shared/FreshnessBadge';
-import { describeSyncAge } from '@/lib/sync-age';
+import { describeSyncAge, isSnapshotCurrent } from '@/lib/sync-age';
+import { SYNC_FRESHNESS_POLL } from '@/config/hospital-network';
 import { cn } from '@/lib/utils';
 
 const BAR =
@@ -43,8 +45,20 @@ function HighRisk({
   );
 }
 
+/** Re-renders on an interval so snapshot age is re-checked even when no new
+ *  response (or error) arrives — e.g. a hung request. */
+function useNow(intervalMs: number): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), intervalMs);
+    return () => window.clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
+
 export function StatusStrip({ variant }: { variant: 'provincial' | 'hospital' }) {
   const { data, error, isLoading, mutate } = useSyncFreshness();
+  const now = useNow(SYNC_FRESHNESS_POLL.recheckMs);
 
   if (isLoading && !data) return <div aria-busy="true" className={BAR} />;
   if (error && !data) {
@@ -58,6 +72,25 @@ export function StatusStrip({ variant }: { variant: 'provincial' | 'hospital' })
     );
   }
   if (!data) return null;
+
+  // SWR keeps the last good payload when refreshes fail: never present it as
+  // current. Show what happened, since when, and what to do — and no numbers.
+  if (!isSnapshotCurrent({ receivedAt: data.receivedAt, hasError: Boolean(error), now })) {
+    const since = describeSyncAge(new Date(data.receivedAt).toISOString(), 'OK', new Date(now)).clock;
+    return (
+      <div className={BAR} aria-live="polite">
+        <span className="inline-flex items-center gap-2 text-warn-text">
+          <Dot tone="warn" />
+          ตรวจสอบสถานะข้อมูลไม่ได้ตั้งแต่ <b className="tabular-nums">{since ?? '—'}</b> — ตัวเลขอาจไม่เป็นปัจจุบัน
+          ระบบกำลังลองใหม่อัตโนมัติ
+        </span>
+        <button type="button" onClick={() => void mutate()} className="underline">
+          ลองใหม่
+        </button>
+        <HighRisk count={0} href="/" unavailable />
+      </div>
+    );
+  }
 
   if (variant === 'hospital') {
     return (

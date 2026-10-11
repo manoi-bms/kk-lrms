@@ -18,6 +18,17 @@ export const SYNC_HEALTH = {
  *  provincial/admin testing account. They are exempt from the access guard and
  *  excluded from every freshness count, map and roster. Client-safe: this file
  *  must never read env or import server-only modules. */
+/** Status-strip polling of /api/sync/freshness. A cached snapshot is trusted
+ *  only while refreshes succeed and it is younger than maxSnapshotAgeMs — one
+ *  missed refresh is tolerated, two are not (SWR keeps the last good payload
+ *  when refreshes fail, which must never read as current). */
+export const SYNC_FRESHNESS_POLL = {
+  refreshMs: 30_000,
+  maxSnapshotAgeMs: 75_000,
+  /** How often the strip re-checks snapshot age without a new response. */
+  recheckMs: 15_000,
+} as const;
+
 export const NON_REPORTING_HCODES = ['00000', '99999'] as const;
 
 export function isNonReportingHcode(hcode: string | null | undefined): boolean {
