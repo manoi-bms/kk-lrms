@@ -1,5 +1,5 @@
 'use client';
-import type { KeyboardEvent, ReactNode } from 'react';
+import type { KeyboardEvent, MouseEvent, ReactNode } from 'react';
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { RiskLevel } from '@/types/domain';
 import { cn } from '@/lib/utils';
@@ -42,6 +42,19 @@ const RISK_ROW: Record<RiskLevel, string> = {
 };
 
 const SKELETON_ROWS = 3;
+
+// A click that starts on a nested control (edit/delete button, link, input)
+// belongs to that control. Without this guard the row's onRowClick fired too,
+// so "แก้ไข" inside a clickable row also navigated the row.
+const NESTED_INTERACTIVE = 'a,button,input,select,textarea,label,summary,[role="button"],[role="link"],[role="checkbox"]';
+
+function activateOnClick<T>(row: T, onRowClick: (row: T) => void) {
+  return (e: MouseEvent<HTMLTableRowElement>) => {
+    const hit = (e.target as Element).closest(NESTED_INTERACTIVE);
+    if (hit && hit !== e.currentTarget && e.currentTarget.contains(hit)) return;
+    onRowClick(row);
+  };
+}
 
 function activateOnKeys<T>(row: T, onRowClick: (row: T) => void) {
   return (e: KeyboardEvent<HTMLTableRowElement>) => {
@@ -110,7 +123,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
                   )}
                   tabIndex={clickable ? 0 : undefined}
                   aria-label={clickable ? rowLabel(row) : undefined}
-                  onClick={clickable ? () => onRowClick(row) : undefined}
+                  onClick={clickable ? activateOnClick(row, onRowClick) : undefined}
                   onKeyDown={clickable ? activateOnKeys(row, onRowClick) : undefined}
                 >
                   {columns.map((c) => (
