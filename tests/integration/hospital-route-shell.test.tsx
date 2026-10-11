@@ -8,7 +8,7 @@
 // Post-session render (header summary, room/bed grid) is covered by
 // tests/integration/hospital-maternity-ward-page.test.tsx (Task 25).
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import HospitalLayout from '@/app/(hospital)/layout';
 import HospitalMaternityWardPage from '@/app/(hospital)/hospital-maternity-ward/page';
 
@@ -93,7 +93,8 @@ describe('Hospital route shell', () => {
         <HospitalMaternityWardPage />
       </HospitalLayout>,
     );
-    expect((await screen.findAllByText('ห้องคลอด')).length).toBeGreaterThan(0);
+    const nav = await screen.findByRole('navigation', { name: 'เมนูหลัก' });
+    expect(within(nav).getByRole('link', { name: /ห้องคลอด/ })).toBeInTheDocument();
     for (const label of ['แดชบอร์ด', 'ฝากครรภ์', 'โรงพยาบาล', 'ส่งต่อ', 'ผลลัพธ์ทารก']) {
       expect(screen.queryByText(label)).not.toBeInTheDocument();
     }

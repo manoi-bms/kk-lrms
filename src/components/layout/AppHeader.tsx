@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { LogOut, Menu } from 'lucide-react';
+import { Bell, LogOut, Menu } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import type { ReactNode } from 'react';
 import { useBreadcrumbs, type Breadcrumb } from '@/components/layout/BreadcrumbContext';
@@ -67,8 +67,14 @@ export function AppHeader({
               {hospitalName}
             </span>
           )}
-          <Link href="/profile" className="hidden text-label text-brand hover:underline md:inline">
-            การตั้งค่าการแจ้งเตือน
+          <Link
+            href="/profile"
+            aria-label="การตั้งค่าการแจ้งเตือน"
+            title="การตั้งค่าการแจ้งเตือน"
+            className="rounded-lg p-1.5 text-brand hover:bg-brand-soft md:p-0 md:text-label md:hover:bg-transparent md:hover:underline"
+          >
+            <Bell className="h-4 w-4 md:hidden" />
+            <span className="hidden md:inline">การตั้งค่าการแจ้งเตือน</span>
           </Link>
           <CallDirectoryButton />
           <span className="hidden flex-col items-end leading-tight md:flex">

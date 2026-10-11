@@ -66,4 +66,9 @@ describe('AppShell', () => {
     render(<AppShell variant="hospital">page</AppShell>);
     expect(screen.getByRole('navigation', { name: 'breadcrumb' })).toHaveTextContent('ห้องคลอด');
   });
+
+  it('keeps the notification-settings link reachable for the provincial variant', () => {
+    render(<AppShell variant="provincial">page</AppShell>);
+    expect(screen.getByRole('link', { name: 'การตั้งค่าการแจ้งเตือน' })).toHaveAttribute('href', '/profile');
+  });
 });
