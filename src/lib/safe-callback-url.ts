@@ -10,6 +10,11 @@
  */
 export function sanitizeCallbackUrl(url: string | null | undefined): string {
   if (!url || !url.startsWith('/')) return '/';
+  // Browsers strip tab/LF/CR while parsing a URL, so "/\t/evil.com" would
+  // collapse to "//evil.com" after this check. No legitimate in-app path
+  // contains a control character — reject them all.
+  // eslint-disable-next-line no-control-regex -- matching control chars is the point
+  if (/[\u0000-\u001f\u007f]/.test(url)) return '/';
   // Reject protocol-relative URLs. Browsers normalise backslashes to forward
   // slashes, so "/\evil.com" is treated as "//evil.com" — block both forms.
   if (url.startsWith('//') || url.startsWith('/\\')) return '/';
