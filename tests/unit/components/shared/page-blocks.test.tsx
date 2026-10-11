@@ -156,3 +156,29 @@ describe('SectionCard testId', () => {
     expect(screen.getByTestId('corridors-panel')).toHaveAttribute('aria-label', 'เส้นทางส่งต่อหลัก');
   });
 });
+
+describe('KpiGrid balanced rows', () => {
+  const cls = (n: number) => {
+    const { container } = render(
+      <KpiGrid count={n}>
+        {Array.from({ length: n }, (_, i) => (
+          <span key={i}>t</span>
+        ))}
+      </KpiGrid>,
+    );
+    return (container.firstChild as HTMLElement).className;
+  };
+  it('5 tiles go 3+2 (never 4+1) and 6 tiles go 3+3 (never 4+2)', () => {
+    expect(cls(5)).toContain('grid-cols-3');
+    expect(cls(5)).not.toContain('grid-cols-4');
+    expect(cls(6)).toContain('grid-cols-3');
+    expect(cls(6)).not.toContain('grid-cols-4');
+  });
+  it('4 tiles go 2x2 or 4x1, never 3+1', () => {
+    expect(cls(4)).not.toContain('grid-cols-3');
+  });
+  it('without a count it keeps the auto-fit behaviour', () => {
+    const { container } = render(<KpiGrid min="md"><span>a</span></KpiGrid>);
+    expect((container.firstChild as HTMLElement).className).toContain('minmax(200px,1fr)');
+  });
+});

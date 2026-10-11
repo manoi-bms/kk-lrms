@@ -79,6 +79,8 @@ describe('OutcomesPage — KPI tiles', () => {
     expect(within(lbw).getByText(/12\.5%/)).toBeInTheDocument();
 
     expect(within(screen.getByTestId('kpi-apgar')).getByText('2')).toBeInTheDocument();
+    // Same sub-line shape as the LBW tile so card heights match.
+    expect(within(screen.getByTestId('kpi-apgar')).getByText(/4\.2% ของทารกทั้งหมด/)).toBeInTheDocument();
     expect(within(screen.getByTestId('kpi-multiples')).getByText('3')).toBeInTheDocument();
     expect(within(screen.getByTestId('kpi-resus')).getByText('4')).toBeInTheDocument();
     expect(within(screen.getByTestId('kpi-avg-weight')).getByText('3,050')).toBeInTheDocument();
