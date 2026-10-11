@@ -1,3 +1,4 @@
+// Kiosk-only since UI sub-project 2; normal mode renders province/AlertsSection.
 // AlertBar — persistent ribbon with "ALL CLEAR" resting state. Recalibrated
 // 2026-07-09: every tile is a number that can actually move, computed from
 // the same configs the drill-down boards use (see dashboard.ts:
@@ -12,6 +13,7 @@ import Link from 'next/link';
 import type { DashboardAlerts } from '@/types/api';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { ALERT_DEFINITIONS, alarmTotal } from '@/components/dashboard/province/alert-definitions';
 
 interface AlertBarProps {
   alerts: DashboardAlerts;
@@ -92,7 +94,7 @@ function AlertTile({
 export function AlertBar({ alerts }: AlertBarProps) {
   // Only true alarms feed the leading total — due-soon is upcoming workload,
   // not an incident, so it must not push the ribbon into red on its own.
-  const total = alerts.referralAlerts + alerts.overdueAnc;
+  const total = alarmTotal(alerts);
   const hot = total > 0;
   const stateColor = hot ? 'var(--risk-high)' : 'var(--risk-low)';
 
@@ -142,55 +144,20 @@ export function AlertBar({ alerts }: AlertBarProps) {
           </div>
         </TooltipContent>
       </Tooltip>
-      <AlertTile
-        testId="alert-referrals"
-        href="/referrals?overdue=1"
-        label="REFERRAL ACTION"
-        value={alerts.referralAlerts}
-        zeroLabel="ไม่มีส่งต่อค้างเกิน SLA"
-        detail="เกิน SLA / ฉุกเฉินยังไม่ถึง"
-        tooltipTitle="เคสส่งต่อที่ต้องเร่งจัดการ"
-        tooltipBody={
-          <>
-            เคสส่งต่อสถานะ <strong>INITIATED</strong> ค้างเกิน <strong>24 ชั่วโมง</strong> รวมกับเคส{' '}
-            <strong>ฉุกเฉิน (EMERGENCY)</strong> ที่ยังไม่ถึงปลายทาง. ต่างจากเดิมที่นับเคสรอทั้งหมด
-            (ตัวเลขไม่เคยลด) — ช่องนี้จะเป็นศูนย์ได้เมื่อจัดการทัน. คลิกเพื่อเปิดรายการที่กรองแล้ว.
-          </>
-        }
-      />
-      <AlertTile
-        testId="alert-overdue-anc"
-        href="/pregnancies?cohort=anc_stale"
-        label="OVERDUE ANC"
-        value={alerts.overdueAnc}
-        zeroLabel="ANC ครบทุกราย"
-        detail="ขาดนัดเกิน 35 วัน"
-        tooltipTitle="หญิงตั้งครรภ์ขาดนัด ANC เกินเกณฑ์"
-        tooltipBody={
-          <>
-            นับเฉพาะทะเบียนครรภ์ที่ยัง active (ตัดรายคลอดแล้ว/หลุดติดตามออก เช่นเดียวกับหน้า
-            ฝากครรภ์) ที่นัดล่าสุดผ่านมาเกิน <strong>35 วัน</strong> — ตัวเลขเดียวกับช่อง MISSED ANC
-            ของหน้าฝากครรภ์. ปฏิบัติ: ติดตามให้กลับมาตรวจครรภ์ก่อนหลุดการติดตามที่ 60 วัน.
-          </>
-        }
-      />
-      <AlertTile
-        testId="alert-due-soon"
-        href="/pregnancies?cohort=due_soon"
-        label="DUE ≤14 DAYS"
-        value={alerts.dueSoon}
-        zeroLabel="ไม่มีครรภ์ใกล้คลอด"
-        detail="ใกล้ครบกำหนดคลอด"
-        tooltipTitle="ครรภ์ครบกำหนดภายใน 14 วัน"
-        hotColor="var(--risk-medium)"
-        tooltipBody={
-          <>
-            หญิงตั้งครรภ์ในทะเบียน active ที่ EDC อยู่ภายใน <strong>14 วัน</strong>{' '}
-            (รวมที่เลยกำหนดแล้ว) — ภาระงานคลอดที่กำลังมาถึงของทั้งจังหวัด ใช้วางแผนเตียง/ส่งต่อ.
-            แทนที่ช่อง IN-TRANSIT เดิมซึ่งเป็นศูนย์ตลอดเพราะสถานะส่งต่อไม่ถูกอัปเดตจากต้นทาง.
-          </>
-        }
-      />
+      {ALERT_DEFINITIONS.map((d) => (
+        <AlertTile
+          key={d.key}
+          testId={d.testId}
+          href={d.href}
+          label={d.kioskLabel}
+          value={alerts[d.key]}
+          zeroLabel={d.zeroLabel}
+          detail={d.kioskDetail}
+          tooltipTitle={d.tooltipTitle}
+          tooltipBody={d.tooltipBody}
+          hotColor={d.kind === 'workload' ? 'var(--risk-medium)' : undefined}
+        />
+      ))}
     </div>
   );
 }
