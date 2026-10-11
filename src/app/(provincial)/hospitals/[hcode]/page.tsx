@@ -10,11 +10,12 @@
 
 import { NETWORK_RETRY_REMEDY } from '@/lib/actionable-errors';
 import { COLOR } from '@/config/design-tokens';
-import { use, useState, useMemo } from 'react';
+import { use, useRef, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { maskName } from '@/lib/pii-mask';
+import { scrollPreviewIntoViewIfStacked } from '@/lib/scroll-preview';
 import {
   classifyPartographCoverage,
   needsPartographNudge,
@@ -410,10 +411,12 @@ interface LaborRowProps {
   p: LaborPatient;
   isSelected: boolean;
   onSelect: () => void;
+  /** Keyboard focus: select AND scroll a stacked preview into view (hover selects without scrolling). */
+  onReveal: () => void;
   onOpen: () => void;
 }
 
-function LaborRow({ p, isSelected, onSelect, onOpen }: LaborRowProps) {
+function LaborRow({ p, isSelected, onSelect, onReveal, onOpen }: LaborRowProps) {
   const tier = laborTier(p.cpd_risk_level);
   const concerns = laborConcerns(p);
   const cervix = p.latest_cervix_cm;
@@ -422,6 +425,7 @@ function LaborRow({ p, isSelected, onSelect, onOpen }: LaborRowProps) {
     <button
       type="button"
       onMouseEnter={onSelect}
+      onFocus={onReveal}
       onClick={onOpen}
       className="grid w-full items-center text-left transition-colors"
       style={{
@@ -479,10 +483,11 @@ interface AncRowProps {
   j: JourneyListItem;
   isSelected: boolean;
   onSelect: () => void;
+  onReveal: () => void;
   onOpen: () => void;
 }
 
-function AncRow({ j, isSelected, onSelect, onOpen }: AncRowProps) {
+function AncRow({ j, isSelected, onSelect, onReveal, onOpen }: AncRowProps) {
   const tier = ancTier(j.ancRiskLevel);
   const concerns = ancConcerns(j);
   const lastDays = daysSince(j.lastAncDate);
@@ -491,6 +496,7 @@ function AncRow({ j, isSelected, onSelect, onOpen }: AncRowProps) {
     <button
       type="button"
       onMouseEnter={onSelect}
+      onFocus={onReveal}
       onClick={onOpen}
       className="grid w-full items-center text-left transition-colors"
       style={{
@@ -1130,6 +1136,13 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
   const [tab, setTab] = useState<TabKey>('labor');
   const [selectedLabor, setSelectedLabor] = useState<string | null>(null);
   const [selectedAnc, setSelectedAnc] = useState<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  // Stacked layout: the preview is below the fold, so selecting a row brings it into view.
+  const selectRow = (select: () => void) => {
+    select();
+    scrollPreviewIntoViewIfStacked(listRef.current, previewRef.current);
+  };
   // Frozen render-time anchor — react-hooks/purity forbids bare Date.now()
   // in render code. SWR's 60s refresh re-derives KPIs from new data anyway,
   // so a per-mount snapshot is fine; we don't need a continuously ticking
@@ -1515,7 +1528,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
         {/* Body split */}
         <div className="grid grid-cols-1 @min-[1000px]:grid-cols-[1.05fr_1fr]">
           {/* List */}
-          <div className="px-4 py-4 @min-[1000px]:max-h-[calc(100dvh_-_var(--app-header-h,0px)_-_120px)] @min-[1000px]:overflow-y-auto @min-[1000px]:border-r @min-[1000px]:border-border">
+          <div ref={listRef} className="px-4 py-4 @min-[1000px]:max-h-[calc(100dvh_-_var(--app-header-h,0px)_-_120px)] @min-[1000px]:overflow-y-auto @min-[1000px]:border-r @min-[1000px]:border-border">
             <div className="mb-2 flex items-baseline justify-between border-b border-brand pb-1">
               <div className="text-label text-ink">
                 {tab === 'labor'
@@ -1551,6 +1564,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
                           p={p}
                           isSelected={effectiveLabor === p.an}
                           onSelect={() => setSelectedLabor(p.an)}
+                          onReveal={() => selectRow(() => setSelectedLabor(p.an))}
                           onOpen={() => router.push(`/patients/${buildPatientId(hcode, p.an)}`)}
                         />
                       ))}
@@ -1596,6 +1610,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
                             j={j}
                             isSelected={effectiveAnc === j.id}
                             onSelect={() => setSelectedAnc(j.id)}
+                            onReveal={() => selectRow(() => setSelectedAnc(j.id))}
                             onOpen={() => router.push(`/pregnancies/${j.id}`)}
                           />
                         ))}
@@ -1608,7 +1623,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
           </div>
 
           {/* Detail preview */}
-          <div className="border-t border-border bg-surface-muted px-4 py-4 @min-[1000px]:max-h-[calc(100dvh_-_var(--app-header-h,0px)_-_120px)] @min-[1000px]:overflow-y-auto @min-[1000px]:border-t-0">
+          <div ref={previewRef} className="border-t border-border bg-surface-muted px-4 py-4 @min-[1000px]:max-h-[calc(100dvh_-_var(--app-header-h,0px)_-_120px)] @min-[1000px]:overflow-y-auto @min-[1000px]:border-t-0">
             {tab === 'labor' ? (
               (() => {
                 const p = labor.find((x) => x.an === effectiveLabor);

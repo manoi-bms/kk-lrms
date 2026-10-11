@@ -18,7 +18,7 @@ vi.mock('@/config/list-page', async (orig) => {
 describe('useDashboard refresh interval', () => {
   it('polls at LIST_PAGE.refreshMs', () => {
     renderHook(() => useDashboard());
-    const cfg = vi.mocked(useSWR).mock.calls[0][1] as { refreshInterval: number };
+    const cfg = vi.mocked(useSWR).mock.calls[0][1] as unknown as { refreshInterval: number };
     expect(cfg.refreshInterval).toBe(12_345);
   });
 });
