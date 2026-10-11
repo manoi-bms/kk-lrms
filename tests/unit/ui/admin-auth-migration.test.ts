@@ -12,6 +12,10 @@ export const MIGRATED: string[] = [
   'src/components/auth/LoginHero.tsx',
   'src/components/auth/AccessDeniedNotice.tsx',
   'src/components/auth/HosxpVersionDialog.tsx',
+  'src/app/about/page.tsx',
+  'src/components/about/AboutHeader.tsx',
+  'src/components/about/about-blocks.tsx',
+  'src/components/about/WebhookApiSection.tsx',
 ];
 
 type Rule = [name: string, offends: (line: string) => boolean];
