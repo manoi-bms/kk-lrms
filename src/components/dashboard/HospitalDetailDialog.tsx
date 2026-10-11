@@ -250,11 +250,17 @@ export function HospitalDetailDialog({
                 ไม่มีผู้ป่วยที่ต้องเฝ้าระวังที่โรงพยาบาลนี้
               </div>
             ) : (
-              <HighRiskPatientList
-                patients={patients}
-                totalActive={counts.total}
-                totalHigh={counts.high}
-              />
+              <>
+                <h3 className="pb-1 text-body-lg font-semibold text-[var(--ink-navy)]">
+                  ผู้คลอดเสี่ยงสูงและในห้องคลอดที่โรงพยาบาลนี้
+                </h3>
+                <HighRiskPatientList
+                  embedded
+                  patients={patients}
+                  totalActive={counts.total}
+                  totalHigh={counts.high}
+                />
+              </>
             )}
           </section>
         </div>

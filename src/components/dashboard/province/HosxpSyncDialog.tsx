@@ -47,9 +47,20 @@ export function HosxpSyncDialog({ open, onOpenChange, state, status, help }: Hos
   const [copy, setCopy] = useState<CopyState>('idle');
   const resetTimer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(resetTimer.current), []);
+  const report = buildHosxpSyncReport(state, status, help);
+  const reportBox = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (!open) {
+      window.clearTimeout(resetTimer.current);
+      setCopy('idle');
+    }
+  }, [open]);
+  useEffect(() => {
+    if (copy === 'failed') reportBox.current?.select();
+  }, [copy]);
   const copyReport = async () => {
     try {
-      await navigator.clipboard.writeText(buildHosxpSyncReport(state, status, help));
+      await navigator.clipboard.writeText(report);
       setCopy('copied');
       window.clearTimeout(resetTimer.current);
       resetTimer.current = window.setTimeout(() => setCopy('idle'), 1800);
@@ -76,6 +87,17 @@ export function HosxpSyncDialog({ open, onOpenChange, state, status, help }: Hos
             </button>
           </div>
           <DialogDescription className="text-body text-ink-muted">{help}</DialogDescription>
+          {copy === 'failed' && (
+            <textarea
+              ref={reportBox}
+              readOnly
+              rows={6}
+              value={report}
+              aria-label="รายงานสถานะการดึงข้อมูล (เลือกแล้ว กด Ctrl+C เพื่อคัดลอก)"
+              onFocus={(e) => e.currentTarget.select()}
+              className="mt-2 w-full rounded-lg border border-border bg-surface-muted p-2 font-mono text-label text-ink"
+            />
+          )}
         </DialogHeader>
         <div className="max-h-[calc(92vh-96px)] space-y-3 overflow-y-auto bg-surface-card p-5 text-body text-ink-muted">
           <dl className="grid grid-cols-[150px_1fr] gap-x-4 gap-y-2 font-mono text-label">

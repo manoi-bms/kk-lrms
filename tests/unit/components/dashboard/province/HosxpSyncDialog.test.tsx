@@ -40,6 +40,27 @@ describe('HosxpSyncDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: /คัดลอกรายงาน/ }));
     expect(await screen.findByText(/คัดลอกไม่สำเร็จ — เลือกข้อความแล้วกด Ctrl\+C/)).toBeInTheDocument();
   });
+  it('M2: failed copy exposes the report in a read-only, pre-selected textarea', async () => {
+    setClipboard(vi.fn().mockRejectedValue(new Error('denied')));
+    render(<HosxpSyncDialog open onOpenChange={vi.fn()} state={state} status="QUERYING" help="h" />);
+    expect(screen.queryByRole('textbox')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /คัดลอกรายงาน/ }));
+    const box = (await screen.findByRole('textbox')) as HTMLTextAreaElement;
+    expect(box.readOnly).toBe(true);
+    expect(box.value).toContain('STATUS: QUERYING');
+    expect(box.selectionStart).toBe(0);
+    expect(box.selectionEnd).toBe(box.value.length);
+  });
+  it('M2: copy state resets when the dialog closes', async () => {
+    setClipboard(vi.fn().mockRejectedValue(new Error('denied')));
+    const { rerender } = render(<HosxpSyncDialog open onOpenChange={vi.fn()} state={state} status="QUERYING" help="h" />);
+    fireEvent.click(screen.getByRole('button', { name: /คัดลอกรายงาน/ }));
+    await screen.findByRole('textbox');
+    rerender(<HosxpSyncDialog open={false} onOpenChange={vi.fn()} state={state} status="QUERYING" help="h" />);
+    rerender(<HosxpSyncDialog open onOpenChange={vi.fn()} state={state} status="QUERYING" help="h" />);
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.getByRole('button', { name: 'คัดลอกรายงาน' })).toBeInTheDocument();
+  });
   it('empty step log is explained in Thai', () => {
     render(<HosxpSyncDialog open onOpenChange={vi.fn()} state={{ ran: true }} status="STARTING" help="h" />);
     expect(screen.getByText(/ยังไม่มีบันทึกขั้นตอน/)).toBeInTheDocument();
