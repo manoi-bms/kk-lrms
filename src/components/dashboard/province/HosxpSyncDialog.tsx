@@ -49,12 +49,12 @@ export function HosxpSyncDialog({ open, onOpenChange, state, status, help }: Hos
   useEffect(() => () => window.clearTimeout(resetTimer.current), []);
   const report = buildHosxpSyncReport(state, status, help);
   const reportBox = useRef<HTMLTextAreaElement>(null);
-  useEffect(() => {
-    if (!open) {
-      window.clearTimeout(resetTimer.current);
-      setCopy('idle');
-    }
-  }, [open]);
+  // Reset on close (adjust-state-during-render; an effect would cascade a render).
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (!open && copy !== 'idle') setCopy('idle');
+  }
   useEffect(() => {
     if (copy === 'failed') reportBox.current?.select();
   }, [copy]);
