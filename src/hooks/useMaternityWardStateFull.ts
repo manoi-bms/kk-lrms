@@ -41,7 +41,7 @@ export interface MaternityWardStateFull {
   mutateOccupancy: () => Promise<unknown>;
 }
 
-const WARD_REFRESH_INTERVAL = 60_000;
+export const WARD_LIST_REFRESH_MS = 60_000;
 const BEDS_REFRESH_INTERVAL = 60_000;
 export const WARD_OCCUPANCY_REFRESH_MS = 20_000;
 
@@ -51,7 +51,7 @@ export function useMaternityWardStateFull(): MaternityWardStateFull {
   const { data: wards, error: wardsErr } = useSWR(
     config ? ['maternity-wards', config.apiUrl] : null,
     () => listMaternityWards(config!),
-    { refreshInterval: WARD_REFRESH_INTERVAL },
+    { refreshInterval: WARD_LIST_REFRESH_MS },
   );
 
   // The user's explicit ward pick. Null until they choose one, in which case

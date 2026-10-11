@@ -114,7 +114,7 @@ describe('Hospital route shell', () => {
         <HospitalMaternityWardPage />
       </HospitalLayout>,
     );
-    await waitFor(() => expect(screen.getByText(/เกิดข้อผิดพลาด/)).toBeInTheDocument(), {
+    await waitFor(() => expect(screen.getByText('ไม่พบเซสชัน HOSxP หรือเซสชันหมดอายุ')).toBeInTheDocument(), {
       timeout: 2000,
     });
   });

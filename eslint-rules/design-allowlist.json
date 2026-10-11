@@ -1,7 +1,6 @@
 {
-  "maxEntries": 14,
+  "maxEntries": 13,
   "files": {
-    "src/app/(hospital)/hospital-maternity-ward/page.tsx": "neutral cool-grey/slate hex (#F4F7FB, #1E293B, #E2E8F0) have no token yet; migrate when sub-projects 2-5 add neutral tokens (hospital pages)",
     "src/app/(provincial)/pregnancies/[journeyId]/page.tsx": "pastel #f4f6fb gradient stop in the journey banner has no surface token; migrate with sub-projects 2-5 (provincial pages)",
     "src/app/about/page.tsx": "decorative amber/rose stat tiles are categorical colours, not risk semantics (ruling R19); migrate with sub-projects 2-5 (public pages)",
     "src/components/admin/HospitalEditDialog.tsx": "pastel red-border hex #fecaca for status outlines has no tint-border token; migrate with sub-projects 2-5 (admin pages)",

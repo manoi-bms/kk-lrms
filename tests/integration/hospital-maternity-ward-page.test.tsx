@@ -205,15 +205,16 @@ describe('Hospital maternity ward page (full render)', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('ห้องคลอด');
     // KPI masthead summary — Total Beds / Occupied are unique to the masthead
     // (the "Available" label collides with the empty-tile status pill).
-    expect(screen.getByText('Total Beds')).toBeInTheDocument();
-    expect(screen.getByText('Occupied')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('region', { name: 'สรุปเตียงในห้องคลอด' })).getByText('เตียงทั้งหมด'),
+    ).toBeInTheDocument();
     // Both rooms render (room_name from the bedno inventory).
     expect(screen.getByText('LR1')).toBeInTheDocument();
     expect(screen.getByText('LR2')).toBeInTheDocument();
     // One occupied + three empty beds.
     expect(screen.getAllByText('ว่าง').length).toBe(3);
     // Refresh control (redesign labels it "Refresh ↻").
-    expect(screen.getByRole('button', { name: /Refresh/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /รีเฟรช/ })).toBeInTheDocument();
   });
 
   it('clicks bed → opens drawer with patient header + tabs', async () => {
@@ -308,10 +309,10 @@ describe('Hospital maternity ward page (full render)', () => {
 // Behaviour assertions below stay UNEDITED through Task 8; Task 4 changes
 // PAGE_COPY values only.
 const PAGE_COPY = {
-  kpiRegion: () => screen.getByText('Total Beds').closest('section') as HTMLElement,
-  kpiLabels: ['Total Beds', 'Occupied', 'Available', 'Locked', 'High-risk'],
-  refreshButton: /Refresh/i,
-  noWards: 'ไม่มีห้องคลอดที่ใช้งานได้',
+  kpiRegion: () => screen.getByRole('region', { name: 'สรุปเตียงในห้องคลอด' }),
+  kpiLabels: ['เตียงทั้งหมด', 'มีผู้คลอด', 'เตียงว่าง', 'ปิดใช้งาน', 'ระยะแฝงนาน'],
+  refreshButton: /รีเฟรช/,
+  noWards: 'ไม่พบห้องคลอดใน HOSxP',
 };
 const num = (n: number) => new RegExp(`^0?${n}$`);
 
@@ -384,5 +385,55 @@ describe('Hospital maternity ward page — characterization', () => {
     mockListWards.mockResolvedValue([]);
     render(PAGE);
     expect(await screen.findByText(PAGE_COPY.noWards, undefined, { timeout: 2000 })).toBeInTheDocument();
+  });
+
+  it('missing bms_url → actionable Thai session error with the raw text kept', async () => {
+    sessionResolver = () =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({ result: { user_info: { bms_session_code: 'B', hospcode: '10670' } } }),
+      });
+    window.history.replaceState({}, '', 'http://localhost/?bms-session-id=NOURL');
+    render(PAGE);
+    const alert = await screen.findByRole('alert', undefined, { timeout: 2000 });
+    expect(alert).toHaveTextContent('เซสชัน HOSxP ไม่มีที่อยู่เซิร์ฟเวอร์ BMS ของโรงพยาบาล');
+    expect(alert).toHaveTextContent('วิธีแก้:');
+    expect(alert).toHaveTextContent('BMS session response missing bms_url');
+  });
+
+  it('a ward with no beds explains how to fix it', async () => {
+    openSession();
+    mockListWards.mockResolvedValue([{ ward: '03', name: 'ห้องคลอดทดสอบ', real_bedcount: 0 }]);
+    mockListInventory.mockResolvedValue([]);
+    mockListOccupancyFull.mockResolvedValue([]);
+    render(PAGE);
+    expect(await screen.findByText('วอร์ดนี้ยังไม่มีเตียงใน HOSxP', undefined, { timeout: 2000 })).toBeInTheDocument();
+  });
+
+  it('zero occupants → EmptyState above a still-usable bed grid', async () => {
+    const s = wardScenario(Date.now());
+    openSession();
+    mockListWards.mockResolvedValue([...s.wards]);
+    mockListInventory.mockResolvedValue([...s.beds]);
+    mockListOccupancyFull.mockResolvedValue([]);
+    const { container } = render(PAGE);
+    expect(await screen.findByText('ไม่มีผู้คลอดในห้องคลอดขณะนี้', undefined, { timeout: 2000 })).toBeInTheDocument();
+    expect(screen.getByText('เตียงว่าง 7 เตียง · ข้อมูล HOSxP อัปเดตทุก 20 วินาที')).toBeInTheDocument();
+    expect(container.querySelectorAll('article[data-testid^="bed-"]')).toHaveLength(9);
+  });
+
+  it('a failing refresh keeps the board and shows a stale banner with retry', async () => {
+    const s = wardScenario(Date.now());
+    openSession();
+    mockListWards.mockResolvedValue([...s.wards]);
+    mockListInventory.mockResolvedValue([...s.beds]);
+    mockListOccupancyFull.mockRejectedValue(new Error('occupancy down'));
+    const { container } = render(PAGE);
+    expect(
+      await screen.findByText('ดึงข้อมูลเตียงจาก HOSxP ไม่สำเร็จ — แสดงข้อมูลเดิม', undefined, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    expect(container.querySelectorAll('article[data-testid^="bed-"]')).toHaveLength(9);
+    expect(screen.getAllByRole('button', { name: /ลองใหม่/ }).length).toBeGreaterThan(0);
   });
 });
