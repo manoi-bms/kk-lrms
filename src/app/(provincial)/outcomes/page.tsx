@@ -7,6 +7,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { NETWORK_RETRY_REMEDY } from '@/lib/actionable-errors';
 import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { LoadingState } from '@/components/shared/LoadingState';
 import { ErrorState } from '@/components/shared/ErrorState';
@@ -169,7 +170,7 @@ export default function OutcomesPage() {
       <ErrorState
         message="ไม่สามารถโหลดข้อมูลผลลัพธ์ทารกได้"
         detail={error instanceof Error ? error.message : String(error)}
-        remedy="ตรวจสอบการเชื่อมต่อเครือข่าย แล้วกด ลองใหม่ หากยังไม่ได้ แจ้งผู้ดูแลระบบ"
+        remedy={NETWORK_RETRY_REMEDY}
         onRetry={() => mutate()}
       />
     );
@@ -195,7 +196,7 @@ export default function OutcomesPage() {
           : null
       }
     >
-      <FilterBar>
+      <FilterBar active={hospitalFilter !== ''} onClear={() => setHospitalFilter('')}>
         <FilterChips label="ช่วงเวลา" value={range} onChange={setRange} options={RANGE_OPTIONS} />
         <FilterSelect
           label="โรงพยาบาล"
@@ -320,7 +321,7 @@ export default function OutcomesPage() {
             rows={k.byHospital}
             rowKey={(h) => h.hcode}
             rowAttrs={(h) => ({ 'data-testid': `hospital-outcome-${h.hcode}` })}
-            empty="ไม่มีข้อมูลในช่วงที่เลือก"
+            empty={<EmptyState title="ไม่มีข้อมูลในช่วงที่เลือก" description="ลองเปลี่ยนช่วงเวลาหรือโรงพยาบาล" />}
           />
         </SectionCard>
       </div>

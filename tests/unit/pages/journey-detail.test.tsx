@@ -357,7 +357,7 @@ describe('JourneyDetailPage — sub-project 4 chrome', () => {
     for (const name of ['แนวโน้มสัญญาณชีพ', 'ประวัติการฝากครรภ์', 'ผลตรวจทางห้องปฏิบัติการ คัดกรอง และโรคประจำตัว', 'วัคซีน', 'อัลตราซาวด์และสุขภาพทารกในครรภ์']) {
       expect(await screen.findByRole('region', { name })).toBeInTheDocument();
     }
-    for (const en of ['PROVINCIAL REGISTRY', 'JOURNEY DETAIL', 'Vital trends', 'ANC visit timeline', 'Immunization', 'JOURNEY ID', 'REFRESHING EVERY']) {
+    for (const en of ['PROVINCIAL REGISTRY', 'JOURNEY DETAIL', 'Vital trends', 'ANC visit timeline', 'Immunization', 'JOURNEY ID', 'REFRESHING EVERY', 'Risk ·']) {
       expect(screen.queryByText(new RegExp(en))).toBeNull();
     }
     expect(screen.getByText(/รีเฟรชอัตโนมัติทุก/)).toBeInTheDocument();

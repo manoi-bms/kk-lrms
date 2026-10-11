@@ -7,6 +7,7 @@
 import { Suspense, useCallback, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
+import { NETWORK_RETRY_REMEDY } from '@/lib/actionable-errors';
 import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { LoadingState } from '@/components/shared/LoadingState';
 import { ErrorState } from '@/components/shared/ErrorState';
@@ -15,7 +16,7 @@ import { SectionCard } from '@/components/shared/SectionCard';
 import { KpiGrid } from '@/components/shared/KpiGrid';
 import { KpiTile } from '@/components/shared/KpiTile';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { FilterBar, FilterChips, FilterSelect, SearchField } from '@/components/shared/FilterBar';
+import { ClearFiltersButton, FilterBar, FilterChips, FilterSelect, SearchField } from '@/components/shared/FilterBar';
 import { ResponsiveTable } from '@/components/shared/ResponsiveTable';
 import { Pagination } from '@/components/shared/Pagination';
 import type { DataTableColumn } from '@/components/shared/DataTable';
@@ -241,7 +242,7 @@ function ReferralsBoard() {
       <ErrorState
         message="ไม่สามารถโหลดรายการส่งต่อได้"
         detail={error instanceof Error ? error.message : String(error)}
-        remedy="ตรวจสอบการเชื่อมต่อเครือข่าย แล้วกด ลองใหม่ หากยังไม่ได้ แจ้งผู้ดูแลระบบ"
+        remedy={NETWORK_RETRY_REMEDY}
         onRetry={() => mutate()}
       />
     );
@@ -459,13 +460,7 @@ function ReferralsBoard() {
                 }
                 action={
                   hasActiveFilters ? (
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="inline-flex h-10 items-center rounded-lg border border-border bg-surface-card px-3 text-label text-brand hover:bg-brand-soft"
-                    >
-                      ล้างตัวกรอง
-                    </button>
+                    <ClearFiltersButton onClick={clearFilters} />
                   ) : undefined
                 }
               />

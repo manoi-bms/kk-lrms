@@ -8,6 +8,7 @@
 // the app's air-traffic-control aesthetic and only ever showed labor data.
 'use client';
 
+import { NETWORK_RETRY_REMEDY } from '@/lib/actionable-errors';
 import { COLOR } from '@/config/design-tokens';
 import { use, useState, useMemo } from 'react';
 import Link from 'next/link';
@@ -1300,7 +1301,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
       <ErrorState
         message="ไม่สามารถโหลดข้อมูลโรงพยาบาลได้"
         detail={laborError instanceof Error ? laborError.message : String(laborError ?? ancError)}
-        remedy="ตรวจสอบการเชื่อมต่อเครือข่าย แล้วกด ลองใหม่ หากยังไม่ได้ แจ้งผู้ดูแลระบบ"
+        remedy={NETWORK_RETRY_REMEDY}
         onRetry={() => {
           laborMutate();
           ancMutate();

@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { NETWORK_RETRY_REMEDY } from '@/lib/actionable-errors';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { LoadingState } from '@/components/shared/LoadingState';
@@ -210,7 +211,7 @@ export default function HospitalsPage() {
       <ErrorState
         message="ไม่สามารถโหลดข้อมูลโรงพยาบาลได้"
         detail={error instanceof Error ? error.message : String(error)}
-        remedy="ตรวจสอบการเชื่อมต่อเครือข่าย แล้วกด ลองใหม่ หากยังไม่ได้ แจ้งผู้ดูแลระบบ"
+        remedy={NETWORK_RETRY_REMEDY}
         onRetry={() => mutate()}
       />
     );

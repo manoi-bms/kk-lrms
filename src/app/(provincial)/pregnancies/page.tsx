@@ -8,6 +8,7 @@
 import { Suspense, useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { NETWORK_RETRY_REMEDY } from '@/lib/actionable-errors';
 import { useSSE } from '@/hooks/useSSE';
 import { useListData } from '@/hooks/useListData';
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch';
@@ -22,7 +23,7 @@ import { KpiTile } from '@/components/shared/KpiTile';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { FlagChip } from '@/components/shared/FlagChip';
 import { AncRiskChip } from '@/components/shared/AncRiskChip';
-import { FilterBar, FilterSelect, SearchField } from '@/components/shared/FilterBar';
+import { ClearFiltersButton, FilterBar, FilterSelect, SearchField } from '@/components/shared/FilterBar';
 import { ResponsiveTable } from '@/components/shared/ResponsiveTable';
 import { Pagination } from '@/components/shared/Pagination';
 import type { DataTableColumn } from '@/components/shared/DataTable';
@@ -312,7 +313,7 @@ function PregnanciesBoard() {
       <ErrorState
         message="ไม่สามารถโหลดทะเบียนฝากครรภ์ได้"
         detail={error instanceof Error ? error.message : String(error)}
-        remedy="ตรวจสอบการเชื่อมต่อเครือข่าย แล้วกด ลองใหม่ หากยังไม่ได้ แจ้งผู้ดูแลระบบ"
+        remedy={NETWORK_RETRY_REMEDY}
         onRetry={() => mutate()}
       />
     );
@@ -455,13 +456,7 @@ function PregnanciesBoard() {
                 }
                 action={
                   hasActiveFilters ? (
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="inline-flex h-10 items-center rounded-lg border border-border bg-surface-card px-3 text-label text-brand hover:bg-brand-soft"
-                    >
-                      ล้างตัวกรอง
-                    </button>
+                    <ClearFiltersButton onClick={clearFilters} />
                   ) : undefined
                 }
               />
