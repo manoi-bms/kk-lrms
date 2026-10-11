@@ -1,0 +1,68 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createTestDb } from '../../helpers/testDb';
+import type { PgliteAdapter } from '@/db/pglite-adapter';
+import { getSyncFreshness } from '@/services/sync-freshness';
+
+const NOW = new Date('2026-10-11T05:40:00Z');
+const mins = (m: number) => new Date(NOW.getTime() - m * 60_000).toISOString();
+
+describe('getSyncFreshness', () => {
+  let db: PgliteAdapter;
+  beforeEach(async () => {
+    db = await createTestDb();
+    const rows: Array<[string, string, string | null]> = [
+      ['h1', '11000', mins(5)], // fresh
+      ['h2', '11002', mins(60 * 24 * 18)], // 18 days stale (บ้านไผ่)
+      ['h3', '10998', mins(90)], // stale
+      ['h4', '77652', null], // never
+      ['h5', '11004', new Date(NOW.getTime() + 3_600_000).toISOString()], // future-dated
+      ['h99', '99999', mins(60 * 24 * 10)], // exempt pseudo-hospital
+    ];
+    for (const [id, hcode, last] of rows) {
+      await db.query(
+        `INSERT INTO hospitals (id, hcode, name, level, is_active, connection_status, last_sync_at, created_at, updated_at)
+         VALUES (?, ?, ?, 'A_S', true, 'ONLINE', ?, NOW(), NOW())`,
+        [id, hcode, `รพ.${hcode}`, last],
+      );
+    }
+    await db.query(
+      `INSERT INTO cached_patients (id, hospital_id, hn, an, name, age, labor_status, admit_date, synced_at, created_at, updated_at)
+       VALUES ('p1','h1','HN1','AN1','enc',30,'ACTIVE',NOW(),NOW(),NOW(),NOW())`,
+    );
+    await db.query(
+      `INSERT INTO cpd_scores (id, patient_id, score, risk_level, recommendation, calculated_at, created_at)
+       VALUES ('c1','p1',11,'HIGH','-',NOW(),NOW())`,
+    );
+  });
+
+  it('province summary excludes exempt hcodes and classifies every feed', async () => {
+    const s = await getSyncFreshness(db, { hcode: null, now: NOW });
+    expect(s.province).toEqual({
+      reporting: 5,
+      fresh: 1,
+      stale: 3, // 18-day, 90-min, future-dated
+      never: 1,
+      highRisk: 1,
+      lastSyncAt: mins(5),
+    });
+    expect(s.own).toBeNull();
+    expect(s.generatedAt).toBe(NOW.toISOString());
+  });
+
+  it('hospital session gets its own block', async () => {
+    const s = await getSyncFreshness(db, { hcode: '11000', now: NOW });
+    expect(s.own).toEqual({ hcode: '11000', name: 'รพ.11000', lastSyncAt: mins(5), health: 'ok', highRisk: 1 });
+  });
+
+  it.each(['99999', '00000', '55555', undefined])('exempt/unregistered/missing hcode %p → own null, no throw', async (hcode) => {
+    const s = await getSyncFreshness(db, { hcode, now: NOW });
+    expect(s.own).toBeNull();
+    expect(s.province.reporting).toBe(5);
+  });
+
+  it('own block never leaks another hospital', async () => {
+    const s = await getSyncFreshness(db, { hcode: '11002', now: NOW });
+    expect(s.own?.hcode).toBe('11002');
+    expect(JSON.stringify(s)).not.toContain('11000');
+  });
+});
