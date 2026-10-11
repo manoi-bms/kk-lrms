@@ -145,24 +145,24 @@ function StatItem({
         style={{ color }}
       >
         <span className="flex h-3.5 w-3.5 items-center justify-center">{icon}</span>
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em]">
+        <span className="font-mono text-caption font-semibold uppercase tracking-[0.12em]">
           {labelEn}
         </span>
       </div>
       <div className="flex items-baseline gap-1.5">
         <span
-          className="font-mono text-[24px] font-bold leading-none tabular-nums"
+          className="font-mono text-page font-bold leading-none tabular-nums"
           style={{ color, letterSpacing: '-0.025em' }}
         >
           {value}
         </span>
         {unit && (
-          <span className="font-mono text-[11px]" style={{ color: 'var(--ink-navy-muted)' }}>
+          <span className="font-mono text-caption" style={{ color: 'var(--ink-navy-muted)' }}>
             {unit}
           </span>
         )}
       </div>
-      <div className="font-mono text-[10px]" style={{ color: 'var(--ink-navy-dim)' }}>
+      <div className="font-mono text-caption" style={{ color: 'var(--ink-navy-dim)' }}>
         {labelTh}
         {sub && <span className="ml-1.5 text-[var(--ink-navy-muted)]">· {sub}</span>}
       </div>

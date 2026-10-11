@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 export function FlagChip({ color, children }: { color: string; children: ReactNode }) {
   return (
     <span
-      className="inline-block border px-1 py-px font-mono text-[12px] font-semibold tracking-[0.04em]"
+      className="inline-block border px-1 py-px font-mono text-caption font-semibold tracking-[0.04em]"
       style={{ color, borderColor: color, background: 'transparent' }}
     >
       {children}

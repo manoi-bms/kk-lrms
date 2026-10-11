@@ -214,16 +214,16 @@ export function WebhookKeysTab() {
               borderRight: i < kpis.length - 1 ? '1px solid var(--rule-strong)' : undefined,
             }}
           >
-            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
+            <div className="font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
               {k.k}
             </div>
             <div
-              className="font-mono text-[28px] font-semibold leading-none tabular-nums"
+              className="font-mono text-page font-semibold leading-none tabular-nums"
               style={{ color: k.color, letterSpacing: '-0.02em' }}
             >
               {k.v}
             </div>
-            <div className="font-mono text-[10px] text-[var(--ink-navy-dim)]">{k.label}</div>
+            <div className="font-mono text-caption text-[var(--ink-navy-dim)]">{k.label}</div>
           </div>
         ))}
       </div>
@@ -236,7 +236,7 @@ export function WebhookKeysTab() {
       >
         <div className="mb-2 flex items-center gap-1.5">
           <KeyRound className="h-3.5 w-3.5" style={{ color: 'var(--accent-navy)' }} />
-          <h3 className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-navy)]">
+          <h3 className="font-mono text-caption font-semibold uppercase tracking-[0.1em] text-[var(--ink-navy)]">
             สร้าง API Key ใหม่
           </h3>
         </div>
@@ -244,7 +244,7 @@ export function WebhookKeysTab() {
           <div>
             <label
               htmlFor="hcode"
-              className="mb-1 block font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]"
+              className="mb-1 block font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]"
             >
               โรงพยาบาล
             </label>
@@ -253,7 +253,7 @@ export function WebhookKeysTab() {
               value={formHcode}
               onChange={(e) => setFormHcode(e.target.value)}
               disabled={creating}
-              className="h-8 w-full rounded-sm border bg-white px-2 text-[12px] focus:border-[var(--accent-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-navy-soft)] disabled:opacity-50"
+              className="h-8 w-full rounded-sm border bg-white px-2 text-caption focus:border-[var(--accent-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-navy-soft)] disabled:opacity-50"
               style={{ borderColor: 'var(--rule-strong)' }}
               required
             >
@@ -268,7 +268,7 @@ export function WebhookKeysTab() {
           <div>
             <label
               htmlFor="label"
-              className="mb-1 block font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]"
+              className="mb-1 block font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]"
             >
               Label
             </label>
@@ -279,14 +279,14 @@ export function WebhookKeysTab() {
               placeholder="เช่น Production webhook — Chiang Rai"
               disabled={creating}
               required
-              className="h-8 text-[12px]"
+              className="h-8 text-caption"
             />
           </div>
           <div className="flex items-end">
             <Button
               type="submit"
               disabled={creating || !formHcode || !formLabel.trim()}
-              className="h-8 gap-1.5 text-[12px]"
+              className="h-8 gap-1.5 text-caption"
               style={{ background: 'var(--accent-navy)' }}
             >
               <Plus className="h-3.5 w-3.5" />
@@ -296,7 +296,7 @@ export function WebhookKeysTab() {
         </div>
         {createError && (
           <div
-            className="mt-2 border px-2.5 py-1.5 font-mono text-[11px]"
+            className="mt-2 border px-2.5 py-1.5 font-mono text-caption"
             style={{ borderColor: 'var(--risk-high)', color: 'var(--risk-high)' }}
           >
             {createError}
@@ -314,12 +314,12 @@ export function WebhookKeysTab() {
               />
               <div>
                 <div
-                  className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em]"
+                  className="font-mono text-caption font-semibold uppercase tracking-[0.08em]"
                   style={{ color: 'var(--risk-medium)' }}
                 >
                   บันทึก API Key นี้ไว้ทันที — ระบบจะไม่แสดงให้เห็นอีก
                 </div>
-                <div className="mt-0.5 font-mono text-[11px] text-[var(--ink-navy-dim)]">
+                <div className="mt-0.5 font-mono text-caption text-[var(--ink-navy-dim)]">
                   {justCreated.hospitalName} ({justCreated.hcode}) · {justCreated.label}
                 </div>
               </div>
@@ -336,14 +336,14 @@ export function WebhookKeysTab() {
             className="flex items-center gap-2 border bg-[var(--surface-cool)] px-3 py-2"
             style={{ borderColor: 'var(--rule-strong)' }}
           >
-            <code className="flex-1 overflow-x-auto font-mono text-[12px] text-[var(--ink-navy)]">
+            <code className="flex-1 overflow-x-auto font-mono text-caption text-[var(--ink-navy)]">
               {justCreated.apiKey}
             </code>
             <Button
               onClick={handleCopy}
               variant="outline"
               size="sm"
-              className="h-7 gap-1.5 text-[11px]"
+              className="h-7 gap-1.5 text-caption"
             >
               {copied ? (
                 <Check className="h-3 w-3" style={{ color: 'var(--risk-low)' }} />
@@ -353,10 +353,10 @@ export function WebhookKeysTab() {
               {copied ? 'คัดลอกแล้ว' : 'คัดลอก'}
             </Button>
           </div>
-          <div className="mt-2 font-mono text-[10px] tracking-[0.04em] text-[var(--ink-navy-dim)]">
+          <div className="mt-2 font-mono text-caption tracking-[0.04em] text-[var(--ink-navy-dim)]">
             ใช้ค่านี้ในส่วน{' '}
             <code
-              className="rounded-sm border px-1 font-mono text-[10px]"
+              className="rounded-sm border px-1 font-mono text-caption"
               style={{ borderColor: 'var(--rule-strong)', background: 'var(--surface-cool)' }}
             >
               Authorization: Bearer &lt;key&gt;
@@ -372,7 +372,7 @@ export function WebhookKeysTab() {
         style={{ borderColor: 'var(--rule-strong)' }}
       >
         <div
-          className="grid gap-2 border-b px-3 py-2 font-mono text-[10px] tracking-[0.1em] text-[var(--ink-navy-muted)]"
+          className="grid gap-2 border-b px-3 py-2 font-mono text-caption tracking-[0.1em] text-[var(--ink-navy-muted)]"
           style={{
             gridTemplateColumns: '1fr 1fr 110px 130px 130px 80px 80px',
             borderColor: 'var(--rule-strong)',
@@ -389,7 +389,7 @@ export function WebhookKeysTab() {
         {keys.length === 0 ? (
           <div className="px-3 py-10 text-center">
             <KeyRound className="mx-auto mb-2 h-8 w-8 text-[var(--ink-navy-muted)] opacity-50" />
-            <p className="font-mono text-[11px] text-[var(--ink-navy-muted)]">
+            <p className="font-mono text-caption text-[var(--ink-navy-muted)]">
               ยังไม่มี API Key — สร้างด้านบน
             </p>
           </div>
@@ -406,26 +406,26 @@ export function WebhookKeysTab() {
               }}
             >
               <div className="min-w-0">
-                <div className="truncate text-[13px] font-medium text-[var(--ink-navy)]">
+                <div className="truncate text-caption font-medium text-[var(--ink-navy)]">
                   {k.hospitalName}
                 </div>
-                <div className="font-mono text-[10px] tabular-nums text-[var(--ink-navy-muted)]">
+                <div className="font-mono text-caption tabular-nums text-[var(--ink-navy-muted)]">
                   {k.hcode}
                 </div>
               </div>
-              <div className="truncate text-[12px] text-[var(--ink-navy-dim)]">{k.label}</div>
+              <div className="truncate text-caption text-[var(--ink-navy-dim)]">{k.label}</div>
               <div>
                 <code
-                  className="rounded-sm border px-1.5 py-0.5 font-mono text-[10px] text-[var(--ink-navy-dim)]"
+                  className="rounded-sm border px-1.5 py-0.5 font-mono text-caption text-[var(--ink-navy-dim)]"
                   style={{ borderColor: 'var(--rule-strong)', background: 'var(--surface-cool)' }}
                 >
                   {k.keyPrefix}…
                 </code>
               </div>
-              <div className="font-mono text-[11px] tabular-nums text-[var(--ink-navy-dim)]">
+              <div className="font-mono text-caption tabular-nums text-[var(--ink-navy-dim)]">
                 {formatDateTime(k.createdAt)}
               </div>
-              <div className="font-mono text-[11px] tabular-nums text-[var(--ink-navy-dim)]">
+              <div className="font-mono text-caption tabular-nums text-[var(--ink-navy-dim)]">
                 {k.lastUsedAt ? (
                   formatDateTime(k.lastUsedAt)
                 ) : (
@@ -435,14 +435,14 @@ export function WebhookKeysTab() {
               <div>
                 {k.isActive ? (
                   <span
-                    className="inline-block border px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-[0.06em]"
+                    className="inline-block border px-1.5 py-0.5 font-mono text-caption font-semibold tracking-[0.06em]"
                     style={{ color: 'var(--risk-low)', borderColor: 'var(--risk-low)' }}
                   >
                     ACTIVE
                   </span>
                 ) : (
                   <span
-                    className="inline-block border px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-[0.06em]"
+                    className="inline-block border px-1.5 py-0.5 font-mono text-caption font-semibold tracking-[0.06em]"
                     style={{
                       color: 'var(--ink-navy-muted)',
                       borderColor: 'var(--rule-strong)',
@@ -456,7 +456,7 @@ export function WebhookKeysTab() {
                 {k.isActive && (
                   <button
                     onClick={() => setRevokeTarget(k)}
-                    className="inline-flex items-center gap-1 rounded-sm px-1.5 py-1 font-mono text-[10px] transition-colors hover:bg-red-50"
+                    className="inline-flex items-center gap-1 rounded-sm px-1.5 py-1 font-mono text-caption transition-colors hover:bg-danger-tint"
                     style={{ color: 'var(--risk-high)' }}
                   >
                     <Trash2 className="h-3 w-3" />
@@ -481,7 +481,7 @@ export function WebhookKeysTab() {
           {revokeTarget && (
             <div className="space-y-4">
               <div
-                className="space-y-1 border px-3 py-2 font-mono text-[11px]"
+                className="space-y-1 border px-3 py-2 font-mono text-caption"
                 style={{ borderColor: 'var(--rule-strong)', background: 'var(--surface-cool)' }}
               >
                 <div>
@@ -498,7 +498,7 @@ export function WebhookKeysTab() {
               </div>
 
               <div
-                className="border px-3 py-2 font-mono text-[11px]"
+                className="border px-3 py-2 font-mono text-caption"
                 style={{ borderColor: 'var(--risk-high)', color: 'var(--risk-high)' }}
               >
                 คีย์ที่ยกเลิกแล้วจะใช้งานไม่ได้ทันที — webhooks
@@ -508,11 +508,11 @@ export function WebhookKeysTab() {
               <div>
                 <label
                   htmlFor="confirmPrefix"
-                  className="mb-1 block font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]"
+                  className="mb-1 block font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]"
                 >
                   พิมพ์{' '}
                   <code
-                    className="rounded-sm border px-1 font-mono text-[10px] text-[var(--ink-navy-dim)]"
+                    className="rounded-sm border px-1 font-mono text-caption text-[var(--ink-navy-dim)]"
                     style={{ borderColor: 'var(--rule-strong)', background: 'var(--surface-cool)' }}
                   >
                     {revokeTarget.keyPrefix}
@@ -532,7 +532,7 @@ export function WebhookKeysTab() {
 
               {revokeError && (
                 <div
-                  className="border px-3 py-2 font-mono text-[11px]"
+                  className="border px-3 py-2 font-mono text-caption"
                   style={{ borderColor: 'var(--risk-high)', color: 'var(--risk-high)' }}
                 >
                   {revokeError}

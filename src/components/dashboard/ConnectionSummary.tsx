@@ -18,12 +18,12 @@ const STATUS_ROWS: StatusRow[] = [
   {
     key: ConnectionStatusEnum.ONLINE,
     label: 'ออนไลน์',
-    dotClass: 'bg-green-500',
+    dotClass: 'bg-ok',
   },
   {
     key: ConnectionStatusEnum.OFFLINE,
     label: 'ออฟไลน์',
-    dotClass: 'bg-red-500',
+    dotClass: 'bg-danger',
   },
   {
     key: ConnectionStatusEnum.UNKNOWN,

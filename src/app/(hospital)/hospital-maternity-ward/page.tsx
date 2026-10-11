@@ -15,6 +15,7 @@
 //   * Cx / Stn / FHR / contractions / oxytocin / IV / amniotic
 //                                    → ipt_labour_partograph (latest by observe_datetime)
 'use client';
+import { COLOR } from '@/config/design-tokens';
 import { useEffect, useState } from 'react';
 import { useBmsSession } from '@/hooks/useBmsSession';
 import { useMaternityWardStateFull } from '@/hooks/useMaternityWardStateFull';
@@ -27,12 +28,12 @@ import { PatientDrawer } from '@/components/maternity/PatientDrawer';
 import { getBedMoveReasons, movePatientBed } from '@/services/maternity-ward';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
-const LIVE_GREEN = '#059669';
-const LIVE_AMBER = '#D97706';
+const LIVE_GREEN = COLOR.riskLow;
+const LIVE_AMBER = COLOR.riskMedium;
 const SLATE_INK = '#0F172A';
 const SLATE_MUTE = '#64748B';
 const ACCENT_BLUE = '#1565C0';
-const CRIT_RED = '#DC2626';
+const CRIT_RED = COLOR.riskHigh;
 const FONT_MONO = "'IBM Plex Mono', 'SF Mono', Consolas, monospace";
 
 function Skeleton({ className = '' }: { className?: string }) {
@@ -62,7 +63,7 @@ function AlertBanner({
       style={{ borderColor: CRIT_RED }}
     >
       <div
-        className="shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-white"
+        className="shrink-0 rounded px-1.5 py-0.5 font-mono text-caption font-semibold uppercase tracking-wider text-white"
         style={{ background: CRIT_RED }}
       >
         {badge}
@@ -74,7 +75,7 @@ function AlertBanner({
       <button
         type="button"
         onClick={onDismiss}
-        className="shrink-0 rounded border border-slate-300 bg-white px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-slate-600 hover:bg-slate-50"
+        className="shrink-0 rounded border border-slate-300 bg-white px-2 py-0.5 font-mono text-caption uppercase tracking-wider text-slate-600 hover:bg-slate-50"
       >
         ซ่อน
       </button>
@@ -152,7 +153,7 @@ export default function HospitalMaternityWardPage() {
   if (sessionError) {
     return (
       <div className="mx-auto max-w-2xl p-8 text-center">
-        <p className="text-red-600">เกิดข้อผิดพลาด: {sessionError}</p>
+        <p className="text-danger-text">เกิดข้อผิดพลาด: {sessionError}</p>
       </div>
     );
   }
@@ -173,18 +174,18 @@ export default function HospitalMaternityWardPage() {
     return (
       <div
         role="alert"
-        className="mx-auto mt-12 flex max-w-xl flex-col items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-8 text-center"
+        className="mx-auto mt-12 flex max-w-xl flex-col items-center gap-3 rounded-xl border border-danger/40 bg-danger-tint p-8 text-center"
       >
-        <AlertCircle className="h-10 w-10 text-red-500" aria-hidden />
-        <p className="text-base font-semibold text-red-700">ไม่สามารถโหลดข้อมูลห้องคลอด</p>
-        <p className="text-sm text-red-600">{error.message}</p>
+        <AlertCircle className="h-10 w-10 text-danger" aria-hidden />
+        <p className="text-base font-semibold text-danger-text">ไม่สามารถโหลดข้อมูลห้องคลอด</p>
+        <p className="text-sm text-danger-text">{error.message}</p>
         <button
           type="button"
           onClick={() => {
             void mutateBeds();
             void mutateOccupancy();
           }}
-          className="mt-2 inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100"
+          className="mt-2 inline-flex items-center gap-2 rounded-lg border border-danger/40 bg-white px-3 py-1.5 text-sm font-medium text-danger-text hover:bg-danger-tint"
         >
           <RefreshCw className="h-4 w-4" /> ลองอีกครั้ง
         </button>

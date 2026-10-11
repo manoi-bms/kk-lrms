@@ -8,6 +8,7 @@
 // imports this with `ssr: false` to satisfy Next.js SSR boundaries.
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
@@ -219,12 +220,12 @@ function buildPalette(mode: 'light' | 'kiosk') {
     };
   }
   return {
-    boundaryStroke: '#2b3a8c',
+    boundaryStroke: COLOR.brand,
     boundaryFill: 'rgba(43, 58, 140, 0.06)',
     amphoeStroke: 'rgba(43, 58, 140, 0.18)',
-    high: '#ef4444',
-    med: '#eab308',
-    low: '#22c55e',
+    high: COLOR.riskHigh,
+    med: COLOR.riskMedium,
+    low: COLOR.riskLow,
     idle: '#94a3b8',
     pinStroke: '#ffffff',
     tooltipBg: '#ffffff',
@@ -421,7 +422,7 @@ export default function ProvinceMapLeaflet({
           isolation: 'isolate',
         }}
       >
-        <span className="font-mono text-[12px] tracking-[0.18em] text-[var(--ink-navy-muted)]">
+        <span className="font-mono text-caption tracking-[0.18em] text-[var(--ink-navy-muted)]">
           LOADING {activeProvince === KK_PROVINCE_CODE ? 'MAP' : `PROVINCE ${activeProvince}`}…
         </span>
       </div>
@@ -711,11 +712,11 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
               marginTop: 2,
             }}
           >
-            <span style={{ color: '#ef4444' }}>H {labor.high}</span>
+            <span style={{ color: COLOR.riskHigh }}>H {labor.high}</span>
             <span style={{ color: muted }}> · </span>
-            <span style={{ color: '#eab308' }}>M {labor.medium}</span>
+            <span style={{ color: COLOR.riskMedium }}>M {labor.medium}</span>
             <span style={{ color: muted }}> · </span>
-            <span style={{ color: '#22c55e' }}>L {labor.low}</span>
+            <span style={{ color: COLOR.riskLow }}>L {labor.low}</span>
           </div>
         </div>
         <div>
@@ -739,7 +740,7 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
                 fontSize: 10,
                 fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
                 marginTop: 2,
-                color: '#ef4444',
+                color: COLOR.riskHigh,
                 fontWeight: 700,
               }}
             >
@@ -803,9 +804,9 @@ function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
   const inkMuted = isKiosk ? 'rgba(230,236,245,0.7)' : 'rgba(11,27,46,0.65)';
   const border = isKiosk ? 'rgba(107,167,229,0.3)' : 'rgba(43,58,140,0.22)';
   const items: Array<{ color: string; label: string; sub: string }> = [
-    { color: '#22c55e', label: 'ONLINE', sub: 'sync ปกติ' },
-    { color: '#eab308', label: 'BLOCKED', sub: 'sync ถูกระงับ' },
-    { color: '#ef4444', label: 'OFFLINE', sub: 'ติดต่อไม่ได้' },
+    { color: COLOR.riskLow, label: 'ONLINE', sub: 'sync ปกติ' },
+    { color: COLOR.riskMedium, label: 'BLOCKED', sub: 'sync ถูกระงับ' },
+    { color: COLOR.riskHigh, label: 'OFFLINE', sub: 'ติดต่อไม่ได้' },
     { color: '#94a3b8', label: 'UNKNOWN', sub: 'ยังไม่ sync' },
   ];
   return (

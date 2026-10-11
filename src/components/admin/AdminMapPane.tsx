@@ -134,10 +134,10 @@ export function AdminMapPane({ onSelectHospital }: AdminMapPaneProps = {}) {
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
+        <div className="font-mono text-caption uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
           GIS PREVIEW · {activeName} ({activeCode})
         </div>
-        <div className="inline-flex items-center gap-1 font-mono text-[10px] text-[var(--ink-navy-muted)]">
+        <div className="inline-flex items-center gap-1 font-mono text-caption text-[var(--ink-navy-muted)]">
           <MapPin className="h-3 w-3" />
           {pinnedCount}/{totalActive} pinned
         </div>
@@ -176,7 +176,7 @@ export function AdminMapPane({ onSelectHospital }: AdminMapPaneProps = {}) {
           />
         )}
       </div>
-      <p className="mt-2 font-mono text-[10px] leading-snug text-[var(--ink-navy-muted)]">
+      <p className="mt-2 font-mono text-caption leading-snug text-[var(--ink-navy-muted)]">
         แผนที่ใช้ active province จากการตั้งค่า · โรงพยาบาลที่ไม่มีพิกัดจะใช้ centroid
         ของอำเภอเป็นจุดแสดง
       </p>

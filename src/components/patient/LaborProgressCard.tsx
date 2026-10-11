@@ -1,6 +1,7 @@
 // LaborProgressCard — visual summary of labor progress with cervix dilation and phases
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import { useMemo } from 'react';
 import { Activity } from 'lucide-react';
 
@@ -44,7 +45,7 @@ const PHASE_CONFIG = {
   },
   TRANSITION: {
     label: 'Transition (ระยะเปลี่ยนผ่าน)',
-    color: '#f59e0b',
+    color: COLOR.riskMedium,
   },
 } as const;
 
@@ -58,8 +59,8 @@ const INTENSITY_LABELS: Record<string, string> = {
 
 const INTENSITY_STYLES: Record<string, string> = {
   MILD: 'bg-slate-100 text-slate-600',
-  MODERATE: 'bg-amber-50 text-amber-700',
-  STRONG: 'bg-red-50 text-red-700',
+  MODERATE: 'bg-warn-tint text-warn-text',
+  STRONG: 'bg-danger-tint text-danger-text',
 };
 
 // ---------------------------------------------------------------------------
@@ -283,7 +284,7 @@ export function LaborProgressCard({
     const currentPhase = latest ? getPhase(latest.dilationCm) : 'LATENT';
     // In active phase (>=4 cm), rate >= 1 cm/hr is good, < 1 is slow
     if (currentPhase !== 'LATENT') {
-      return dilationRate >= 1 ? 'text-emerald-600' : 'text-amber-600';
+      return dilationRate >= 1 ? 'text-ok-text' : 'text-warn-text';
     }
     return 'text-slate-800';
   }, [dilationRate, latest]);
@@ -306,7 +307,7 @@ export function LaborProgressCard({
         }}
       >
         <Activity className="h-4 w-4" style={{ color: 'var(--accent-navy)' }} />
-        <h3 className="font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--ink-navy)]">
+        <h3 className="font-mono text-caption font-bold uppercase tracking-[0.12em] text-[var(--ink-navy)]">
           ความคืบหน้าการคลอด
         </h3>
       </div>
@@ -315,7 +316,7 @@ export function LaborProgressCard({
       {/* Empty state */}
       {!hasEntries && (
         <div
-          className="flex h-28 items-center justify-center border border-dashed font-mono text-[12px]"
+          className="flex h-28 items-center justify-center border border-dashed font-mono text-caption"
           style={{
             borderColor: 'var(--rule-strong)',
             color: 'var(--ink-navy-muted)',
@@ -364,13 +365,13 @@ export function LaborProgressCard({
           {(exceedsActionLine || exceedsAlertLine) && (
             <div className="mt-4 space-y-2">
               {exceedsActionLine && (
-                <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+                <div className="flex items-start gap-2 rounded-xl bg-danger-tint border border-danger/40 px-3 py-2 text-sm text-danger-text">
                   <span className="shrink-0">{'🔴'}</span>
                   <span>เกินเส้นปฏิบัติ — ควรพิจารณาดำเนินการ</span>
                 </div>
               )}
               {exceedsAlertLine && !exceedsActionLine && (
-                <div className="flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-700">
+                <div className="flex items-start gap-2 rounded-xl bg-warn-tint border border-warn/40 px-3 py-2 text-sm text-warn-text">
                   <span className="shrink-0">{'⚠'}</span>
                   <span>เกินเส้นเตือน — พิจารณาเฝ้าระวังใกล้ชิด</span>
                 </div>

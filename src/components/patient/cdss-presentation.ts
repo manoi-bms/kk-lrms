@@ -3,9 +3,9 @@
 import type { CdssSeverity, CdssSection } from '@/types/api';
 
 export const SEVERITY_DOT: Record<CdssSeverity, string> = {
-  CRITICAL: 'bg-red-500',
-  ALERT: 'bg-orange-500',
-  WARN: 'bg-amber-400',
+  CRITICAL: 'bg-danger',
+  ALERT: 'bg-warn',
+  WARN: 'bg-warn',
   INFO: 'bg-slate-400',
 };
 

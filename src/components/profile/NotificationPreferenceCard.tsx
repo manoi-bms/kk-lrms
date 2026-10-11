@@ -190,7 +190,7 @@ export function NotificationPreferenceCard() {
       {loading && <p className="text-xs text-slate-500">กำลังโหลดการตั้งค่า…</p>}
       {busy && <p className="text-xs text-slate-500">กำลังบันทึก…</p>}
       {error && (
-        <p className="text-sm text-rose-700" role="alert">
+        <p className="text-sm text-danger-text" role="alert">
           {error}
         </p>
       )}
@@ -224,7 +224,7 @@ export function NotificationPreferenceCard() {
                 <button
                   onClick={() => void removeHospital(row.hospitalCode)}
                   disabled={busy}
-                  className="text-xs text-slate-500 hover:text-rose-700 disabled:opacity-50"
+                  className="text-xs text-slate-500 hover:text-danger-text disabled:opacity-50"
                   aria-label={`เลิกติดตาม ${row.hospitalCode}`}
                 >
                   เลิกติดตาม
@@ -237,7 +237,7 @@ export function NotificationPreferenceCard() {
               if (tierEvents.length === 0) return null;
               return (
                 <div key={tier} className="mt-2">
-                  <p className="text-[11px] font-semibold text-slate-400">{TIER_LABEL[tier]}</p>
+                  <p className="text-caption font-semibold text-slate-400">{TIER_LABEL[tier]}</p>
                   {tierEvents.map((e) => (
                     <label key={e.key} className="mt-1 flex items-start gap-2 text-sm">
                       <input
@@ -286,7 +286,7 @@ export function NotificationPreferenceCard() {
         <button
           onClick={() => followHospital(ownHospitalCode)}
           disabled={busy}
-          className="rounded bg-teal-600 px-3 py-1 text-sm text-white disabled:opacity-50"
+          className="rounded bg-brand px-3 py-1 text-sm text-white disabled:opacity-50"
         >
           เพิ่มโรงพยาบาลของคุณ ({hospitalLabel(ownHospitalCode)})
         </button>
@@ -324,7 +324,7 @@ export function NotificationPreferenceCard() {
               setAddCode('');
               followHospital(code);
             }}
-            className="rounded bg-teal-600 px-3 py-1 text-sm text-white disabled:opacity-50"
+            className="rounded bg-brand px-3 py-1 text-sm text-white disabled:opacity-50"
           >
             เพิ่ม
           </button>

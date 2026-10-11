@@ -4,6 +4,7 @@
 // promotes the single most-important number to page-level prominence.
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import { ConnectionStatus } from '@/components/shared/ConnectionStatus';
 import { formatThaiDate } from '@/lib/utils';
 import { maskName } from '@/lib/pii-mask';
@@ -68,7 +69,7 @@ function Chip({
   }[tone];
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 font-mono text-[11px]"
+      className="inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 font-mono text-caption"
       style={{ background: palette.bg, color: palette.fg }}
     >
       <span className="flex h-3 w-3 items-center justify-center" style={{ color: palette.label }}>
@@ -91,7 +92,7 @@ function CpdTile({ score, riskLevel }: { score: number; riskLevel: RiskLevel }) 
       ? { bg: '#7f1d1d', accent: '#fecaca', label: 'เสี่ยงสูง', icon: <AlertTriangle className="h-4 w-4" /> }
       : riskLevel === RiskLevel.MEDIUM
         ? { bg: '#78350f', accent: '#fde68a', label: 'เฝ้าระวัง', icon: <AlertTriangle className="h-4 w-4" /> }
-        : { bg: '#14532d', accent: '#bbf7d0', label: 'ปกติ', icon: <ShieldCheck className="h-4 w-4" /> };
+        : { bg: COLOR.riskLowText, accent: '#bbf7d0', label: 'ปกติ', icon: <ShieldCheck className="h-4 w-4" /> };
   return (
     <div
       className="relative flex shrink-0 flex-col items-end justify-between gap-1 rounded-sm px-4 py-3"
@@ -102,7 +103,7 @@ function CpdTile({ score, riskLevel }: { score: number; riskLevel: RiskLevel }) 
       }}
     >
       <div
-        className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em]"
+        className="flex items-center gap-1.5 font-mono text-caption uppercase tracking-[0.14em]"
         style={{ color: tone.accent }}
       >
         {tone.icon}
@@ -110,17 +111,17 @@ function CpdTile({ score, riskLevel }: { score: number; riskLevel: RiskLevel }) 
       </div>
       <div className="flex items-baseline gap-1.5 tabular-nums" style={{ color: 'white' }}>
         <span
-          className="font-mono text-[34px] font-bold leading-none"
+          className="font-mono text-kpi font-bold leading-none"
           style={{ letterSpacing: '-0.03em' }}
         >
           {Number.isFinite(scoreNum) ? scoreNum.toFixed(scoreNum % 1 === 0 ? 0 : 2) : '—'}
         </span>
-        <span className="font-mono text-[11px]" style={{ color: tone.accent }}>
+        <span className="font-mono text-caption" style={{ color: tone.accent }}>
           / 14.5
         </span>
       </div>
       <div
-        className="font-mono text-[10px] font-semibold tracking-[0.12em]"
+        className="font-mono text-caption font-semibold tracking-[0.12em]"
         style={{ color: tone.accent }}
       >
         {tone.label.toUpperCase()} · {riskLevel}
@@ -174,13 +175,13 @@ export function PatientHeader({
           {/* Primary identity row — name + status + AN/HN */}
           <div className="flex flex-wrap items-center gap-2.5">
             <h1
-              className="truncate text-[24px] font-bold leading-tight"
+              className="truncate text-page font-bold leading-tight"
               style={{ letterSpacing: '-0.015em', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
             >
               {name ? maskName(name) : 'ไม่ทราบชื่อ'}
             </h1>
             <span
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-sm px-2 py-0.5 font-mono text-[10px] font-semibold tracking-[0.08em]"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-sm px-2 py-0.5 font-mono text-caption font-semibold tracking-[0.08em]"
               style={{ background: statusMeta.bg, color: statusMeta.fg }}
             >
               <span
@@ -233,7 +234,7 @@ export function PatientHeader({
                     >
                       +{weightDiffKg}
                     </span>
-                    <span className="ml-0.5 text-[10px] opacity-60">กก.</span>
+                    <span className="ml-0.5 text-caption opacity-60">กก.</span>
                   </>
                 }
               />
@@ -243,7 +244,7 @@ export function PatientHeader({
           {/* Hospital row — shown as a distinct bar under the chips */}
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span
-              className="inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 font-mono text-[10px] tracking-[0.04em]"
+              className="inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 font-mono text-caption tracking-[0.04em]"
               style={{
                 background: 'rgba(255,255,255,0.09)',
                 color: 'rgba(255,255,255,0.88)',
@@ -256,7 +257,7 @@ export function PatientHeader({
             </span>
             {hospital.connectionStatus && (
               <span
-                className="inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 font-mono text-[10px]"
+                className="inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 font-mono text-caption"
                 style={{
                   background: 'rgba(255,255,255,0.06)',
                   color: 'rgba(255,255,255,0.78)',
@@ -265,7 +266,7 @@ export function PatientHeader({
                 <ConnectionStatus
                   status={hospital.connectionStatus}
                   lastSyncAt={hospital.lastSyncAt ?? null}
-                  className="text-[10px]"
+                  className="text-caption"
                 />
               </span>
             )}

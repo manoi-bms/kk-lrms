@@ -8,6 +8,7 @@
 // don't clobber unrelated fields.
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import {
@@ -334,12 +335,12 @@ function DialogInner({
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+                <span className="inline-flex items-center gap-1.5 font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
                   <Building2 className="h-3.5 w-3.5" />
                   Hospital Operations Profile
                 </span>
                 <span
-                  className="border px-2 py-0.5 font-mono text-[12px]"
+                  className="border px-2 py-0.5 font-mono text-caption"
                   style={{
                     borderColor: 'var(--rule-strong)',
                     color: 'var(--ink-navy-dim)',
@@ -350,7 +351,7 @@ function DialogInner({
                 </span>
               </div>
               <div
-                className="mt-1 truncate text-[20px] font-semibold leading-tight"
+                className="mt-1 truncate text-title font-semibold leading-tight"
                 style={{ color: 'var(--ink-navy)' }}
               >
                 {hospital.name}
@@ -389,7 +390,7 @@ function DialogInner({
           </div>
 
           <div
-            className="grid gap-2 border px-3 py-2 text-[12px] md:grid-cols-[1.2fr_1fr_1fr]"
+            className="grid gap-2 border px-3 py-2 text-caption md:grid-cols-[1.2fr_1fr_1fr]"
             style={{ borderColor: 'var(--rule-strong)', background: 'var(--surface-cool)' }}
           >
             <HeaderFact label="SERVICE" value={service?.labelTh ?? 'ยังไม่ระบุประเภท'} />
@@ -434,10 +435,10 @@ function DialogInner({
               >
                 <Icon className="h-3.5 w-3.5" />
                 <span className="min-w-0">
-                  <span className="block truncate font-mono text-[13px] tracking-[0.03em]">
+                  <span className="block truncate font-mono text-caption tracking-[0.03em]">
                     {t.label}
                   </span>
-                  <span className="block truncate font-mono text-[12px] font-normal text-[var(--ink-navy-muted)]">
+                  <span className="block truncate font-mono text-caption font-normal text-[var(--ink-navy-muted)]">
                     {t.detail}
                   </span>
                 </span>
@@ -555,7 +556,7 @@ function GeneralSection({
           consequence blurb before committing. Drives sync eligibility and
           dashboard filters, so worth surfacing above the MOPH level. */}
       <div>
-        <div className="mb-1 font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
+        <div className="mb-1 font-mono text-caption uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
           SERVICE TYPE · ประเภทการให้บริการ
         </div>
         <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
@@ -574,8 +575,8 @@ function GeneralSection({
                   boxShadow: active ? 'inset 0 0 0 1px var(--accent-navy)' : undefined,
                 }}
               >
-                <div className="text-[13px] font-semibold leading-tight">{m.labelTh}</div>
-                <div className="font-mono text-[12px] leading-snug text-[var(--ink-navy-muted)]">
+                <div className="text-caption font-semibold leading-tight">{m.labelTh}</div>
+                <div className="font-mono text-caption leading-snug text-[var(--ink-navy-muted)]">
                   {m.blurb}
                 </div>
               </button>
@@ -618,7 +619,7 @@ function GeneralSection({
           </select>
         </Field>
         <Field label="สถานะ">
-          <label className="inline-flex h-9 items-center gap-2 text-[13px]">
+          <label className="inline-flex h-9 items-center gap-2 text-caption">
             <input
               type="checkbox"
               checked={isActive}
@@ -630,7 +631,7 @@ function GeneralSection({
       </div>
 
       <div>
-        <div className="mb-1 flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
+        <div className="mb-1 flex items-center gap-1.5 font-mono text-caption uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
           <MapPin className="h-3 w-3" />
           GEO COORDINATES · ใช้สำหรับปักหมุดบนแผนที่
         </div>
@@ -652,14 +653,14 @@ function GeneralSection({
             />
           </Field>
         </div>
-        <p className="mt-1 font-mono text-[12px] leading-snug text-[var(--ink-navy-muted)]">
+        <p className="mt-1 font-mono text-caption leading-snug text-[var(--ink-navy-muted)]">
           ถ้าไม่ใส่พิกัด ระบบจะใช้ centroid ของอำเภอแทน
         </p>
       </div>
 
       {message ? (
         <div
-          className="border px-3 py-2 font-mono text-[11px]"
+          className="border px-3 py-2 font-mono text-caption"
           style={{
             borderColor: message === 'บันทึกสำเร็จ' ? 'var(--risk-low)' : 'var(--risk-high)',
             color: message === 'บันทึกสำเร็จ' ? 'var(--risk-low)' : 'var(--risk-high)',
@@ -814,7 +815,7 @@ function ConsultDoctorsSection({ hospital }: { hospital: AdminHospital }) {
       />
 
       <div className="border bg-white p-4" style={{ borderColor: 'var(--rule-strong)' }}>
-        <div className="mb-3 flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.08em]">
+        <div className="mb-3 flex items-center gap-1.5 font-mono text-caption uppercase tracking-[0.08em]">
           <Users className="h-3 w-3" style={{ color: 'var(--accent-navy)' }} />
           <span style={{ color: 'var(--accent-navy)' }}>
             {editing ? 'แก้ไขแพทย์ Consult' : 'เพิ่มแพทย์ Consult'}
@@ -867,7 +868,7 @@ function ConsultDoctorsSection({ hospital }: { hospital: AdminHospital }) {
 
         {message ? (
           <div
-            className="mt-3 border px-3 py-2 font-mono text-[11px]"
+            className="mt-3 border px-3 py-2 font-mono text-caption"
             style={{
               borderColor: message.tone === 'ok' ? 'var(--risk-low)' : 'var(--risk-high)',
               color: message.tone === 'ok' ? 'var(--risk-low)' : 'var(--risk-high)',
@@ -893,7 +894,7 @@ function ConsultDoctorsSection({ hospital }: { hospital: AdminHospital }) {
 
       <div className="overflow-x-auto border bg-white" style={{ borderColor: 'var(--rule-strong)' }}>
         <div
-          className="grid min-w-[720px] gap-2 border-b px-3 py-2 font-mono text-[12px] tracking-[0.06em] text-[var(--ink-navy-muted)]"
+          className="grid min-w-[720px] gap-2 border-b px-3 py-2 font-mono text-caption tracking-[0.06em] text-[var(--ink-navy-muted)]"
           style={{
             gridTemplateColumns: '130px minmax(180px,1fr) minmax(120px,160px) minmax(120px,150px) 90px',
             borderColor: 'var(--rule-strong)',
@@ -906,33 +907,33 @@ function ConsultDoctorsSection({ hospital }: { hospital: AdminHospital }) {
           <div className="text-right">ACTION</div>
         </div>
         {isLoading ? (
-          <div className="px-3 py-6 text-center font-mono text-[11px] text-[var(--ink-navy-muted)]">
+          <div className="px-3 py-6 text-center font-mono text-caption text-[var(--ink-navy-muted)]">
             กำลังโหลดรายชื่อแพทย์ consult...
           </div>
         ) : doctors.length === 0 ? (
-          <div className="px-3 py-6 text-center font-mono text-[11px] text-[var(--ink-navy-muted)]">
+          <div className="px-3 py-6 text-center font-mono text-caption text-[var(--ink-navy-muted)]">
             ยังไม่มีแพทย์ consult สำหรับโรงพยาบาลนี้
           </div>
         ) : (
           doctors.map((doctor) => (
             <div
               key={doctor.id}
-              className="grid min-w-[720px] items-center gap-2 border-b px-3 py-2 text-[12px] last:border-b-0"
+              className="grid min-w-[720px] items-center gap-2 border-b px-3 py-2 text-caption last:border-b-0"
               style={{
                 gridTemplateColumns: '130px minmax(180px,1fr) minmax(120px,160px) minmax(120px,150px) 90px',
                 borderColor: 'var(--rule-hair)',
               }}
             >
-              <code className="font-mono text-[12px] text-[var(--ink-navy-dim)]">{doctor.cid}</code>
+              <code className="font-mono text-caption text-[var(--ink-navy-dim)]">{doctor.cid}</code>
               <div className="truncate font-medium text-[var(--ink-navy)]">{doctor.name}</div>
               <div className="truncate text-[var(--ink-navy-dim)]">{doctor.position ?? '—'}</div>
-              <div className="truncate font-mono text-[12px] text-[var(--ink-navy-dim)]">
+              <div className="truncate font-mono text-caption text-[var(--ink-navy-dim)]">
                 {doctor.phoneNumber ?? '—'}
               </div>
               <div className="flex justify-end gap-1">
                 <button
                   onClick={() => startEdit(doctor)}
-                  className="inline-flex items-center gap-1 px-1.5 py-1 font-mono text-[12px] hover:bg-[var(--accent-navy-soft)]"
+                  className="inline-flex items-center gap-1 px-1.5 py-1 font-mono text-caption hover:bg-[var(--accent-navy-soft)]"
                   style={{ color: 'var(--ink-navy-dim)' }}
                   disabled={busy || !!deleteBusyId}
                 >
@@ -941,7 +942,7 @@ function ConsultDoctorsSection({ hospital }: { hospital: AdminHospital }) {
                 </button>
                 <button
                   onClick={() => handleDelete(doctor)}
-                  className="inline-flex items-center gap-1 px-1.5 py-1 font-mono text-[12px] hover:bg-red-50"
+                  className="inline-flex items-center gap-1 px-1.5 py-1 font-mono text-caption hover:bg-danger-tint"
                   style={{ color: 'var(--risk-high)' }}
                   disabled={busy || deleteBusyId === doctor.id}
                 >
@@ -1062,10 +1063,10 @@ function TunnelSection({ hospital }: { hospital: AdminHospital }) {
             value={tunnelUrl}
             onChange={(e) => setTunnelUrl(e.target.value)}
             placeholder="https://xxxxx-ondemand-win-xxxxxxxxx.tunnel.hosxp.net"
-            className="h-9 font-mono text-[12px]"
+            className="h-9 font-mono text-caption"
           />
         </Field>
-        <p className="mt-1 font-mono text-[12px] leading-snug text-[var(--ink-navy-muted)]">
+        <p className="mt-1 font-mono text-caption leading-snug text-[var(--ink-navy-muted)]">
           ระบบจะใช้ URL นี้สำหรับดึงข้อมูลจาก BMS ของโรงพยาบาล · ต้องสามารถเข้าถึงได้จากเซิร์ฟเวอร์ของระบบ
         </p>
 
@@ -1087,7 +1088,7 @@ function TunnelSection({ hospital }: { hospital: AdminHospital }) {
 
         {saveMessage ? (
           <div
-            className="mt-3 border px-3 py-2 font-mono text-[11px]"
+            className="mt-3 border px-3 py-2 font-mono text-caption"
             style={{
               borderColor: saveMessage.includes('สำเร็จ')
                 ? 'var(--risk-low)'
@@ -1103,7 +1104,7 @@ function TunnelSection({ hospital }: { hospital: AdminHospital }) {
 
         {testResult ? (
           <div
-            className="mt-3 space-y-1 border px-3 py-2 font-mono text-[11px]"
+            className="mt-3 space-y-1 border px-3 py-2 font-mono text-caption"
             style={{
               borderColor: testResult.connected ? 'var(--risk-low)' : 'var(--risk-high)',
               color: testResult.connected ? 'var(--risk-low)' : 'var(--risk-high)',
@@ -1228,7 +1229,7 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
 
       {/* Create form */}
       <div className="border bg-white p-4" style={{ borderColor: 'var(--rule-strong)' }}>
-        <div className="mb-2 flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.08em]">
+        <div className="mb-2 flex items-center gap-1.5 font-mono text-caption uppercase tracking-[0.08em]">
           <KeyRound className="h-3 w-3" style={{ color: 'var(--accent-navy)' }} />
           <span style={{ color: 'var(--accent-navy)' }}>สร้าง API Key ใหม่</span>
           <span className="text-[var(--ink-navy-muted)]">· {hospital.hcode}</span>
@@ -1251,7 +1252,7 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
         </div>
         {createError ? (
           <div
-            className="mt-2 border px-3 py-2 font-mono text-[11px]"
+            className="mt-2 border px-3 py-2 font-mono text-caption"
             style={{ borderColor: 'var(--risk-high)', color: 'var(--risk-high)' }}
           >
             {createError}
@@ -1272,12 +1273,12 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
             />
             <div>
               <div
-                className="font-mono text-[12px] font-semibold uppercase tracking-[0.06em]"
+                className="font-mono text-caption font-semibold uppercase tracking-[0.06em]"
                 style={{ color: 'var(--risk-medium)' }}
               >
                 บันทึก API Key นี้ไว้ทันที — ระบบจะไม่แสดงอีก
               </div>
-              <div className="mt-0.5 font-mono text-[12px] text-[var(--ink-navy-dim)]">
+              <div className="mt-0.5 font-mono text-caption text-[var(--ink-navy-dim)]">
                 {justCreated.label}
               </div>
             </div>
@@ -1286,10 +1287,10 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
             className="flex items-center gap-2 border bg-[var(--surface-cool)] px-3 py-2"
             style={{ borderColor: 'var(--rule-strong)' }}
           >
-            <code className="flex-1 overflow-x-auto font-mono text-[12px] text-[var(--ink-navy)]">
+            <code className="flex-1 overflow-x-auto font-mono text-caption text-[var(--ink-navy)]">
               {justCreated.apiKey}
             </code>
-            <Button onClick={handleCopy} variant="outline" size="sm" className="h-8 gap-1.5 text-[12px]">
+            <Button onClick={handleCopy} variant="outline" size="sm" className="h-8 gap-1.5 text-caption">
               {copied ? (
                 <Check className="h-3 w-3" style={{ color: 'var(--risk-low)' }} />
               ) : (
@@ -1304,7 +1305,7 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
       {/* Keys list */}
       <div className="border bg-white" style={{ borderColor: 'var(--rule-strong)' }}>
         <div
-          className="grid gap-2 border-b px-3 py-2 font-mono text-[12px] tracking-[0.06em] text-[var(--ink-navy-muted)]"
+          className="grid gap-2 border-b px-3 py-2 font-mono text-caption tracking-[0.06em] text-[var(--ink-navy-muted)]"
           style={{ gridTemplateColumns: '1fr 110px 120px 70px 80px', borderColor: 'var(--rule-strong)' }}
         >
           <div>LABEL</div>
@@ -1314,14 +1315,14 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
           <div className="text-right">ACTION</div>
         </div>
         {keys.length === 0 ? (
-          <div className="px-3 py-6 text-center font-mono text-[11px] text-[var(--ink-navy-muted)]">
+          <div className="px-3 py-6 text-center font-mono text-caption text-[var(--ink-navy-muted)]">
             ยังไม่มี API Key สำหรับโรงพยาบาลนี้
           </div>
         ) : (
           keys.map((k) => (
             <div
               key={k.id}
-              className="grid items-center gap-2 border-b px-3 py-2 text-[12px] last:border-b-0"
+              className="grid items-center gap-2 border-b px-3 py-2 text-caption last:border-b-0"
               style={{
                 gridTemplateColumns: '1fr 110px 120px 70px 80px',
                 borderColor: 'var(--rule-hair)',
@@ -1330,17 +1331,17 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
             >
               <div className="truncate">{k.label}</div>
               <code
-                className="border px-1.5 py-0.5 font-mono text-[12px] text-[var(--ink-navy-dim)]"
+                className="border px-1.5 py-0.5 font-mono text-caption text-[var(--ink-navy-dim)]"
                 style={{ borderColor: 'var(--rule-strong)', background: 'var(--surface-cool)' }}
               >
                 {k.keyPrefix}…
               </code>
-              <div className="font-mono text-[12px] text-[var(--ink-navy-dim)]">
+              <div className="font-mono text-caption text-[var(--ink-navy-dim)]">
                 {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString('th-TH') : '—'}
               </div>
               <div>
                 <span
-                  className="inline-block border px-1.5 py-0.5 font-mono text-[12px] font-semibold tracking-[0.04em]"
+                  className="inline-block border px-1.5 py-0.5 font-mono text-caption font-semibold tracking-[0.04em]"
                   style={{
                     color: k.isActive ? 'var(--risk-low)' : 'var(--ink-navy-muted)',
                     borderColor: k.isActive ? 'var(--risk-low)' : 'var(--rule-strong)',
@@ -1356,7 +1357,7 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
                       setRevokeTarget(k);
                       setRevokeInput('');
                     }}
-                    className="inline-flex items-center gap-1 px-1.5 py-1 font-mono text-[12px] hover:bg-red-50"
+                    className="inline-flex items-center gap-1 px-1.5 py-1 font-mono text-caption hover:bg-danger-tint"
                     style={{ color: 'var(--risk-high)' }}
                   >
                     <Trash2 className="h-3 w-3" />
@@ -1375,12 +1376,12 @@ function WebhooksSection({ hospital }: { hospital: AdminHospital }) {
           className="border-2 bg-white p-3"
           style={{ borderColor: 'var(--risk-high)' }}
         >
-          <div className="mb-2 flex items-center gap-1.5 font-mono text-[12px] font-semibold uppercase tracking-[0.06em]"
+          <div className="mb-2 flex items-center gap-1.5 font-mono text-caption font-semibold uppercase tracking-[0.06em]"
             style={{ color: 'var(--risk-high)' }}>
             <AlertTriangle className="h-3.5 w-3.5" />
             ยืนยันการยกเลิก · {revokeTarget.label}
           </div>
-          <p className="mb-2 font-mono text-[12px] leading-snug text-[var(--ink-navy-dim)]">
+          <p className="mb-2 font-mono text-caption leading-snug text-[var(--ink-navy-dim)]">
             คีย์ที่ยกเลิกแล้วจะใช้ไม่ได้ทันที · พิมพ์ prefix <code>{revokeTarget.keyPrefix}</code> เพื่อยืนยัน
           </p>
           <div className="flex gap-2">
@@ -1534,12 +1535,12 @@ function DangerZoneSection({
           className="flex items-center justify-between border-b px-4 py-2"
           style={{ borderColor: 'var(--rule-strong)', background: 'var(--surface-cool)' }}
         >
-          <div className="flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
+          <div className="flex items-center gap-1.5 font-mono text-caption uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
             <Database className="h-3 w-3" />
             ข้อมูลปัจจุบันในระบบ · HCODE {hospital.hcode}
           </div>
           <div
-            className="font-mono text-[13px] font-semibold tracking-[0.04em]"
+            className="font-mono text-caption font-semibold tracking-[0.04em]"
             style={{ color: liveTotal > 0 ? 'var(--accent-navy)' : 'var(--ink-navy-muted)' }}
           >
             {countsLoading ? '...' : `${liveTotal.toLocaleString('th-TH')} แถวรวม`}
@@ -1562,11 +1563,11 @@ function DangerZoneSection({
                   borderBottom: isLastRow ? undefined : '1px solid var(--rule-hair)',
                 }}
               >
-                <div className="font-mono text-[11px] uppercase tracking-[0.06em] text-[var(--ink-navy-muted)]">
+                <div className="font-mono text-caption uppercase tracking-[0.06em] text-[var(--ink-navy-muted)]">
                   {row.label}
                 </div>
                 <div
-                  className="mt-0.5 font-mono text-[15px] font-semibold tabular-nums"
+                  className="mt-0.5 font-mono text-body font-semibold tabular-nums"
                   style={{
                     color: count > 0 ? 'var(--ink-navy)' : 'var(--ink-navy-muted)',
                   }}
@@ -1584,14 +1585,14 @@ function DangerZoneSection({
         style={{ borderColor: 'var(--risk-high)' }}
       >
         <div
-          className="mb-3 flex items-center gap-2 font-mono text-[12px] font-semibold uppercase tracking-[0.06em]"
+          className="mb-3 flex items-center gap-2 font-mono text-caption font-semibold uppercase tracking-[0.06em]"
           style={{ color: 'var(--risk-high)' }}
         >
           <Eraser className="h-3.5 w-3.5" />
           ลบข้อมูล cached ของ {hospital.name}
         </div>
 
-        <ul className="mb-3 space-y-1 font-mono text-[12px] leading-relaxed text-[var(--ink-navy-dim)]">
+        <ul className="mb-3 space-y-1 font-mono text-caption leading-relaxed text-[var(--ink-navy-dim)]">
           <li>· ผู้ป่วยที่ admit (cached_patients) และ partograph / vital-signs / CPD scores ที่เกี่ยวข้อง</li>
           <li>· Maternal journeys และ ANC visits / risks / newborns ที่ผูกกับ journey</li>
           <li>· Referrals ที่โรงพยาบาลนี้เป็นต้นทางหรือปลายทาง</li>
@@ -1599,7 +1600,7 @@ function DangerZoneSection({
         </ul>
 
         <div
-          className="mb-3 border bg-[var(--surface-cool)] px-3 py-2 font-mono text-[12px] leading-relaxed text-[var(--ink-navy-dim)]"
+          className="mb-3 border bg-[var(--surface-cool)] px-3 py-2 font-mono text-caption leading-relaxed text-[var(--ink-navy-dim)]"
           style={{ borderColor: 'var(--rule-strong)' }}
         >
           <strong className="text-[var(--ink-navy)]">จะไม่ถูกลบ:</strong> tunnel URL / session,
@@ -1618,7 +1619,7 @@ function DangerZoneSection({
         </Field>
 
         <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
-          <span className="font-mono text-[12px] text-[var(--ink-navy-muted)]">
+          <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
             {confirmInput.trim() === hospital.hcode
               ? '✓ พร้อมยืนยันการลบ'
               : 'พิมพ์ hcode ให้ตรงเพื่อเปิดปุ่ม'}
@@ -1636,7 +1637,7 @@ function DangerZoneSection({
 
         {error ? (
           <div
-            className="mt-3 border px-3 py-2 font-mono text-[11px]"
+            className="mt-3 border px-3 py-2 font-mono text-caption"
             style={{ borderColor: 'var(--risk-high)', color: 'var(--risk-high)' }}
           >
             {error}
@@ -1645,11 +1646,11 @@ function DangerZoneSection({
 
         {result?.ok ? (
           <div
-            className="mt-3 border bg-white px-3 py-2 font-mono text-[12px]"
+            className="mt-3 border bg-white px-3 py-2 font-mono text-caption"
             style={{ borderColor: 'var(--risk-low)' }}
           >
             <div
-              className="mb-1 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.06em]"
+              className="mb-1 flex items-center gap-1.5 text-caption font-semibold uppercase tracking-[0.06em]"
               style={{ color: 'var(--risk-low)' }}
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
@@ -1685,7 +1686,7 @@ function DangerZoneSection({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1.5 block font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
+      <label className="mb-1.5 block font-mono text-caption uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
         {label}
       </label>
       {children}
@@ -1705,7 +1706,7 @@ function StatusPill({
   const color = toneColor(tone);
   return (
     <span
-      className="inline-flex items-center gap-1 border px-2 py-1 font-mono text-[12px] font-semibold uppercase tracking-[0.06em]"
+      className="inline-flex items-center gap-1 border px-2 py-1 font-mono text-caption font-semibold uppercase tracking-[0.06em]"
       style={{
         borderColor: color,
         color,
@@ -1732,11 +1733,11 @@ function ProfileMetric({
   const color = toneColor(tone);
   return (
     <div className="border bg-[var(--surface-cool)] px-3 py-2" style={{ borderColor: 'var(--rule-strong)' }}>
-      <div className="flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
+      <div className="flex items-center gap-1.5 font-mono text-caption uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
         <Icon className="h-3 w-3" />
         {label}
       </div>
-      <div className="mt-1 truncate font-mono text-[13px] font-semibold" style={{ color }}>
+      <div className="mt-1 truncate font-mono text-caption font-semibold" style={{ color }}>
         {value}
       </div>
     </div>
@@ -1756,12 +1757,12 @@ function HeaderFact({
 }) {
   return (
     <div className="min-w-0">
-      <div className="flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
+      <div className="flex items-center gap-1.5 font-mono text-caption uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
         {Icon ? <Icon className="h-3 w-3" /> : null}
         {label}
       </div>
       <div
-        className="mt-0.5 truncate font-mono text-[13px]"
+        className="mt-0.5 truncate font-mono text-caption"
         style={{ color: muted ? 'var(--ink-navy-muted)' : 'var(--ink-navy)' }}
       >
         {value}
@@ -1813,11 +1814,11 @@ function outcomeTone(outcome: SyncLogRun['outcome']): {
 } {
   switch (outcome) {
     case 'success':
-      return { bg: '#d1fae5', ink: '#065f46', label: 'SUCCESS' };
+      return { bg: COLOR.riskLowTint, ink: COLOR.riskLowText, label: 'SUCCESS' };
     case 'partial':
-      return { bg: '#fef3c7', ink: '#92400e', label: 'PARTIAL' };
+      return { bg: COLOR.riskMediumTint, ink: COLOR.riskMediumText, label: 'PARTIAL' };
     case 'failed':
-      return { bg: '#fee2e2', ink: '#991b1b', label: 'FAILED' };
+      return { bg: COLOR.riskHighTint, ink: COLOR.riskHighText, label: 'FAILED' };
     case 'running':
     default:
       return { bg: '#dbeafe', ink: '#1e3a8a', label: 'RUNNING' };
@@ -1827,11 +1828,11 @@ function outcomeTone(outcome: SyncLogRun['outcome']): {
 function stepTone(status: SyncLogStep['status']): { dot: string; ink: string } {
   switch (status) {
     case 'success':
-      return { dot: '#22c55e', ink: 'var(--ink-navy)' };
+      return { dot: COLOR.riskLow, ink: 'var(--ink-navy)' };
     case 'warning':
-      return { dot: '#eab308', ink: '#92400e' };
+      return { dot: COLOR.riskMedium, ink: COLOR.riskMediumText };
     case 'error':
-      return { dot: '#ef4444', ink: '#991b1b' };
+      return { dot: COLOR.riskHigh, ink: COLOR.riskHighText };
     case 'info':
       return { dot: '#94a3b8', ink: 'var(--ink-navy-dim)' };
     case 'running':
@@ -1882,7 +1883,7 @@ function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
 
       {isLoading && (
         <div
-          className="border bg-white px-4 py-6 text-center font-mono text-[11px] text-[var(--ink-navy-muted)]"
+          className="border bg-white px-4 py-6 text-center font-mono text-caption text-[var(--ink-navy-muted)]"
           style={{ borderColor: 'var(--rule-strong)' }}
         >
           กำลังโหลด…
@@ -1891,8 +1892,8 @@ function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
 
       {error && (
         <div
-          className="border bg-white px-4 py-3 text-[13px] text-[#991b1b]"
-          style={{ borderColor: '#fee2e2', background: '#fef2f2' }}
+          className="border bg-white px-4 py-3 text-caption text-danger-text"
+          style={{ borderColor: COLOR.riskHighTint, background: COLOR.riskHighTint }}
         >
           โหลดประวัติ sync ไม่สำเร็จ
         </div>
@@ -1900,7 +1901,7 @@ function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
 
       {!isLoading && !error && runs.length === 0 && (
         <div
-          className="border bg-white px-4 py-6 text-center font-mono text-[11px] text-[var(--ink-navy-muted)]"
+          className="border bg-white px-4 py-6 text-center font-mono text-caption text-[var(--ink-navy-muted)]"
           style={{ borderColor: 'var(--rule-strong)' }}
         >
           ยังไม่มีรอบ sync บันทึกใน 24 ชม.ที่ผ่านมา — ตรวจสอบว่าผู้ใช้จากโรงพยาบาลนี้เปิด KK-LRMS แล้วหรือยัง
@@ -1914,14 +1915,14 @@ function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
           style={{ borderColor: 'var(--rule-strong)' }}
         >
           <div
-            className="flex items-center justify-between border-b px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]"
+            className="flex items-center justify-between border-b px-3 py-2 font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]"
             style={{ borderColor: 'var(--rule-strong)' }}
           >
             <span>RUN HISTORY · 24h · auto-refresh 10s</span>
             <button
               type="button"
               onClick={() => mutate()}
-              className="border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--accent-navy)]"
+              className="border px-2 py-0.5 font-mono text-caption uppercase tracking-[0.08em] text-[var(--accent-navy)]"
               style={{ borderColor: 'var(--accent-navy)' }}
             >
               REFRESH
@@ -1950,7 +1951,7 @@ function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
                     }}
                   >
                     <span
-                      className="font-mono text-[10px] font-bold uppercase tracking-[0.1em]"
+                      className="font-mono text-caption font-bold uppercase tracking-[0.1em]"
                       style={{
                         background: tone.bg,
                         color: tone.ink,
@@ -1961,19 +1962,19 @@ function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
                       {tone.label}
                     </span>
                     <span
-                      className="truncate text-[12px]"
+                      className="truncate text-caption"
                       style={{ color: 'var(--ink-navy)' }}
                     >
                       {summary}
                     </span>
                     <span
-                      className="font-mono text-[10px] text-[var(--ink-navy-muted)]"
+                      className="font-mono text-caption text-[var(--ink-navy-muted)]"
                       style={{ textAlign: 'right' }}
                     >
                       {run.trigger}
                     </span>
                     <span
-                      className="font-mono text-[10px] tabular-nums text-[var(--ink-navy-dim)]"
+                      className="font-mono text-caption tabular-nums text-[var(--ink-navy-dim)]"
                       style={{ textAlign: 'right' }}
                     >
                       {formatRelative(run.startedAt)}
@@ -1988,7 +1989,7 @@ function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
                         background: 'var(--surface-cool)',
                       }}
                     >
-                      <div className="mb-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-[10px] text-[var(--ink-navy-muted)]">
+                      <div className="mb-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-caption text-[var(--ink-navy-muted)]">
                         <span>
                           เริ่ม:{' '}
                           <span style={{ color: 'var(--ink-navy)' }}>
@@ -2021,11 +2022,11 @@ function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
 
                       {run.errorMessage && (
                         <div
-                          className="mb-2 border px-3 py-2 text-[12px]"
+                          className="mb-2 border px-3 py-2 text-caption"
                           style={{
                             borderColor: '#fecaca',
-                            background: '#fef2f2',
-                            color: '#991b1b',
+                            background: COLOR.riskHighTint,
+                            color: COLOR.riskHighText,
                           }}
                         >
                           <strong>Error:</strong> {run.errorMessage}
@@ -2038,7 +2039,7 @@ function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
                       >
                         {run.steps.length === 0 ? (
                           <li
-                            className="px-3 py-2 text-[11px] text-[var(--ink-navy-muted)]"
+                            className="px-3 py-2 text-caption text-[var(--ink-navy-muted)]"
                           >
                             ไม่มีขั้นตอนบันทึกในรอบนี้
                           </li>
@@ -2065,21 +2066,21 @@ function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
                                   }}
                                 />
                                 <span
-                                  className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--ink-navy-muted)]"
+                                  className="font-mono text-caption uppercase tracking-[0.06em] text-[var(--ink-navy-muted)]"
                                   style={{ marginTop: 2 }}
                                 >
                                   {step.name}
                                 </span>
                                 <div>
                                   <div
-                                    className="text-[12px] leading-snug"
+                                    className="text-caption leading-snug"
                                     style={{ color: t.ink }}
                                   >
                                     {step.message}
                                   </div>
                                   {step.detail && (
                                     <div
-                                      className="mt-0.5 break-words font-mono text-[10px]"
+                                      className="mt-0.5 break-words font-mono text-caption"
                                       style={{ color: 'var(--ink-navy-muted)' }}
                                     >
                                       {step.detail}
@@ -2088,7 +2089,7 @@ function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
                                   {step.counts &&
                                     Object.keys(step.counts).length > 0 && (
                                       <div
-                                        className="mt-0.5 font-mono text-[10px]"
+                                        className="mt-0.5 font-mono text-caption"
                                         style={{
                                           color: 'var(--ink-navy-dim)',
                                         }}
@@ -2102,7 +2103,7 @@ function SyncLogSection({ hospital }: { hospital: AdminHospital }) {
                                     )}
                                 </div>
                                 <span
-                                  className="font-mono text-[10px] tabular-nums text-[var(--ink-navy-muted)]"
+                                  className="font-mono text-caption tabular-nums text-[var(--ink-navy-muted)]"
                                   style={{ textAlign: 'right', marginTop: 2 }}
                                 >
                                   {formatTimeShort(step.at)}
@@ -2154,19 +2155,19 @@ function SectionIntro({
           <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0">
-          <div className="font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
+          <div className="font-mono text-caption uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
             {eyebrow}
           </div>
-          <div className="mt-0.5 text-[15px] font-semibold leading-tight text-[var(--ink-navy)]">
+          <div className="mt-0.5 text-body font-semibold leading-tight text-[var(--ink-navy)]">
             {title}
           </div>
-          <div className="mt-1 text-[13px] leading-snug text-[var(--ink-navy-dim)]">
+          <div className="mt-1 text-caption leading-snug text-[var(--ink-navy-dim)]">
             {detail}
           </div>
         </div>
       </div>
       {meta ? (
-        <div className="shrink-0 border px-2.5 py-1.5 font-mono text-[12px] text-[var(--ink-navy-dim)] md:text-right"
+        <div className="shrink-0 border px-2.5 py-1.5 font-mono text-caption text-[var(--ink-navy-dim)] md:text-right"
           style={{ borderColor: 'var(--rule-strong)', background: 'var(--surface-cool)' }}>
           {meta}
         </div>
@@ -2194,12 +2195,12 @@ function StatBox({
         : 'var(--ink-navy-muted)';
   return (
     <div className="px-4 py-3" style={{ borderLeft: `2px solid ${color}` }}>
-      <div className="flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
+      <div className="flex items-center gap-1.5 font-mono text-caption uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
         <Icon className="h-3 w-3" />
         {label}
       </div>
       <div
-        className="mt-1 font-mono text-[14px] font-semibold leading-none"
+        className="mt-1 font-mono text-label font-semibold leading-none"
         style={{ color }}
       >
         {value}

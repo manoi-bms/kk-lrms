@@ -61,7 +61,7 @@ function DueCell({ edc, due }: { edc: string | null; due: EdcDueClass }) {
   const deltaDays = daysUntil(edc);
   return (
     <div className="flex flex-col items-start gap-0.5 leading-tight">
-      <span className="font-mono text-[13px] tabular-nums text-[var(--ink-navy-dim)]">
+      <span className="font-mono text-caption tabular-nums text-[var(--ink-navy-dim)]">
         {formatThaiDate(edc)}
       </span>
       {due === 'overdue' ? (
@@ -69,7 +69,7 @@ function DueCell({ edc, due }: { edc: string | null; due: EdcDueClass }) {
       ) : due === 'dueSoon' ? (
         <FlagChip color="var(--risk-medium)">ครบกำหนดใน {Math.max(deltaDays, 0)} วัน</FlagChip>
       ) : (
-        <span className="font-mono text-[12px] text-[var(--ink-navy-muted)]">
+        <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
           อีก {deltaDays} วัน
         </span>
       )}
@@ -89,13 +89,13 @@ function LastAncCell({
   const sinceDays = daysSince(lastAncDate);
   return (
     <div className="flex flex-col items-start gap-0.5 leading-tight">
-      <span className="text-[13px] text-[var(--ink-navy-dim)]">{formatThaiDate(lastAncDate)}</span>
+      <span className="text-caption text-[var(--ink-navy-dim)]">{formatThaiDate(lastAncDate)}</span>
       {followup === 'critical' ? (
         <FlagChip color="var(--risk-high)">ใกล้หลุดติดตาม · {sinceDays} วัน</FlagChip>
       ) : followup === 'warn' ? (
         <FlagChip color="var(--risk-medium)">ห่างนัด {sinceDays} วัน</FlagChip>
       ) : (
-        <span className="font-mono text-[12px] text-[var(--ink-navy-muted)]">
+        <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
           {formatRelativeTime(lastAncDate)}
         </span>
       )}
@@ -321,24 +321,24 @@ function PregnanciesBoard() {
       >
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <div>
-            <div className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
+            <div className="font-mono text-caption uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
               PROVINCIAL REGISTRY · ANC
             </div>
             <h1
-              className="mt-0.5 text-[26px] font-bold leading-tight tracking-tight"
+              className="mt-0.5 text-page font-bold leading-tight tracking-tight"
               style={{ color: 'var(--ink-navy)' }}
             >
               ฝากครรภ์ (ANC)
             </h1>
           </div>
-          <p className="font-mono text-[13px] text-[var(--ink-navy-muted)]">
+          <p className="font-mono text-caption text-[var(--ink-navy-muted)]">
             ทะเบียนหญิงตั้งครรภ์ทั้งจังหวัด ·{' '}
             <span className="font-semibold text-[var(--ink-navy)] tabular-nums">
               {counts ? counts.total : pagination.total}
             </span>{' '}
             ราย
           </p>
-          <p className="ml-auto font-mono text-[12px] tracking-[0.08em] text-[var(--ink-navy-muted)]">
+          <p className="ml-auto font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
             อัปเดตล่าสุด{' '}
             <span className="tabular-nums text-[var(--ink-navy-dim)]">
               {lastUpdated ? formatThaiTime(lastUpdated) : '—'}
@@ -346,7 +346,7 @@ function PregnanciesBoard() {
             · รีเฟรชอัตโนมัติทุก 30 วิ
           </p>
         </div>
-        <p className="mt-1 text-[12px] text-[var(--ink-navy-muted)]">
+        <p className="mt-1 text-caption text-[var(--ink-navy-muted)]">
           ไม่รวมรายที่คลอดแล้ว · GA เกิน 42 สัปดาห์ · หรือขาดการติดตามเกิน 60 วัน
           (ดูรายขาดติดตามได้ที่ช่อง LTFU)
         </p>
@@ -361,17 +361,17 @@ function PregnanciesBoard() {
         }}
       >
         <div className="border-r border-[var(--rule-strong)] px-5 py-4">
-          <div className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
+          <div className="font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
             PROVINCE-WIDE
           </div>
           <div className="mt-1.5 flex items-baseline gap-2.5">
             <div
-              className="font-mono text-[40px] font-semibold leading-none tabular-nums"
+              className="font-mono text-kpi font-semibold leading-none tabular-nums"
               style={{ color: 'var(--ink-navy)', letterSpacing: '-0.02em' }}
             >
               {counts ? counts.total : '—'}
             </div>
-            <div className="font-mono text-[13px] text-[var(--ink-navy-dim)]">หญิงตั้งครรภ์</div>
+            <div className="font-mono text-caption text-[var(--ink-navy-dim)]">หญิงตั้งครรภ์</div>
           </div>
           <div className="mt-2.5">
             <RiskBar
@@ -405,17 +405,17 @@ function PregnanciesBoard() {
                 />
               }
             >
-              <div className="font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+              <div className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
                 {c.k}
               </div>
               <div className="flex items-baseline gap-2">
                 <div
-                  className="font-mono text-[28px] font-semibold leading-none tabular-nums"
+                  className="font-mono text-page font-semibold leading-none tabular-nums"
                   style={{ color: 'var(--ink-navy)' }}
                 >
                   {c.v ?? '—'}
                 </div>
-                <div className="font-mono text-[12px] text-[var(--ink-navy-muted)]">
+                <div className="font-mono text-caption text-[var(--ink-navy-muted)]">
                   {ANC_RISK_LABEL_TH[c.k]}
                 </div>
               </div>
@@ -455,11 +455,11 @@ function PregnanciesBoard() {
                 />
               }
             >
-              <div className="font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+              <div className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
                 {c.k}
               </div>
               <div
-                className="font-mono text-[28px] font-semibold leading-none tabular-nums"
+                className="font-mono text-page font-semibold leading-none tabular-nums"
                 style={{
                   color:
                     (c.v ?? 0) > 0 && c.color === 'var(--risk-high)' ? c.color : 'var(--ink-navy)',
@@ -467,7 +467,7 @@ function PregnanciesBoard() {
               >
                 {c.v ?? '—'}
               </div>
-              <div className="text-[12px] text-[var(--ink-navy-muted)]">{c.labelTh}</div>
+              <div className="text-caption text-[var(--ink-navy-muted)]">{c.labelTh}</div>
             </KpiTip>
           );
         })}
@@ -489,7 +489,7 @@ function PregnanciesBoard() {
         {/* The count under this heading is a filtered cohort, not the raw
           pregnancy table. Saying so here is what stops it reading as a
           mismatch against the hospital console's own ANC figure. */}
-        <p className="text-[12px] leading-relaxed text-[var(--ink-navy-muted)]">
+        <p className="text-caption leading-relaxed text-[var(--ink-navy-muted)]">
           {ANC_REGISTRY_CRITERIA_TH}
         </p>
 
@@ -505,14 +505,14 @@ function PregnanciesBoard() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="ค้นหา ชื่อ / HN / โรงพยาบาล…"
-              className="h-8 w-full rounded-sm border bg-white pl-8 pr-3 text-[14px] focus:border-[var(--accent-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-navy-soft)]"
+              className="h-8 w-full rounded-sm border bg-white pl-8 pr-3 text-label focus:border-[var(--accent-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-navy-soft)]"
               style={{ borderColor: 'var(--rule-strong)' }}
             />
           </div>
 
           {/* Hospital */}
           <div className="flex items-center gap-1">
-            <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
+            <span className="font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
               HOSPITAL:
             </span>
             <select
@@ -522,7 +522,7 @@ function PregnanciesBoard() {
                 setHospitalFilter(e.target.value);
                 setPage(1);
               }}
-              className="h-7 max-w-[220px] rounded-sm border bg-white px-1.5 font-mono text-[13px] focus:border-[var(--accent-navy)] focus:outline-none"
+              className="h-7 max-w-[220px] rounded-sm border bg-white px-1.5 font-mono text-caption focus:border-[var(--accent-navy)] focus:outline-none"
               style={{
                 borderColor: hospitalFilter ? 'var(--accent-navy)' : 'var(--rule-strong)',
                 color: hospitalFilter ? 'var(--accent-navy)' : 'var(--ink-navy-dim)',
@@ -539,7 +539,7 @@ function PregnanciesBoard() {
 
           {/* Sort */}
           <div className="flex items-center gap-1">
-            <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
+            <span className="font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
               SORT:
             </span>
             <select
@@ -549,7 +549,7 @@ function PregnanciesBoard() {
                 setSortBy(e.target.value);
                 setPage(1);
               }}
-              className="h-7 rounded-sm border bg-white px-1.5 font-mono text-[13px] focus:border-[var(--accent-navy)] focus:outline-none"
+              className="h-7 rounded-sm border bg-white px-1.5 font-mono text-caption focus:border-[var(--accent-navy)] focus:outline-none"
               style={{ borderColor: 'var(--rule-strong)', color: 'var(--ink-navy-dim)' }}
             >
               {SORT_OPTIONS.map((o) => (
@@ -563,7 +563,7 @@ function PregnanciesBoard() {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="inline-flex items-center gap-1 rounded-sm border px-2 py-1 font-mono text-[12px] tracking-[0.08em] transition-colors hover:bg-[var(--accent-navy-soft)]"
+              className="inline-flex items-center gap-1 rounded-sm border px-2 py-1 font-mono text-caption tracking-[0.08em] transition-colors hover:bg-[var(--accent-navy-soft)]"
               style={{ borderColor: 'var(--rule-strong)', color: 'var(--ink-navy-dim)' }}
             >
               <X className="h-3 w-3" />
@@ -580,7 +580,7 @@ function PregnanciesBoard() {
           <div className="overflow-x-auto">
             <div className="min-w-[1250px]">
               <div
-                className="grid gap-2 border-b border-[var(--rule-strong)] px-3 py-2 font-mono text-[12px] tracking-[0.1em] text-[var(--ink-navy-muted)]"
+                className="grid gap-2 border-b border-[var(--rule-strong)] px-3 py-2 font-mono text-caption tracking-[0.1em] text-[var(--ink-navy-muted)]"
                 style={{ gridTemplateColumns: GRID_COLUMNS }}
               >
                 <div>HN</div>
@@ -618,7 +618,7 @@ function PregnanciesBoard() {
         {/* Pagination */}
         {pagination.totalPages > 1 && (
           <div
-            className="mt-3 flex items-center justify-between font-mono text-[12px] tracking-[0.08em]"
+            className="mt-3 flex items-center justify-between font-mono text-caption tracking-[0.08em]"
             style={{ color: 'var(--ink-navy-muted)' }}
           >
             <span>
@@ -636,7 +636,7 @@ function PregnanciesBoard() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="inline-flex items-center gap-1 rounded-sm border bg-white px-2.5 py-1 text-[12px] transition-colors hover:bg-[var(--accent-navy-soft)] disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-sm border bg-white px-2.5 py-1 text-caption transition-colors hover:bg-[var(--accent-navy-soft)] disabled:opacity-40"
                 style={{ borderColor: 'var(--rule-strong)', color: 'var(--ink-navy-dim)' }}
               >
                 <ChevronLeft className="h-3 w-3" />
@@ -651,7 +651,7 @@ function PregnanciesBoard() {
               <button
                 onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
                 disabled={page >= pagination.totalPages}
-                className="inline-flex items-center gap-1 rounded-sm border bg-white px-2.5 py-1 text-[12px] transition-colors hover:bg-[var(--accent-navy-soft)] disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-sm border bg-white px-2.5 py-1 text-caption transition-colors hover:bg-[var(--accent-navy-soft)] disabled:opacity-40"
                 style={{ borderColor: 'var(--rule-strong)', color: 'var(--ink-navy-dim)' }}
               >
                 NEXT
@@ -675,18 +675,18 @@ function EmptyState({
   return (
     <div className="px-3 py-10 text-center">
       <Baby className="mx-auto mb-2 h-8 w-8 text-[var(--ink-navy-muted)] opacity-50" />
-      <p className="font-mono text-[13px] text-[var(--ink-navy-muted)]">ไม่พบข้อมูลฝากครรภ์</p>
+      <p className="font-mono text-caption text-[var(--ink-navy-muted)]">ไม่พบข้อมูลฝากครรภ์</p>
       {hasActiveFilters ? (
         <button
           onClick={onClear}
-          className="mt-3 inline-flex items-center gap-1 rounded-sm border bg-white px-2.5 py-1 font-mono text-[12px] tracking-[0.08em] transition-colors hover:bg-[var(--accent-navy-soft)]"
+          className="mt-3 inline-flex items-center gap-1 rounded-sm border bg-white px-2.5 py-1 font-mono text-caption tracking-[0.08em] transition-colors hover:bg-[var(--accent-navy-soft)]"
           style={{ borderColor: 'var(--rule-strong)', color: 'var(--accent-navy)' }}
         >
           <X className="h-3 w-3" />
           ล้างตัวกรอง
         </button>
       ) : (
-        <p className="mt-1 text-[13px] text-[var(--ink-navy-muted)]">
+        <p className="mt-1 text-caption text-[var(--ink-navy-muted)]">
           ยังไม่มีข้อมูลฝากครรภ์ในทะเบียน
         </p>
       )}
@@ -698,7 +698,7 @@ function AgeCell({ age }: { age: number }) {
   const flag = ageFlag(age);
   return (
     <div className="flex items-center gap-1">
-      <span className="font-mono text-[14px] tabular-nums text-[var(--ink-navy-dim)]">{age}</span>
+      <span className="font-mono text-label tabular-nums text-[var(--ink-navy-dim)]">{age}</span>
       {flag === 'teen' && <FlagChip color="var(--risk-medium)">&lt;20</FlagChip>}
       {flag === 'ama' && <FlagChip color="var(--ink-navy-dim)">35+</FlagChip>}
     </div>
@@ -725,20 +725,20 @@ function JourneyRow({ journey: j }: { journey: JourneyListItem }) {
         minHeight: 52,
       }}
     >
-      <div className="font-mono text-[14px] font-semibold text-[var(--ink-navy)]">{j.hn}</div>
+      <div className="font-mono text-label font-semibold text-[var(--ink-navy)]">{j.hn}</div>
       <div className="min-w-0">
-        <div className="truncate text-[15px] text-[var(--ink-navy)]">{maskName(j.name)}</div>
-        <div className="font-mono text-[12px] text-[var(--ink-navy-muted)]">
+        <div className="truncate text-body text-[var(--ink-navy)]">{maskName(j.name)}</div>
+        <div className="font-mono text-caption text-[var(--ink-navy-muted)]">
           G{j.gravida}
           {j.para > 0 && <>P{j.para}</>}
         </div>
       </div>
       <AgeCell age={j.age} />
-      <div className="font-mono text-[14px] tabular-nums text-[var(--ink-navy-dim)]">
+      <div className="font-mono text-label tabular-nums text-[var(--ink-navy-dim)]">
         {j.gaWeeks != null ? (
           <>
             {j.gaWeeks}
-            <span className="text-[12px] text-[var(--ink-navy-muted)]">w</span>
+            <span className="text-caption text-[var(--ink-navy-muted)]">w</span>
           </>
         ) : (
           '—'
@@ -747,12 +747,12 @@ function JourneyRow({ journey: j }: { journey: JourneyListItem }) {
       <div>
         <AncRiskChip level={j.ancRiskLevel} />
       </div>
-      <div className="font-mono text-[14px] tabular-nums text-[var(--ink-navy-dim)]">
+      <div className="font-mono text-label tabular-nums text-[var(--ink-navy-dim)]">
         {j.ancVisitCount}
       </div>
       <LastAncCell lastAncDate={j.lastAncDate} followup={followup} />
       <DueCell edc={j.edc} due={due} />
-      <div className="truncate text-[14px] text-[var(--ink-navy-dim)]">{j.hospitalName}</div>
+      <div className="truncate text-label text-[var(--ink-navy-dim)]">{j.hospitalName}</div>
     </Link>
   );
 }
@@ -772,15 +772,15 @@ function JourneyCard({ journey: j }: { journey: JourneyListItem }) {
       }}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-[13px] font-semibold text-[var(--ink-navy)]">{j.hn}</span>
+        <span className="font-mono text-caption font-semibold text-[var(--ink-navy)]">{j.hn}</span>
         <AncRiskChip level={j.ancRiskLevel} />
       </div>
       <div className="mt-1 flex items-center gap-1.5">
-        <span className="truncate text-[15px] font-medium text-[var(--ink-navy)]">
+        <span className="truncate text-body font-medium text-[var(--ink-navy)]">
           {maskName(j.name)}
         </span>
       </div>
-      <div className="mt-0.5 font-mono text-[12px] text-[var(--ink-navy-muted)]">
+      <div className="mt-0.5 font-mono text-caption text-[var(--ink-navy-muted)]">
         อายุ {j.age} · G{j.gravida}
         {j.para > 0 && <>P{j.para}</>}
         {j.gaWeeks != null && <> · GA {j.gaWeeks}w</>} · ANC {j.ancVisitCount} ครั้ง
@@ -789,7 +789,7 @@ function JourneyCard({ journey: j }: { journey: JourneyListItem }) {
         <LastAncCell lastAncDate={j.lastAncDate} followup={followup} />
         <DueCell edc={j.edc} due={due} />
       </div>
-      <div className="mt-1 text-[13px] text-[var(--ink-navy-dim)]">{j.hospitalName}</div>
+      <div className="mt-1 text-caption text-[var(--ink-navy-dim)]">{j.hospitalName}</div>
     </Link>
   );
 }

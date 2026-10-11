@@ -63,7 +63,7 @@ function FeatureCard({
 }) {
   return (
     <div className="rounded-2xl bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50 text-teal-600 mb-4">
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-soft text-brand mb-4">
         {icon}
       </div>
       <h3 className="text-lg font-semibold text-slate-800 mb-2">{title}</h3>
@@ -83,7 +83,7 @@ function HospitalLevelRow({
 }) {
   return (
     <div className="flex items-start gap-4 py-3 border-b border-slate-100 last:border-0">
-      <span className="shrink-0 rounded-lg bg-teal-50 px-3 py-1 text-sm font-bold text-teal-700 font-mono">
+      <span className="shrink-0 rounded-lg bg-brand-soft px-3 py-1 text-sm font-bold text-brand font-mono">
         {level}
       </span>
       <div>
@@ -137,7 +137,7 @@ function StepItem({
 }) {
   return (
     <div className="flex gap-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white font-bold">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-white font-bold">
         {step}
       </div>
       <div>
@@ -166,9 +166,9 @@ function CodeBlock({ title, children }: { title?: string; children: string }) {
 
 function EndpointBadge({ method, path }: { method: string; path: string }) {
   const colors: Record<string, string> = {
-    POST: 'bg-green-100 text-green-700 border-green-200',
+    POST: 'bg-ok-tint text-ok-text border-ok/40',
     GET: 'bg-blue-100 text-blue-700 border-blue-200',
-    DELETE: 'bg-red-100 text-red-700 border-red-200',
+    DELETE: 'bg-danger-tint text-danger-text border-danger/40',
   };
   return (
     <div className="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 font-mono text-sm">
@@ -220,7 +220,7 @@ export default function AboutPage() {
         {/* --- Section: ภาพรวม --- */}
         <section>
           <SectionTitle>
-            <Activity className="h-6 w-6 text-teal-600" />
+            <Activity className="h-6 w-6 text-brand" />
             ภาพรวมระบบ
           </SectionTitle>
           <div className="rounded-2xl bg-white p-8 shadow-sm space-y-6">
@@ -239,21 +239,21 @@ export default function AboutPage() {
               KK-LRMS โดยอัตโนมัติภายใน 30 วินาที
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
-              <div className="text-center p-4 bg-teal-50 rounded-xl">
-                <div className="text-3xl font-bold text-teal-700 font-mono">26</div>
-                <div className="text-sm text-teal-600 mt-1">โรงพยาบาลในเครือข่าย</div>
+              <div className="text-center p-4 bg-brand-soft rounded-xl">
+                <div className="text-3xl font-bold text-brand font-mono">26</div>
+                <div className="text-sm text-brand mt-1">โรงพยาบาลในเครือข่าย</div>
               </div>
               <div className="text-center p-4 bg-blue-50 rounded-xl">
                 <div className="text-3xl font-bold text-blue-700 font-mono">30</div>
                 <div className="text-sm text-blue-600 mt-1">วินาที อัปเดตข้อมูล</div>
               </div>
-              <div className="text-center p-4 bg-amber-50 rounded-xl">
-                <div className="text-3xl font-bold text-amber-700 font-mono">8</div>
-                <div className="text-sm text-amber-600 mt-1">ปัจจัยเสี่ยง CPD</div>
+              <div className="text-center p-4 bg-warn-tint rounded-xl">
+                <div className="text-3xl font-bold text-warn-text font-mono">8</div>
+                <div className="text-sm text-warn-text mt-1">ปัจจัยเสี่ยง CPD</div>
               </div>
-              <div className="text-center p-4 bg-rose-50 rounded-xl">
-                <div className="text-3xl font-bold text-rose-700 font-mono">24/7</div>
-                <div className="text-sm text-rose-600 mt-1">ติดตามตลอดเวลา</div>
+              <div className="text-center p-4 bg-danger-tint rounded-xl">
+                <div className="text-3xl font-bold text-danger-text font-mono">24/7</div>
+                <div className="text-sm text-danger-text mt-1">ติดตามตลอดเวลา</div>
               </div>
             </div>
           </div>
@@ -262,7 +262,7 @@ export default function AboutPage() {
         {/* --- Section: วัตถุประสงค์ --- */}
         <section>
           <SectionTitle>
-            <Shield className="h-6 w-6 text-teal-600" />
+            <Shield className="h-6 w-6 text-brand" />
             วัตถุประสงค์
           </SectionTitle>
           <div className="rounded-2xl bg-white p-8 shadow-sm">
@@ -294,7 +294,7 @@ export default function AboutPage() {
         {/* --- Section: ฟีเจอร์หลัก --- */}
         <section>
           <SectionTitle>
-            <BarChart3 className="h-6 w-6 text-teal-600" />
+            <BarChart3 className="h-6 w-6 text-brand" />
             ฟีเจอร์หลักของระบบ
           </SectionTitle>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -344,7 +344,7 @@ export default function AboutPage() {
         {/* --- Section: CPD Risk Score --- */}
         <section>
           <SectionTitle>
-            <AlertTriangle className="h-6 w-6 text-teal-600" />
+            <AlertTriangle className="h-6 w-6 text-brand" />
             ระบบประเมินความเสี่ยง CPD
           </SectionTitle>
           <div className="rounded-2xl bg-white p-8 shadow-sm space-y-6">
@@ -436,7 +436,7 @@ export default function AboutPage() {
         {/* --- Section: โครงสร้างเครือข่าย --- */}
         <section>
           <SectionTitle>
-            <Network className="h-6 w-6 text-teal-600" />
+            <Network className="h-6 w-6 text-brand" />
             โครงสร้างเครือข่ายโรงพยาบาล
           </SectionTitle>
           <div className="rounded-2xl bg-white p-8 shadow-sm space-y-6">
@@ -487,7 +487,7 @@ export default function AboutPage() {
         {/* --- Section: การทำงานของระบบ --- */}
         <section>
           <SectionTitle>
-            <Clock className="h-6 w-6 text-teal-600" />
+            <Clock className="h-6 w-6 text-brand" />
             ขั้นตอนการทำงานของระบบ
           </SectionTitle>
           <div className="rounded-2xl bg-white p-8 shadow-sm">
@@ -528,14 +528,14 @@ export default function AboutPage() {
         {/* --- Section: Webhook & API --- */}
         <section>
           <SectionTitle>
-            <Webhook className="h-6 w-6 text-teal-600" />
+            <Webhook className="h-6 w-6 text-brand" />
             Webhook &amp; API สำหรับโรงพยาบาลภายนอก
           </SectionTitle>
           <div className="rounded-2xl bg-white p-8 shadow-sm space-y-8">
             {/* Overview */}
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                <Globe className="h-6 w-6 shrink-0 text-teal-500 mt-1" />
+                <Globe className="h-6 w-6 shrink-0 text-brand mt-1" />
                 <div>
                   <h3 className="text-lg font-semibold text-slate-700 mb-2">ภาพรวม</h3>
                   <p className="text-slate-600 leading-relaxed">
@@ -552,7 +552,7 @@ export default function AboutPage() {
             {/* Authentication */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <Key className="h-5 w-5 text-teal-600" />
+                <Key className="h-5 w-5 text-brand" />
                 <h3 className="text-lg font-semibold text-slate-700">
                   การยืนยันตัวตน (Authentication)
                 </h3>
@@ -584,7 +584,7 @@ export default function AboutPage() {
             {/* Endpoint: Patient Data */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Send className="h-5 w-5 text-teal-600" />
+                <Send className="h-5 w-5 text-brand" />
                 <h3 className="text-lg font-semibold text-slate-700">Endpoint: ส่งข้อมูลผู้คลอด</h3>
               </div>
               <EndpointBadge method="POST" path="/api/webhooks/patient-data" />
@@ -603,11 +603,11 @@ export default function AboutPage() {
                     เหมาะสำหรับส่งข้อมูลเฉพาะรายที่มีการเปลี่ยนแปลง
                   </p>
                 </div>
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                  <div className="font-semibold text-amber-800 mb-1 font-mono text-sm">
+                <div className="rounded-lg border border-warn/40 bg-warn-tint p-4">
+                  <div className="font-semibold text-warn-text mb-1 font-mono text-sm">
                     &quot;mode&quot;: &quot;full_snapshot&quot;
                   </div>
-                  <p className="text-sm text-amber-700">
+                  <p className="text-sm text-warn-text">
                     <strong>ส่งรายชื่อทั้งหมด</strong> — ผู้คลอดที่อยู่ในระบบแต่ไม่อยู่ใน payload
                     จะถูกเปลี่ยนสถานะเป็น DELIVERED อัตโนมัติ เหมาะสำหรับระบบที่ส่งข้อมูลเป็นรอบ
                     (เช่น ทุก 5 นาที)
@@ -663,23 +663,23 @@ export default function AboutPage() {
                     <h4 className="text-sm font-semibold text-slate-600 mb-2">Response Fields</h4>
                     <div className="space-y-1.5 text-sm">
                       <div className="flex gap-2">
-                        <code className="text-teal-700 font-mono shrink-0">patientsProcessed</code>
+                        <code className="text-brand font-mono shrink-0">patientsProcessed</code>
                         <span className="text-slate-500">— จำนวนผู้คลอดที่ประมวลผลสำเร็จ</span>
                       </div>
                       <div className="flex gap-2">
-                        <code className="text-teal-700 font-mono shrink-0">newAdmissions</code>
+                        <code className="text-brand font-mono shrink-0">newAdmissions</code>
                         <span className="text-slate-500">
                           — จำนวนผู้คลอดรายใหม่ (ไม่เคยอยู่ในระบบ)
                         </span>
                       </div>
                       <div className="flex gap-2">
-                        <code className="text-teal-700 font-mono shrink-0">discharges</code>
+                        <code className="text-brand font-mono shrink-0">discharges</code>
                         <span className="text-slate-500">
                           — จำนวนที่ถูกเปลี่ยนเป็น DELIVERED (เฉพาะ full_snapshot mode)
                         </span>
                       </div>
                       <div className="flex gap-2">
-                        <code className="text-teal-700 font-mono shrink-0">transfers</code>
+                        <code className="text-brand font-mono shrink-0">transfers</code>
                         <span className="text-slate-500">— จำนวนที่ตรวจพบว่าเป็นการย้าย รพ.</span>
                       </div>
                     </div>
@@ -705,42 +705,42 @@ export default function AboutPage() {
                   </thead>
                   <tbody className="text-slate-600">
                     <tr className="border-b border-slate-100">
-                      <td className="py-2.5 pr-3 font-mono text-teal-700">hn</td>
+                      <td className="py-2.5 pr-3 font-mono text-brand">hn</td>
                       <td className="py-2.5 pr-3">string</td>
                       <td className="py-2.5 pr-3">
-                        <CheckCircle2 size={16} className="text-green-500" />
+                        <CheckCircle2 size={16} className="text-ok" />
                       </td>
                       <td className="py-2.5">เลข HN (Hospital Number)</td>
                     </tr>
                     <tr className="border-b border-slate-100">
-                      <td className="py-2.5 pr-3 font-mono text-teal-700">an</td>
+                      <td className="py-2.5 pr-3 font-mono text-brand">an</td>
                       <td className="py-2.5 pr-3">string</td>
                       <td className="py-2.5 pr-3">
-                        <CheckCircle2 size={16} className="text-green-500" />
+                        <CheckCircle2 size={16} className="text-ok" />
                       </td>
                       <td className="py-2.5">เลข AN (Admission Number) — ใช้เป็น primary key</td>
                     </tr>
                     <tr className="border-b border-slate-100">
-                      <td className="py-2.5 pr-3 font-mono text-teal-700">name</td>
+                      <td className="py-2.5 pr-3 font-mono text-brand">name</td>
                       <td className="py-2.5 pr-3">string</td>
                       <td className="py-2.5 pr-3">
-                        <CheckCircle2 size={16} className="text-green-500" />
+                        <CheckCircle2 size={16} className="text-ok" />
                       </td>
                       <td className="py-2.5">ชื่อ-สกุลผู้คลอด (เข้ารหัสอัตโนมัติ ตาม PDPA)</td>
                     </tr>
                     <tr className="border-b border-slate-100">
-                      <td className="py-2.5 pr-3 font-mono text-teal-700">age</td>
+                      <td className="py-2.5 pr-3 font-mono text-brand">age</td>
                       <td className="py-2.5 pr-3">number</td>
                       <td className="py-2.5 pr-3">
-                        <CheckCircle2 size={16} className="text-green-500" />
+                        <CheckCircle2 size={16} className="text-ok" />
                       </td>
                       <td className="py-2.5">อายุมารดา (ปี)</td>
                     </tr>
                     <tr className="border-b border-slate-100">
-                      <td className="py-2.5 pr-3 font-mono text-teal-700">admit_date</td>
+                      <td className="py-2.5 pr-3 font-mono text-brand">admit_date</td>
                       <td className="py-2.5 pr-3">string</td>
                       <td className="py-2.5 pr-3">
-                        <CheckCircle2 size={16} className="text-green-500" />
+                        <CheckCircle2 size={16} className="text-ok" />
                       </td>
                       <td className="py-2.5">
                         วันเวลา Admit (ISO 8601 เช่น 2026-03-08T08:00:00+07:00)
@@ -849,11 +849,11 @@ export default function AboutPage() {
                 ในหน้ารายละเอียดผู้คลอด
               </p>
 
-              <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 mt-4">
-                <h4 className="font-semibold text-amber-800 text-sm mb-2">
+              <div className="rounded-xl bg-warn-tint border border-warn/40 p-4 mt-4">
+                <h4 className="font-semibold text-warn-text text-sm mb-2">
                   ข้อแนะนำ: เลือกโหมดที่เหมาะสม
                 </h4>
-                <ul className="text-sm text-amber-700 space-y-1.5 list-disc list-inside">
+                <ul className="text-sm text-warn-text space-y-1.5 list-disc list-inside">
                   <li>
                     <strong>full_snapshot</strong> — ใช้เมื่อระบบ HIS
                     ส่งรายชื่อผู้คลอดทั้งหมดเป็นรอบ (ทุก 5-30 นาที) ผู้คลอดที่จำหน่ายแล้วจะหายจาก
@@ -862,7 +862,7 @@ export default function AboutPage() {
                   <li>
                     <strong>incremental</strong> — ใช้เมื่อส่งข้อมูลเฉพาะรายที่มีการเปลี่ยนแปลง
                     ต้องส่ง{' '}
-                    <code className="bg-amber-100 px-1 rounded">
+                    <code className="bg-warn-tint px-1 rounded">
                       labor_status: &quot;DELIVERED&quot;
                     </code>{' '}
                     เมื่อผู้คลอดจำหน่าย มิฉะนั้นผู้คลอดจะแสดงเป็น ACTIVE ตลอด
@@ -875,21 +875,21 @@ export default function AboutPage() {
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-slate-700">HTTP Status Codes</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="rounded-lg border border-green-200 bg-green-50 p-3 flex gap-3">
-                  <span className="shrink-0 font-mono font-bold text-green-700">200</span>
-                  <span className="text-sm text-green-800">
+                <div className="rounded-lg border border-ok/40 bg-ok-tint p-3 flex gap-3">
+                  <span className="shrink-0 font-mono font-bold text-ok-text">200</span>
+                  <span className="text-sm text-ok-text">
                     สำเร็จ — ข้อมูลถูกประมวลผลเรียบร้อย
                   </span>
                 </div>
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 flex gap-3">
-                  <span className="shrink-0 font-mono font-bold text-amber-700">400</span>
-                  <span className="text-sm text-amber-800">
+                <div className="rounded-lg border border-warn/40 bg-warn-tint p-3 flex gap-3">
+                  <span className="shrink-0 font-mono font-bold text-warn-text">400</span>
+                  <span className="text-sm text-warn-text">
                     Payload ไม่ถูกต้อง — ตรวจสอบ JSON format และ required fields
                   </span>
                 </div>
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3 flex gap-3">
-                  <span className="shrink-0 font-mono font-bold text-red-700">401</span>
-                  <span className="text-sm text-red-800">
+                <div className="rounded-lg border border-danger/40 bg-danger-tint p-3 flex gap-3">
+                  <span className="shrink-0 font-mono font-bold text-danger-text">401</span>
+                  <span className="text-sm text-danger-text">
                     ไม่ได้ยืนยันตัวตน — API Key หาย ไม่ถูกต้อง หรือถูกเพิกถอน
                   </span>
                 </div>
@@ -905,7 +905,7 @@ export default function AboutPage() {
             {/* Admin API */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Key className="h-5 w-5 text-teal-600" />
+                <Key className="h-5 w-5 text-brand" />
                 <h3 className="text-lg font-semibold text-slate-700">
                   Admin API — จัดการ API Keys
                 </h3>
@@ -968,12 +968,12 @@ export default function AboutPage() {
             </div>
 
             {/* Data Flow Note */}
-            <div className="rounded-xl bg-teal-50 border border-teal-100 p-5 space-y-3">
-              <h4 className="font-semibold text-teal-800 flex items-center gap-2">
+            <div className="rounded-xl bg-brand-soft border border-brand-soft p-5 space-y-3">
+              <h4 className="font-semibold text-brand flex items-center gap-2">
                 <Activity size={18} />
                 การประมวลผลหลังรับข้อมูล
               </h4>
-              <ol className="text-sm text-teal-700 space-y-2 list-decimal list-inside">
+              <ol className="text-sm text-brand space-y-2 list-decimal list-inside">
                 <li>เข้ารหัสชื่อ-สกุลและเลขบัตรประชาชน (AES-256-GCM ตาม PDPA)</li>
                 <li>Upsert ข้อมูลผู้คลอดลงฐานข้อมูล (อิงจาก AN)</li>
                 <li>ตรวจจับการย้ายโรงพยาบาลจาก CID Hash (ถ้ามี)</li>
@@ -988,7 +988,7 @@ export default function AboutPage() {
         {/* --- Section: กลุ่มผู้ใช้ --- */}
         <section>
           <SectionTitle>
-            <Users className="h-6 w-6 text-teal-600" />
+            <Users className="h-6 w-6 text-brand" />
             กลุ่มผู้ใช้งาน
           </SectionTitle>
           <div className="rounded-2xl bg-white p-8 shadow-sm">
@@ -1031,7 +1031,7 @@ export default function AboutPage() {
         {/* --- Section: ความปลอดภัย --- */}
         <section>
           <SectionTitle>
-            <Shield className="h-6 w-6 text-teal-600" />
+            <Shield className="h-6 w-6 text-brand" />
             ความปลอดภัยและความเป็นส่วนตัว
           </SectionTitle>
           <div className="rounded-2xl bg-white p-8 shadow-sm space-y-4">
@@ -1040,35 +1040,35 @@ export default function AboutPage() {
             </p>
             <ul className="space-y-3 text-slate-600">
               <li className="flex gap-3">
-                <Shield className="h-5 w-5 shrink-0 text-teal-500 mt-0.5" />
+                <Shield className="h-5 w-5 shrink-0 text-brand mt-0.5" />
                 <span>
                   <strong>เข้ารหัสข้อมูลส่วนบุคคล</strong> — ชื่อ-สกุลและเลขบัตรประชาชนถูกเข้ารหัส
                   (Encrypt) ทั้งในฐานข้อมูลและระหว่างการส่งข้อมูล
                 </span>
               </li>
               <li className="flex gap-3">
-                <Shield className="h-5 w-5 shrink-0 text-teal-500 mt-0.5" />
+                <Shield className="h-5 w-5 shrink-0 text-brand mt-0.5" />
                 <span>
                   <strong>ระบบยืนยันตัวตน</strong> — ผู้ใช้ต้องลงชื่อเข้าใช้ด้วย BMS Session ID
                   ที่ได้รับจาก สสจ.ขอนแก่น ไม่สามารถเข้าถึงข้อมูลได้โดยไม่ผ่านการยืนยันตัวตน
                 </span>
               </li>
               <li className="flex gap-3">
-                <Shield className="h-5 w-5 shrink-0 text-teal-500 mt-0.5" />
+                <Shield className="h-5 w-5 shrink-0 text-brand mt-0.5" />
                 <span>
                   <strong>บันทึกการเข้าถึง (Audit Log)</strong> —
                   ทุกครั้งที่มีการเปิดดูข้อมูลผู้คลอด ระบบจะบันทึกว่าใครเข้าดูข้อมูลอะไร เมื่อไหร่
                 </span>
               </li>
               <li className="flex gap-3">
-                <Shield className="h-5 w-5 shrink-0 text-teal-500 mt-0.5" />
+                <Shield className="h-5 w-5 shrink-0 text-brand mt-0.5" />
                 <span>
                   <strong>ไม่แสดงชื่อผู้คลอด</strong> — หน้าจอแสดงเฉพาะเลข AN และ HN เท่านั้น
                   ไม่แสดงชื่อ-สกุล เพื่อความเป็นส่วนตัว
                 </span>
               </li>
               <li className="flex gap-3">
-                <Shield className="h-5 w-5 shrink-0 text-teal-500 mt-0.5" />
+                <Shield className="h-5 w-5 shrink-0 text-brand mt-0.5" />
                 <span>
                   <strong>การเชื่อมต่อปลอดภัย</strong> — ใช้ HTTPS ในการเชื่อมต่อทั้งหมด พร้อม
                   Security Headers มาตรฐาน
@@ -1087,7 +1087,7 @@ export default function AboutPage() {
           <p className="pt-4">
             <Link
               href="/login"
-              className="text-teal-600 hover:text-teal-800 font-medium transition-colors"
+              className="text-brand hover:text-brand font-medium transition-colors"
             >
               เข้าสู่ระบบ
             </Link>

@@ -266,24 +266,24 @@ function ReferralsBoard() {
         style={{ borderBottom: '1px solid var(--rule-strong)' }}
       >
         <div>
-          <div className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
+          <div className="font-mono text-caption uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
             PROVINCIAL REGISTRY · REFERRALS
           </div>
           <h1
-            className="mt-0.5 text-[26px] font-bold leading-tight tracking-tight"
+            className="mt-0.5 text-page font-bold leading-tight tracking-tight"
             style={{ color: 'var(--ink-navy)' }}
           >
             การส่งต่อ
           </h1>
         </div>
-        <p className="font-mono text-[13px] text-[var(--ink-navy-muted)]">
+        <p className="font-mono text-caption text-[var(--ink-navy-muted)]">
           ส่งต่อระหว่างโรงพยาบาลทั้งจังหวัด ·{' '}
           <span className="font-semibold text-[var(--ink-navy)] tabular-nums">
             {statusCounts.total}
           </span>{' '}
           รายการ
         </p>
-        <p className="ml-auto font-mono text-[12px] tracking-[0.08em] text-[var(--ink-navy-muted)]">
+        <p className="ml-auto font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
           อัปเดตล่าสุด{' '}
           <span className="tabular-nums text-[var(--ink-navy-dim)]">
             {lastUpdated ? formatThaiTime(lastUpdated) : '—'}
@@ -319,18 +319,18 @@ function ReferralsBoard() {
               }}
             />}
             >
-              <div className="font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+              <div className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
                 {c.k}
               </div>
               <div
-                className="font-mono text-[28px] font-semibold leading-none tabular-nums"
+                className="font-mono text-page font-semibold leading-none tabular-nums"
                 style={{
                   color: c.v > 0 && c.color === 'var(--risk-high)' ? c.color : 'var(--ink-navy)',
                 }}
               >
                 {c.v}
               </div>
-              <div className="text-[12px] text-[var(--ink-navy-muted)]">{c.labelTh}</div>
+              <div className="text-caption text-[var(--ink-navy-muted)]">{c.labelTh}</div>
             </KpiTip>
           );
         })}
@@ -341,7 +341,7 @@ function ReferralsBoard() {
         className="flex flex-wrap items-stretch gap-x-5 gap-y-1 bg-white px-5 py-2"
         style={{ borderBottom: '1px solid var(--rule-strong)' }}
       >
-        <span className="self-center font-mono text-[12px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+        <span className="self-center font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
           STATUS:
         </span>
         {statusCells.map((c) => {
@@ -368,12 +368,12 @@ function ReferralsBoard() {
               }
             >
               <span
-                className="font-mono text-[20px] font-semibold leading-none tabular-nums"
+                className="font-mono text-title font-semibold leading-none tabular-nums"
                 style={{ color: c.v > 0 ? meta.color : 'var(--ink-navy-muted)' }}
               >
                 {c.v}
               </span>
-              <span className="font-mono text-[12px] tracking-[0.06em] text-[var(--ink-navy-dim)]">
+              <span className="font-mono text-caption tracking-[0.06em] text-[var(--ink-navy-dim)]">
                 {meta.label}
               </span>
             </KpiTip>
@@ -393,7 +393,7 @@ function ReferralsBoard() {
               title="เส้นทางส่งต่อหลักของจังหวัด"
               body="จับคู่ รพ.ต้นทาง → ปลายทาง ที่มีจำนวนเคสส่งต่อสะสมมากที่สุด (สูงสุด 6 อันดับ) ใช้ดูภาระของ รพ.แม่ข่ายและวางแผนศักยภาพรับส่งต่อ"
               trigger={
-                <div className="cursor-help font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]" />
+                <div className="cursor-help font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]" />
               }
             >
               REFERRAL CORRIDORS · TOP {insights.corridors.length}
@@ -406,7 +406,7 @@ function ReferralsBoard() {
                     key={`${c.fromHospitalId}-${c.toHospitalId}`}
                     className="flex items-center gap-2"
                   >
-                    <div className="w-[45%] min-w-0 truncate text-[13px] text-[var(--ink-navy-dim)]">
+                    <div className="w-[45%] min-w-0 truncate text-caption text-[var(--ink-navy-dim)]">
                       {c.fromHospital}
                       <span className="mx-1 text-[var(--ink-navy-muted)]">→</span>
                       <span className="font-medium text-[var(--ink-navy)]">{c.toHospital}</span>
@@ -420,7 +420,7 @@ function ReferralsBoard() {
                         }}
                       />
                     </div>
-                    <div className="w-8 text-right font-mono text-[13px] font-semibold tabular-nums">
+                    <div className="w-8 text-right font-mono text-caption font-semibold tabular-nums">
                       {c.count}
                     </div>
                   </div>
@@ -435,7 +435,7 @@ function ReferralsBoard() {
               title="ปริมาณการส่งต่อรายวัน"
               body="จำนวนเคสส่งต่อที่เริ่มในแต่ละวัน (ตามวันเวลาไทย) ย้อนหลัง 7 วัน — ใช้ดูแนวโน้มภาระงานของเครือข่าย"
               trigger={
-                <div className="cursor-help font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]" />
+                <div className="cursor-help font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]" />
               }
             >
               VOLUME · LAST 7 DAYS
@@ -445,7 +445,7 @@ function ReferralsBoard() {
                 const max = Math.max(...insights.daily.map((x) => x.count), 1);
                 return (
                   <div key={d.date} className="flex flex-1 flex-col items-center gap-0.5">
-                    <span className="font-mono text-[12px] tabular-nums text-[var(--ink-navy-dim)]">
+                    <span className="font-mono text-caption tabular-nums text-[var(--ink-navy-dim)]">
                       {d.count > 0 ? d.count : ''}
                     </span>
                     <div
@@ -455,7 +455,7 @@ function ReferralsBoard() {
                         background: d.count > 0 ? 'var(--accent-navy)' : 'var(--surface-cool)',
                       }}
                     />
-                    <span className="font-mono text-[11px] tabular-nums text-[var(--ink-navy-muted)]">
+                    <span className="font-mono text-caption tabular-nums text-[var(--ink-navy-muted)]">
                       {d.date.slice(8, 10)}/{d.date.slice(5, 7)}
                     </span>
                   </div>
@@ -492,14 +492,14 @@ function ReferralsBoard() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="ค้นหา เลขที่ส่งต่อ / HN / ชื่อผู้ป่วย…"
-              className="h-8 w-full rounded-sm border bg-white pl-8 pr-3 text-[14px] focus:border-[var(--accent-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-navy-soft)]"
+              className="h-8 w-full rounded-sm border bg-white pl-8 pr-3 text-label focus:border-[var(--accent-navy)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-navy-soft)]"
               style={{ borderColor: 'var(--rule-strong)' }}
             />
           </div>
 
           {/* Urgency chips */}
           <div className="flex items-center gap-1">
-            <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
+            <span className="font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
               URGENCY:
             </span>
             {URGENCY_OPTIONS.map((opt) => {
@@ -512,7 +512,7 @@ function ReferralsBoard() {
                     setPage(1);
                   }}
                   className={cn(
-                    'rounded-sm border bg-white px-2 py-1 font-mono text-[12px] tracking-[0.08em] transition-colors',
+                    'rounded-sm border bg-white px-2 py-1 font-mono text-caption tracking-[0.08em] transition-colors',
                     active ? 'font-semibold' : 'font-normal',
                   )}
                   style={{
@@ -529,7 +529,7 @@ function ReferralsBoard() {
 
           {/* Range chips */}
           <div className="flex items-center gap-1">
-            <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
+            <span className="font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
               PERIOD:
             </span>
             {RANGE_OPTIONS.map((opt) => {
@@ -542,7 +542,7 @@ function ReferralsBoard() {
                     setPage(1);
                   }}
                   className={cn(
-                    'rounded-sm border bg-white px-2 py-1 font-mono text-[12px] tracking-[0.08em] transition-colors',
+                    'rounded-sm border bg-white px-2 py-1 font-mono text-caption tracking-[0.08em] transition-colors',
                     active ? 'font-semibold' : 'font-normal',
                   )}
                   style={{
@@ -559,7 +559,7 @@ function ReferralsBoard() {
 
           {/* Destination hospital */}
           <div className="flex items-center gap-1">
-            <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
+            <span className="font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
               TO:
             </span>
             <select
@@ -569,7 +569,7 @@ function ReferralsBoard() {
                 setToHospitalFilter(e.target.value);
                 setPage(1);
               }}
-              className="h-7 max-w-[220px] rounded-sm border bg-white px-1.5 font-mono text-[13px] focus:border-[var(--accent-navy)] focus:outline-none"
+              className="h-7 max-w-[220px] rounded-sm border bg-white px-1.5 font-mono text-caption focus:border-[var(--accent-navy)] focus:outline-none"
               style={{
                 borderColor: toHospitalFilter ? 'var(--accent-navy)' : 'var(--rule-strong)',
                 color: toHospitalFilter ? 'var(--accent-navy)' : 'var(--ink-navy-dim)',
@@ -587,7 +587,7 @@ function ReferralsBoard() {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="inline-flex items-center gap-1 rounded-sm border px-2 py-1 font-mono text-[12px] tracking-[0.08em] transition-colors hover:bg-[var(--accent-navy-soft)]"
+              className="inline-flex items-center gap-1 rounded-sm border px-2 py-1 font-mono text-caption tracking-[0.08em] transition-colors hover:bg-[var(--accent-navy-soft)]"
               style={{ borderColor: 'var(--rule-strong)', color: 'var(--ink-navy-dim)' }}
             >
               <X className="h-3 w-3" />
@@ -604,7 +604,7 @@ function ReferralsBoard() {
           <div className="overflow-x-auto">
             <div className="min-w-[1220px]">
               <div
-                className="grid gap-2 border-b border-[var(--rule-strong)] px-3 py-2 font-mono text-[12px] tracking-[0.1em] text-[var(--ink-navy-muted)]"
+                className="grid gap-2 border-b border-[var(--rule-strong)] px-3 py-2 font-mono text-caption tracking-[0.1em] text-[var(--ink-navy-muted)]"
                 style={{ gridTemplateColumns: GRID_COLUMNS }}
               >
                 <div>REF NO</div>
@@ -654,7 +654,7 @@ function ReferralsBoard() {
         {/* Pagination */}
         {pagination.totalPages > 1 && (
           <div
-            className="mt-3 flex items-center justify-between font-mono text-[12px] tracking-[0.08em]"
+            className="mt-3 flex items-center justify-between font-mono text-caption tracking-[0.08em]"
             style={{ color: 'var(--ink-navy-muted)' }}
           >
             <span>
@@ -672,7 +672,7 @@ function ReferralsBoard() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="inline-flex items-center gap-1 rounded-sm border bg-white px-2.5 py-1 text-[12px] transition-colors hover:bg-[var(--accent-navy-soft)] disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-sm border bg-white px-2.5 py-1 text-caption transition-colors hover:bg-[var(--accent-navy-soft)] disabled:opacity-40"
                 style={{ borderColor: 'var(--rule-strong)', color: 'var(--ink-navy-dim)' }}
               >
                 <ChevronLeft className="h-3 w-3" />
@@ -690,7 +690,7 @@ function ReferralsBoard() {
               <button
                 onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
                 disabled={page >= pagination.totalPages}
-                className="inline-flex items-center gap-1 rounded-sm border bg-white px-2.5 py-1 text-[12px] transition-colors hover:bg-[var(--accent-navy-soft)] disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-sm border bg-white px-2.5 py-1 text-caption transition-colors hover:bg-[var(--accent-navy-soft)] disabled:opacity-40"
                 style={{ borderColor: 'var(--rule-strong)', color: 'var(--ink-navy-dim)' }}
               >
                 NEXT
@@ -714,18 +714,18 @@ function EmptyState({
   return (
     <div className="px-3 py-10 text-center">
       <ArrowRightLeft className="mx-auto mb-2 h-8 w-8 text-[var(--ink-navy-muted)] opacity-50" />
-      <p className="font-mono text-[13px] text-[var(--ink-navy-muted)]">ไม่พบรายการส่งต่อ</p>
+      <p className="font-mono text-caption text-[var(--ink-navy-muted)]">ไม่พบรายการส่งต่อ</p>
       {hasActiveFilters ? (
         <button
           onClick={onClear}
-          className="mt-3 inline-flex items-center gap-1 rounded-sm border bg-white px-2.5 py-1 font-mono text-[12px] tracking-[0.08em] transition-colors hover:bg-[var(--accent-navy-soft)]"
+          className="mt-3 inline-flex items-center gap-1 rounded-sm border bg-white px-2.5 py-1 font-mono text-caption tracking-[0.08em] transition-colors hover:bg-[var(--accent-navy-soft)]"
           style={{ borderColor: 'var(--rule-strong)', color: 'var(--accent-navy)' }}
         >
           <X className="h-3 w-3" />
           ล้างตัวกรอง
         </button>
       ) : (
-        <p className="mt-1 text-[13px] text-[var(--ink-navy-muted)]">
+        <p className="mt-1 text-caption text-[var(--ink-navy-muted)]">
           ยังไม่มีการส่งต่อระหว่างโรงพยาบาลในระบบ
         </p>
       )}
@@ -738,12 +738,12 @@ function PatientCell({ referral }: { referral: ProvincialReferralListItem }) {
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-1.5">
-        <span className="truncate text-[15px] font-medium text-[var(--ink-navy)]">
+        <span className="truncate text-body font-medium text-[var(--ink-navy)]">
           {maskName(referral.patientName)}
         </span>
         <RiskChip level={referral.ancRiskLevel} />
       </div>
-      <div className="font-mono text-[12px] text-[var(--ink-navy-muted)]">
+      <div className="font-mono text-caption text-[var(--ink-navy-muted)]">
         HN {referral.hn || '—'}
         {referral.gaWeeks != null && <> · GA {referral.gaWeeks}</>}
       </div>
@@ -755,10 +755,10 @@ function PatientCell({ referral }: { referral: ProvincialReferralListItem }) {
 function RouteCell({ referral }: { referral: ProvincialReferralListItem }) {
   return (
     <div className="min-w-0">
-      <div className="truncate text-[15px] font-medium text-[var(--ink-navy)]">
+      <div className="truncate text-body font-medium text-[var(--ink-navy)]">
         → {referral.toHospital}
       </div>
-      <div className="truncate text-[13px] text-[var(--ink-navy-muted)]">
+      <div className="truncate text-caption text-[var(--ink-navy-muted)]">
         จาก {referral.fromHospital}
       </div>
     </div>
@@ -774,12 +774,12 @@ function InitiatedCell({
 }) {
   return (
     <div>
-      <div className="font-mono text-[13px] tabular-nums text-[var(--ink-navy-dim)]">
+      <div className="font-mono text-caption tabular-nums text-[var(--ink-navy-dim)]">
         {formatThaiDate(referral.initiatedAt)} {formatThaiTime(referral.initiatedAt)}
       </div>
       <div className="mt-0.5">
         {age === 'fresh' ? (
-          <span className="font-mono text-[12px] text-[var(--ink-navy-muted)]">
+          <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
             {formatRelativeAge(referral.initiatedAt, 'th')}ที่แล้ว
           </span>
         ) : (
@@ -822,7 +822,7 @@ function ReferralRow({
       }}
     >
       <div
-        className="truncate font-mono text-[13px] text-[var(--ink-navy-dim)]"
+        className="truncate font-mono text-caption text-[var(--ink-navy-dim)]"
         title={referral.referNumber ?? ''}
       >
         {referral.referNumber ?? '—'}
@@ -835,11 +835,11 @@ function ReferralRow({
       <div>
         <Pill meta={URGENCY_META[referral.urgencyLevel]} fallback={referral.urgencyLevel} />
       </div>
-      <div className="font-mono text-[13px] text-[var(--ink-navy-dim)]">
+      <div className="font-mono text-caption text-[var(--ink-navy-dim)]">
         {referral.diagnosisCode ?? '—'}
       </div>
       <div
-        className="truncate text-[14px] text-[var(--ink-navy-dim)]"
+        className="truncate text-label text-[var(--ink-navy-dim)]"
         title={referral.reason ?? ''}
       >
         {referral.reason ?? '—'}
@@ -876,7 +876,7 @@ function ReferralCard({
       }}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-[13px] text-[var(--ink-navy-dim)]">
+        <span className="font-mono text-caption text-[var(--ink-navy-dim)]">
           {referral.referNumber ?? '—'}
         </span>
         <div className="flex items-center gap-1.5">
@@ -891,19 +891,19 @@ function ReferralCard({
         <RouteCell referral={referral} />
       </div>
       {referral.reason && (
-        <div className="mt-1 line-clamp-2 text-[14px] text-[var(--ink-navy-dim)]">
+        <div className="mt-1 line-clamp-2 text-label text-[var(--ink-navy-dim)]">
           {referral.diagnosisCode && (
-            <span className="mr-1.5 font-mono text-[13px]">{referral.diagnosisCode}</span>
+            <span className="mr-1.5 font-mono text-caption">{referral.diagnosisCode}</span>
           )}
           {referral.reason}
         </div>
       )}
       <div className="mt-1.5 flex items-center justify-between">
-        <span className="font-mono text-[12px] tabular-nums text-[var(--ink-navy-muted)]">
+        <span className="font-mono text-caption tabular-nums text-[var(--ink-navy-muted)]">
           {formatThaiDate(referral.initiatedAt)} {formatThaiTime(referral.initiatedAt)}
         </span>
         {age === 'fresh' ? (
-          <span className="font-mono text-[12px] text-[var(--ink-navy-muted)]">
+          <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
             {formatRelativeAge(referral.initiatedAt, 'th')}ที่แล้ว
           </span>
         ) : (

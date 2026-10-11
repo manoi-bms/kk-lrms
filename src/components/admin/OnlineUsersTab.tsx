@@ -94,16 +94,16 @@ export function OnlineUsersTab() {
           className="flex items-center justify-between px-3 py-2"
           style={{ borderBottom: '1px solid var(--rule-strong)' }}
         >
-          <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--ink-navy)]">
+          <div className="font-mono text-caption font-semibold uppercase tracking-[0.14em] text-[var(--ink-navy)]">
             ACTIVE SESSIONS
           </div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+          <div className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
             POLL 10S · TTL 120S
           </div>
         </div>
 
         {error ? (
-          <div className="px-3 py-8 text-sm text-red-600">โหลดรายชื่อผู้ใช้งานออนไลน์ไม่สำเร็จ</div>
+          <div className="px-3 py-8 text-sm text-danger-text">โหลดรายชื่อผู้ใช้งานออนไลน์ไม่สำเร็จ</div>
         ) : isLoading ? (
           <div className="px-3 py-8 text-sm text-[var(--ink-navy-muted)]">กำลังโหลด...</div>
         ) : users.length === 0 ? (
@@ -114,7 +114,7 @@ export function OnlineUsersTab() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-sm">
               <thead className="bg-[var(--surface-cool)]">
-                <tr className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+                <tr className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
                   <th className="px-3 py-2 font-semibold">User</th>
                   <th className="px-3 py-2 font-semibold">Hospital</th>
                   <th className="px-3 py-2 font-semibold">Page</th>
@@ -131,25 +131,25 @@ export function OnlineUsersTab() {
                   >
                     <td className="px-3 py-2">
                       <div className="font-medium text-[var(--ink-navy)]">{user.name}</div>
-                      <div className="mt-0.5 font-mono text-[10px] text-[var(--ink-navy-muted)]">
+                      <div className="mt-0.5 font-mono text-caption text-[var(--ink-navy-muted)]">
                         {user.role} · {user.authProvider} · {user.accessMode}
                       </div>
                     </td>
                     <td className="px-3 py-2">
                       <div className="text-[var(--ink-navy)]">{user.hospitalName || '—'}</div>
-                      <div className="mt-0.5 font-mono text-[10px] tabular-nums text-[var(--ink-navy-muted)]">
+                      <div className="mt-0.5 font-mono text-caption tabular-nums text-[var(--ink-navy-muted)]">
                         {user.hospitalCode || '—'}
                       </div>
                     </td>
-                    <td className="px-3 py-2 font-mono text-[11px] text-[var(--ink-navy-dim)]">
+                    <td className="px-3 py-2 font-mono text-caption text-[var(--ink-navy-dim)]">
                       {user.path}
                     </td>
                     <td className="px-3 py-2">
-                      <div className="inline-flex items-center gap-1.5 font-mono text-[11px] tabular-nums text-[var(--ink-navy)]">
+                      <div className="inline-flex items-center gap-1.5 font-mono text-caption tabular-nums text-[var(--ink-navy)]">
                         <Clock className="h-3 w-3" />
                         {formatTime(user.lastSeenAt)}
                       </div>
-                      <div className="mt-0.5 font-mono text-[10px] text-[var(--ink-navy-muted)]">
+                      <div className="mt-0.5 font-mono text-caption text-[var(--ink-navy-muted)]">
                         {ageLabel(user.lastSeenAt)}
                       </div>
                     </td>
@@ -158,7 +158,7 @@ export function OnlineUsersTab() {
                         <Monitor className="h-3.5 w-3.5" />
                         {browserLabel(user.userAgent)}
                       </div>
-                      <div className="mt-0.5 font-mono text-[10px] tabular-nums text-[var(--ink-navy-muted)]">
+                      <div className="mt-0.5 font-mono text-caption tabular-nums text-[var(--ink-navy-muted)]">
                         {user.ipAddress ?? '—'}
                       </div>
                     </td>
@@ -187,15 +187,15 @@ function Metric({
   return (
     <div className="border bg-white px-3 py-2" style={{ borderColor: 'var(--rule-strong)' }}>
       <div className="flex items-center justify-between gap-2">
-        <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+        <div className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
           {label}
         </div>
         <Icon className="h-3.5 w-3.5 text-[var(--ink-navy-muted)]" />
       </div>
-      <div className="mt-1 font-mono text-[24px] font-semibold leading-none tabular-nums text-[var(--ink-navy)]">
+      <div className="mt-1 font-mono text-page font-semibold leading-none tabular-nums text-[var(--ink-navy)]">
         {value}
       </div>
-      <div className="mt-1 text-[11px] text-[var(--ink-navy-muted)]">{detail}</div>
+      <div className="mt-1 text-caption text-[var(--ink-navy-muted)]">{detail}</div>
     </div>
   );
 }

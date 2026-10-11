@@ -168,10 +168,10 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
         style={{ color: 'var(--ink-navy-muted)' }}
       >
         <div className="max-w-md text-center">
-          <p className="font-mono text-[13px] font-semibold text-[var(--ink-navy)]">{heading}</p>
-          {error && <p className="mt-2 font-mono text-[11px] text-red-600">{apiMessage}</p>}
+          <p className="font-mono text-caption font-semibold text-[var(--ink-navy)]">{heading}</p>
+          {error && <p className="mt-2 font-mono text-caption text-danger-text">{apiMessage}</p>}
           {status === 400 && (
-            <p className="mt-2 font-mono text-[11px] text-[var(--ink-navy-dim)]">
+            <p className="mt-2 font-mono text-caption text-[var(--ink-navy-dim)]">
               URL ต้องอยู่ในรูปแบบ{' '}
               <code className="rounded bg-[var(--rule-hair)] px-1">
                 /patients/&lt;hcode&gt;-&lt;an&gt;
@@ -183,7 +183,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
           )}
           <button
             onClick={() => router.back()}
-            className="mt-3 font-mono text-[11px] underline"
+            className="mt-3 font-mono text-caption underline"
             style={{ color: 'var(--accent-navy)' }}
           >
             BACK
@@ -262,7 +262,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
       >
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center gap-1 font-mono text-[11px] tracking-[0.1em] text-[var(--ink-navy-muted)] hover:text-[var(--accent-navy)]"
+          className="inline-flex items-center gap-1 font-mono text-caption tracking-[0.1em] text-[var(--ink-navy-muted)] hover:text-[var(--accent-navy)]"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> BACK
         </button>
@@ -272,7 +272,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
           trigger={
             <div
               data-testid="sync-stamp"
-              className="flex cursor-default items-center gap-1.5 font-mono text-[11px] text-[var(--ink-navy-muted)]"
+              className="flex cursor-default items-center gap-1.5 font-mono text-caption text-[var(--ink-navy-muted)]"
             />
           }
         >
@@ -388,18 +388,18 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Baby className="h-4 w-4" style={{ color: riskMeta.color }} />
-                  <h3 className="text-[14px] font-bold" style={{ color: 'var(--ink-navy)' }}>
+                  <h3 className="text-label font-bold" style={{ color: 'var(--ink-navy)' }}>
                     ข้อมูลฝากครรภ์ (ANC)
                   </h3>
                   <span
-                    className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-[0.08em] text-white"
+                    className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-caption font-bold tracking-[0.08em] text-white"
                     style={{ background: riskMeta.color }}
                   >
                     {riskKey === 'HR3' && <AlertTriangle className="h-3 w-3" />}
                     {riskKey ?? 'LOW'} · {riskMeta.label}
                   </span>
                   <span
-                    className="inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono text-[10px] tracking-[0.08em]"
+                    className="inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono text-caption tracking-[0.08em]"
                     style={{
                       borderColor: 'var(--rule-strong)',
                       color: 'var(--ink-navy-dim)',
@@ -412,7 +412,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                 </div>
                 <Link
                   href={`/pregnancies/${journeyContext.journeyId}`}
-                  className="inline-flex items-center gap-1 rounded-sm px-2 py-1 font-mono text-[11px] font-bold tracking-[0.06em] text-white transition-colors hover:opacity-90"
+                  className="inline-flex items-center gap-1 rounded-sm px-2 py-1 font-mono text-caption font-bold tracking-[0.06em] text-white transition-colors hover:opacity-90"
                   style={{ background: 'var(--accent-navy)' }}
                 >
                   ดูรายละเอียดการฝากครรภ์ →
@@ -426,7 +426,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                     value: (
                       <>
                         {journeyContext.ancVisitCount}
-                        <span className="ml-1 text-[11px] font-normal text-[var(--ink-navy-muted)]">
+                        <span className="ml-1 text-caption font-normal text-[var(--ink-navy-muted)]">
                           / 8
                         </span>
                       </>
@@ -477,7 +477,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                     }}
                   >
                     <div
-                      className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em]"
+                      className="font-mono text-caption font-semibold uppercase tracking-[0.12em]"
                       style={{ color: t.color }}
                     >
                       {t.labelEn}
@@ -492,7 +492,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                     >
                       {t.value}
                     </div>
-                    <div className="mt-0.5 font-mono text-[10px] text-[var(--ink-navy-dim)]">
+                    <div className="mt-0.5 font-mono text-caption text-[var(--ink-navy-dim)]">
                       {t.label}
                       {t.note && (
                         <span className="ml-1 text-[var(--ink-navy-muted)]">· {t.note}</span>
@@ -521,16 +521,16 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
               trigger={<div className="flex cursor-default items-center gap-2" />}
             >
               <Send className="h-4 w-4" style={{ color: 'var(--accent-navy)' }} />
-              <h3 className="text-[14px] font-bold" style={{ color: 'var(--ink-navy)' }}>
+              <h3 className="text-label font-bold" style={{ color: 'var(--ink-navy)' }}>
                 การส่งต่อ (REFERRAL)
               </h3>
-              <span className="font-mono text-[10px] text-[var(--ink-navy-muted)]">
+              <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
                 {journeyContext.referrals.length} รายการ
               </span>
             </KpiTip>
             <Link
               href="/referrals"
-              className="font-mono text-[11px] font-bold tracking-[0.06em] text-[var(--accent-navy)] hover:underline"
+              className="font-mono text-caption font-bold tracking-[0.06em] text-[var(--accent-navy)] hover:underline"
             >
               ดูกระดานส่งต่อ →
             </Link>
@@ -544,21 +544,21 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
               >
                 <Pill meta={STATUS_META[ref.status]} fallback={ref.status} />
                 <Pill meta={URGENCY_META[ref.urgencyLevel]} fallback={ref.urgencyLevel} />
-                <span className="font-mono text-[11px] font-semibold text-[var(--ink-navy)]">
+                <span className="font-mono text-caption font-semibold text-[var(--ink-navy)]">
                   {ref.referNumber ?? '—'}
                 </span>
-                <span className="font-mono text-[11px] text-[var(--ink-navy-dim)]">
+                <span className="font-mono text-caption text-[var(--ink-navy-dim)]">
                   {ref.fromHospital} → {ref.toHospital}
                 </span>
                 {ref.diagnosisCode && (
                   <FlagChip color="var(--accent-navy)">{ref.diagnosisCode}</FlagChip>
                 )}
                 {ref.reason && (
-                  <span className="max-w-[24rem] truncate text-[12px] text-[var(--ink-navy-dim)]">
+                  <span className="max-w-[24rem] truncate text-caption text-[var(--ink-navy-dim)]">
                     {ref.reason}
                   </span>
                 )}
-                <span className="ml-auto font-mono text-[10px] text-[var(--ink-navy-muted)]">
+                <span className="ml-auto font-mono text-caption text-[var(--ink-navy-muted)]">
                   ส่งเมื่อ {fmtDateTimeTh(ref.initiatedAt)}
                   {ref.arrivedAt ? ` · ถึงเมื่อ ${fmtDateTimeTh(ref.arrivedAt)}` : ''}
                 </span>
@@ -686,7 +686,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                       key={t.k}
                       onClick={() => setActiveTab(t.k)}
                       className={cn(
-                        'inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-[11px] tracking-[0.06em] transition-colors',
+                        'inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-caption tracking-[0.06em] transition-colors',
                         active ? 'font-semibold' : 'font-normal hover:bg-[var(--accent-navy-soft)]',
                       )}
                       style={{
@@ -699,7 +699,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                       {t.label}
                       {showBadge && partographState?.badge && (
                         <span
-                          className="border px-1 py-0 font-mono text-[9px] font-semibold tracking-[0.06em]"
+                          className="border px-1 py-0 font-mono text-caption font-semibold tracking-[0.06em]"
                           style={{
                             color: partographState.badge.color,
                             borderColor: partographState.badge.color,
@@ -713,7 +713,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                 })}
               </div>
 
-              <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
+              <span className="ml-auto font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
                 READ-ONLY · PROVINCIAL VIEW
               </span>
 
@@ -723,7 +723,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                   render={
                     <Button
                       variant="outline"
-                      className="h-7 border-[var(--rule-strong)] px-2.5 text-[11px] text-[var(--accent-navy)] hover:bg-[var(--accent-navy-soft)] print:hidden"
+                      className="h-7 border-[var(--rule-strong)] px-2.5 text-caption text-[var(--accent-navy)] hover:bg-[var(--accent-navy-soft)] print:hidden"
                     />
                   }
                 >
@@ -785,14 +785,14 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                               }}
                             >
                               <Baby className="h-4 w-4" style={{ color: 'var(--accent-navy)' }} />
-                              <span className="font-mono text-[12px] font-bold text-[var(--ink-navy)]">
+                              <span className="font-mono text-caption font-bold text-[var(--ink-navy)]">
                                 #{nb.infantNumber}
                               </span>
-                              <span className="text-[13px] text-[var(--ink-navy-dim)]">
+                              <span className="text-caption text-[var(--ink-navy-dim)]">
                                 เพศ{SEX_TH[nb.sex ?? ''] ?? 'ไม่ระบุ'}
                               </span>
                               <span
-                                className="font-mono text-[13px] font-semibold tabular-nums"
+                                className="font-mono text-caption font-semibold tabular-nums"
                                 style={{ color: lbw ? 'var(--risk-high)' : 'var(--ink-navy)' }}
                               >
                                 {nb.birthWeightG != null
@@ -803,7 +803,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                               <span
                                 data-testid={`newborn-apgar-${nb.infantNumber}`}
                                 data-low={lowApgar ? 'true' : 'false'}
-                                className="font-mono text-[12px] tabular-nums"
+                                className="font-mono text-caption tabular-nums"
                                 style={{
                                   color: lowApgar ? 'var(--risk-high)' : 'var(--ink-navy-dim)',
                                   fontWeight: lowApgar ? 700 : 400,
@@ -812,7 +812,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                                 Apgar {nb.apgar1min ?? '—'} / {nb.apgar5min ?? '—'}
                               </span>
                               {lowApgar && <FlagChip color="var(--risk-high)">APGAR&lt;7</FlagChip>}
-                              <span className="ml-auto font-mono text-[10px] text-[var(--ink-navy-muted)]">
+                              <span className="ml-auto font-mono text-caption text-[var(--ink-navy-muted)]">
                                 เกิดเมื่อ {fmtDateTimeTh(nb.bornAt)}
                               </span>
                             </div>
@@ -925,7 +925,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                           </div>
                         ) : (
                           <div
-                            className="mt-2 border p-4 text-center font-mono text-[11px] text-[var(--ink-navy-muted)]"
+                            className="mt-2 border p-4 text-center font-mono text-caption text-[var(--ink-navy-muted)]"
                             style={{ borderColor: 'var(--rule-strong)' }}
                           >
                             ยังไม่มีข้อมูลสัญญาณชีพ
@@ -944,7 +944,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                       </SectionLabel>
                       {partographState.observations.length === 0 ? (
                         <div
-                          className="mt-2 border p-4 font-mono text-[12px] text-[var(--ink-navy-muted)]"
+                          className="mt-2 border p-4 font-mono text-caption text-[var(--ink-navy-muted)]"
                           style={{ borderColor: 'var(--rule-strong)' }}
                         >
                           ไม่พบข้อมูล
@@ -954,10 +954,10 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                           className="mt-2 overflow-x-auto border"
                           style={{ borderColor: 'var(--rule-strong)' }}
                         >
-                          <table className="w-full text-[12px]">
+                          <table className="w-full text-caption">
                             <thead>
                               <tr
-                                className="border-b text-left font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]"
+                                className="border-b text-left font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]"
                                 style={{ borderColor: 'var(--rule-strong)' }}
                               >
                                 <th className="px-3 py-2">เวลา</th>
@@ -977,7 +977,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                                   className="border-b tabular-nums text-[var(--ink-navy-dim)]"
                                   style={{ borderColor: 'var(--rule-hair)' }}
                                 >
-                                  <td className="px-3 py-2 font-mono text-[11px]">
+                                  <td className="px-3 py-2 font-mono text-caption">
                                     {o.observeDatetime?.replace('T', ' ').slice(0, 16) ?? '-'}
                                   </td>
                                   <td className="px-3 py-2">{o.hourNo ?? '-'}</td>
@@ -1022,7 +1022,7 @@ export default function PatientDetailPage({ params }: { params: Promise<{ an: st
                   />
                 ) : (
                   <div
-                    className="border p-6 text-center font-mono text-[12px] text-[var(--ink-navy-muted)]"
+                    className="border p-6 text-center font-mono text-caption text-[var(--ink-navy-muted)]"
                     style={{ borderColor: 'var(--rule-strong)' }}
                   >
                     ยังไม่มีข้อมูล Partograph สำหรับผู้คลอดรายนี้

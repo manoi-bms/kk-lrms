@@ -94,7 +94,7 @@ export function ActiveProvinceTab() {
         />
       ) : null}
 
-      <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
+      <div className="font-mono text-caption uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
         ACTIVE PROVINCE · {provinces.length} choices
       </div>
 
@@ -105,7 +105,7 @@ export function ActiveProvinceTab() {
             <h3 className="text-sm font-semibold" style={{ color: 'var(--ink-navy)' }}>
               จังหวัดหลักของระบบ
             </h3>
-            <p className="mt-0.5 text-[12px] leading-snug text-[var(--ink-navy-dim)]">
+            <p className="mt-0.5 text-caption leading-snug text-[var(--ink-navy-dim)]">
               เลือกจังหวัดที่ระบบจะโฟกัส — กระทบแดชบอร์ด แผนที่ และ sync หลังจากบันทึก
               โรงพยาบาลในจังหวัดอื่นจะไม่แสดงจนกว่าจะเพิ่มเข้าระบบ
             </p>
@@ -139,7 +139,7 @@ export function ActiveProvinceTab() {
 
             {currentProvince ? (
               <div
-                className="mt-3 inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[11px]"
+                className="mt-3 inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-caption"
                 style={{
                   borderColor: 'var(--rule-strong)',
                   background: 'var(--accent-navy-soft)',
@@ -152,7 +152,7 @@ export function ActiveProvinceTab() {
             ) : null}
 
             {saveMessage ? (
-              <div className="mt-2 text-[12px]" style={{ color: 'var(--ink-navy-dim)' }}>
+              <div className="mt-2 text-caption" style={{ color: 'var(--ink-navy-dim)' }}>
                 {saveMessage}
               </div>
             ) : null}
@@ -170,7 +170,7 @@ export function ActiveProvinceTab() {
               <h3 className="text-sm font-semibold" style={{ color: 'var(--ink-navy)' }}>
                 เพิ่มหลายโรงพยาบาลพร้อมกัน
               </h3>
-              <p className="mt-0.5 text-[12px] leading-snug text-[var(--ink-navy-dim)]">
+              <p className="mt-0.5 text-caption leading-snug text-[var(--ink-navy-dim)]">
                 เลือกโรงพยาบาลในจังหวัด{currentProvince.name}จากทะเบียน MOPH
                 แล้วเพิ่มเข้าระบบในครั้งเดียว — ระบบจะตั้งค่า LEVEL และ service_type
                 เริ่มต้นให้อัตโนมัติ

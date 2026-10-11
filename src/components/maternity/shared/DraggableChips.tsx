@@ -34,24 +34,24 @@ export const CHIP_TONE_CLASSES: Record<ChipTone, { selected: string; unselected:
       'border-slate-200 bg-white text-slate-700 hover:border-cyan-400 hover:bg-cyan-50/60 hover:text-cyan-700',
   },
   ok: {
-    selected: 'border-emerald-600 bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/20',
+    selected: 'border-ok bg-ok text-white shadow-sm ring-2 ring-ok/20',
     unselected:
-      'border-emerald-300 bg-emerald-50/60 text-emerald-700 hover:border-emerald-500 hover:bg-emerald-50',
+      'border-ok/40 bg-ok-tint/60 text-ok-text hover:border-ok hover:bg-ok-tint',
   },
   warn: {
-    selected: 'border-amber-600 bg-amber-600 text-white shadow-sm ring-2 ring-amber-600/20',
+    selected: 'border-warn bg-warn text-white shadow-sm ring-2 ring-warn/20',
     unselected:
-      'border-amber-300 bg-amber-50/60 text-amber-700 hover:border-amber-500 hover:bg-amber-50',
+      'border-warn/40 bg-warn-tint/60 text-warn-text hover:border-warn hover:bg-warn-tint',
   },
   crit: {
-    selected: 'border-rose-600 bg-rose-600 text-white shadow-sm ring-2 ring-rose-600/20',
+    selected: 'border-danger bg-danger text-white shadow-sm ring-2 ring-danger/20',
     unselected:
-      'border-rose-300 bg-rose-50/60 text-rose-700 hover:border-rose-500 hover:bg-rose-50',
+      'border-danger/40 bg-danger-tint/60 text-danger-text hover:border-danger hover:bg-danger-tint',
   },
   'severity-0': {
-    selected: 'border-emerald-600 bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/20',
+    selected: 'border-ok bg-ok text-white shadow-sm ring-2 ring-ok/20',
     unselected:
-      'border-emerald-300 bg-emerald-50/60 text-emerald-700 hover:border-emerald-500 hover:bg-emerald-50',
+      'border-ok/40 bg-ok-tint/60 text-ok-text hover:border-ok hover:bg-ok-tint',
   },
   'severity-2': {
     selected: 'border-lime-600 bg-lime-600 text-white shadow-sm ring-2 ring-lime-600/20',
@@ -59,23 +59,23 @@ export const CHIP_TONE_CLASSES: Record<ChipTone, { selected: string; unselected:
       'border-lime-300 bg-lime-50/60 text-lime-700 hover:border-lime-500 hover:bg-lime-50',
   },
   'severity-4': {
-    selected: 'border-yellow-600 bg-yellow-500 text-white shadow-sm ring-2 ring-yellow-600/20',
+    selected: 'border-warn bg-warn text-white shadow-sm ring-2 ring-warn/20',
     unselected:
-      'border-yellow-300 bg-yellow-50/60 text-yellow-700 hover:border-yellow-500 hover:bg-yellow-50',
+      'border-warn/40 bg-warn-tint/60 text-warn-text hover:border-warn hover:bg-warn-tint',
   },
   'severity-6': {
-    selected: 'border-amber-600 bg-amber-600 text-white shadow-sm ring-2 ring-amber-600/20',
+    selected: 'border-warn bg-warn text-white shadow-sm ring-2 ring-warn/20',
     unselected:
-      'border-amber-300 bg-amber-50/60 text-amber-700 hover:border-amber-500 hover:bg-amber-50',
+      'border-warn/40 bg-warn-tint/60 text-warn-text hover:border-warn hover:bg-warn-tint',
   },
   'severity-8': {
-    selected: 'border-orange-600 bg-orange-600 text-white shadow-sm ring-2 ring-orange-600/20',
+    selected: 'border-warn bg-warn text-white shadow-sm ring-2 ring-warn/20',
     unselected:
-      'border-orange-300 bg-orange-50/60 text-orange-700 hover:border-orange-500 hover:bg-orange-50',
+      'border-warn/40 bg-warn-tint/60 text-warn-text hover:border-warn hover:bg-warn-tint',
   },
   'severity-10': {
-    selected: 'border-red-700 bg-red-700 text-white shadow-sm ring-2 ring-red-700/20',
-    unselected: 'border-red-400 bg-red-100/80 text-red-700 hover:border-red-600 hover:bg-red-100',
+    selected: 'border-danger bg-danger text-white shadow-sm ring-2 ring-danger/20',
+    unselected: 'border-danger bg-danger-tint/80 text-danger-text hover:border-danger hover:bg-danger-tint',
   },
 };
 
@@ -163,13 +163,13 @@ export function DraggableChip({
           : 'แตะเพื่อเลือก · ลากซ้าย/ขวาเพื่อปรับค่า'
       }
       className={cn(
-        'min-w-[48px] cursor-ew-resize touch-none select-none rounded-md border px-3 py-1.5 text-[13px] font-semibold tabular-nums transition-all',
+        'min-w-[48px] cursor-ew-resize touch-none select-none rounded-md border px-3 py-1.5 text-caption font-semibold tabular-nums transition-all',
         isSelected ? toneClasses.selected : toneClasses.unselected,
         drag && drag.moved && !drag.clamped && 'scale-110 shadow-lg ring-2 ring-cyan-400',
         drag &&
           drag.moved &&
           drag.clamped &&
-          'scale-110 shadow-lg ring-2 ring-amber-400 cursor-not-allowed',
+          'scale-110 shadow-lg ring-2 ring-warn cursor-not-allowed',
       )}
     >
       {displayLabel}
@@ -235,7 +235,7 @@ export function SimpleChipRow({ options, selected, onPick, ariaLabel }: SimpleCh
             type="button"
             onClick={() => onPick(value)}
             className={cn(
-              'rounded-md border px-2.5 py-1 text-[12px] font-semibold transition-all',
+              'rounded-md border px-2.5 py-1 text-caption font-semibold transition-all',
               isSelected
                 ? 'border-cyan-600 bg-cyan-600 text-white shadow-sm ring-2 ring-cyan-600/20'
                 : 'border-slate-200 bg-white text-slate-700 hover:border-cyan-400 hover:bg-cyan-50/60 hover:text-cyan-700',

@@ -57,7 +57,7 @@ export function BedMoveReasonModal({
           aria-label="เหตุผลการย้าย"
           value={selected}
           onChange={(e) => setChosen(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-ok focus:outline-none focus:ring-1 focus:ring-ok"
         >
           {reasons.map((r) => (
             <option key={r} value={r}>
@@ -78,7 +78,7 @@ export function BedMoveReasonModal({
             type="button"
             onClick={() => onConfirm(selected)}
             disabled={selected === ''}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
+            className="rounded-lg bg-ok px-4 py-2 text-sm font-medium text-white hover:bg-ok disabled:cursor-not-allowed disabled:bg-ok-tint"
           >
             ยืนยัน
           </button>

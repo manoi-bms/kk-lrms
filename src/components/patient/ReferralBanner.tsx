@@ -4,6 +4,7 @@
 // headline, and a separate CTA chip pointing to the recommended facility.
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import { AlertTriangle, ArrowRightLeft } from 'lucide-react';
 import { RiskLevel } from '@/types/domain';
 import { RISK_LEVELS } from '@/config/risk-levels';
@@ -28,8 +29,8 @@ interface BannerStyle {
 const BANNER_STYLES: Record<'MEDIUM' | 'HIGH', BannerStyle> = {
   MEDIUM: {
     bg: 'linear-gradient(90deg, color-mix(in srgb, #eab308 14%, white), white)',
-    accent: '#eab308',
-    headline: '#854d0e',
+    accent: COLOR.riskMedium,
+    headline: COLOR.riskMediumText,
     sub: '#a16207',
     scoreBg: '#fde68a',
     scoreFg: '#78350f',
@@ -38,9 +39,9 @@ const BANNER_STYLES: Record<'MEDIUM' | 'HIGH', BannerStyle> = {
   },
   HIGH: {
     bg: 'linear-gradient(90deg, color-mix(in srgb, #ef4444 16%, white), white)',
-    accent: '#dc2626',
+    accent: COLOR.riskHigh,
     headline: '#7f1d1d',
-    sub: '#b91c1c',
+    sub: COLOR.riskHighText,
     scoreBg: '#fecaca',
     scoreFg: '#7f1d1d',
     pulse: true,
@@ -83,7 +84,7 @@ export function ReferralBanner({ score, riskLevel, recommendation }: ReferralBan
 
       {/* Score circle */}
       <span
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full font-mono text-[18px] font-bold shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)]"
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full font-mono text-title font-bold shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)]"
         style={{
           background: style.scoreBg,
           color: style.scoreFg,
@@ -96,19 +97,19 @@ export function ReferralBanner({ score, riskLevel, recommendation }: ReferralBan
       {/* Headline + sub */}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span
-          className="text-[15px] font-bold leading-tight"
+          className="text-body font-bold leading-tight"
           style={{ color: style.headline, letterSpacing: '-0.005em' }}
         >
           {style.ctaLabel}
         </span>
-        <span className="text-[12px] leading-tight" style={{ color: style.sub }}>
+        <span className="text-caption leading-tight" style={{ color: style.sub }}>
           {config.labelTh} · {recommendation}
         </span>
       </div>
 
       {/* Risk level badge */}
       <span
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-sm px-2.5 py-1 font-mono text-[11px] font-bold tracking-[0.1em] text-white"
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-sm px-2.5 py-1 font-mono text-caption font-bold tracking-[0.1em] text-white"
         style={{ background: style.accent }}
       >
         <ArrowRightLeft className="h-3 w-3" />

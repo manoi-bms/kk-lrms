@@ -174,13 +174,13 @@ function Tile({
       <div className="flex items-center justify-between gap-2">
         <div className="inline-flex items-center gap-1.5" style={{ color: c }}>
           <span className="flex h-3 w-3 items-center justify-center">{icon}</span>
-          <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em]">
+          <span className="font-mono text-caption font-semibold uppercase tracking-[0.1em]">
             {labelEn}
           </span>
         </div>
         {showBadge && (
           <span
-            className="inline-flex items-center gap-0.5 rounded-sm px-1 py-0.5 font-mono text-[9px] font-bold tracking-[0.06em] text-white"
+            className="inline-flex items-center gap-0.5 rounded-sm px-1 py-0.5 font-mono text-caption font-bold tracking-[0.06em] text-white"
             style={{ background: c }}
           >
             <AlertTriangle className="h-2.5 w-2.5" />
@@ -195,7 +195,7 @@ function Tile({
       </div>
       <div className="mt-0.5 flex items-baseline gap-1">
         <span
-          className="font-mono text-[20px] font-bold leading-none tabular-nums"
+          className="font-mono text-title font-bold leading-none tabular-nums"
           style={{
             color: severity === 'neutral' ? 'var(--ink-navy)' : c,
             letterSpacing: '-0.02em',
@@ -204,10 +204,10 @@ function Tile({
           {value}
         </span>
         {unit && (
-          <span className="font-mono text-[10px] text-[var(--ink-navy-muted)]">{unit}</span>
+          <span className="font-mono text-caption text-[var(--ink-navy-muted)]">{unit}</span>
         )}
       </div>
-      <div className="font-mono text-[10px] text-[var(--ink-navy-dim)]">
+      <div className="font-mono text-caption text-[var(--ink-navy-dim)]">
         {label}
         {note && <span className="ml-1 text-[var(--ink-navy-muted)]">· {note}</span>}
       </div>
@@ -298,7 +298,7 @@ export function ClinicalData({
         }}
       >
         <Activity className="h-4 w-4" style={{ color: 'var(--accent-navy)' }} />
-        <h3 className="font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--ink-navy)]">
+        <h3 className="font-mono text-caption font-bold uppercase tracking-[0.12em] text-[var(--ink-navy)]">
           ข้อมูลทางคลินิก
         </h3>
       </div>
@@ -375,13 +375,13 @@ export function ClinicalData({
           <div className="flex items-center justify-between gap-2">
             <div className="inline-flex items-center gap-1.5" style={{ color: weightColor }}>
               <Scale className="h-3 w-3" />
-              <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em]">
+              <span className="font-mono text-caption font-semibold uppercase tracking-[0.1em]">
                 WEIGHT GAIN
               </span>
             </div>
             {weightShowBadge && weightDiffKg != null && (
               <span
-                className="inline-flex items-center gap-0.5 rounded-sm px-1 py-0.5 font-mono text-[9px] font-bold tracking-[0.06em] text-white"
+                className="inline-flex items-center gap-0.5 rounded-sm px-1 py-0.5 font-mono text-caption font-bold tracking-[0.06em] text-white"
                 style={{ background: weightColor }}
               >
                 <AlertTriangle className="h-2.5 w-2.5" />
@@ -389,7 +389,7 @@ export function ClinicalData({
               </span>
             )}
           </div>
-          <div className="mt-0.5 font-mono text-[13px] tabular-nums text-[var(--ink-navy-dim)]">
+          <div className="mt-0.5 font-mono text-caption tabular-nums text-[var(--ink-navy-dim)]">
             {hasFullWeight && preWeight !== null && effectiveWeightDiff != null ? (
               <>
                 <span>{preWeight}</span>
@@ -399,20 +399,20 @@ export function ClinicalData({
                 <span className="font-bold" style={{ color: weightColor }}>
                   {effectiveWeightDiff >= 0 ? '+' : ''}{effectiveWeightDiff}
                 </span>
-                <span className="ml-0.5 text-[10px] text-[var(--ink-navy-muted)]">กก.</span>
+                <span className="ml-0.5 text-caption text-[var(--ink-navy-muted)]">กก.</span>
               </>
             ) : effectiveWeightDiff != null ? (
               <>
                 <span className="font-bold" style={{ color: weightColor }}>
                   {effectiveWeightDiff >= 0 ? '+' : ''}{effectiveWeightDiff}
                 </span>
-                <span className="ml-0.5 text-[10px] text-[var(--ink-navy-muted)]">กก.</span>
+                <span className="ml-0.5 text-caption text-[var(--ink-navy-muted)]">กก.</span>
               </>
             ) : (
               dash
             )}
           </div>
-          <div className="font-mono text-[10px] text-[var(--ink-navy-dim)]">
+          <div className="font-mono text-caption text-[var(--ink-navy-dim)]">
             ส่วนต่างน้ำหนัก
             {effectiveWeightDiff != null && effectiveWeightDiff > 20 && (
               <span className="ml-1 text-[var(--ink-navy-muted)]">· เกินเกณฑ์</span>
@@ -471,7 +471,7 @@ export function ClinicalData({
       {(hasAdmitVitals || hasAdmitCervix) && (
         <>
           <div
-            className="border-t px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-navy-dim)]"
+            className="border-t px-3 py-1.5 font-mono text-caption font-semibold uppercase tracking-[0.12em] text-[var(--ink-navy-dim)]"
             style={{
               borderColor: 'var(--rule-strong)',
               background: 'color-mix(in srgb, var(--accent-navy) 4%, white)',

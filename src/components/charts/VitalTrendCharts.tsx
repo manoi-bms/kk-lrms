@@ -1,6 +1,7 @@
 // VitalTrendCharts — 4 time-series area charts for HR, FHR, BP, PPH trends
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -101,7 +102,7 @@ function MaternalHrChart({ vitals }: { vitals: VitalSignEntry[] }) {
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
           {/* Normal range green zone */}
-          <ReferenceArea y1={60} y2={100} fill="#22c55e" fillOpacity={0.06} />
+          <ReferenceArea y1={60} y2={100} fill={COLOR.riskLow} fillOpacity={0.06} />
           <XAxis dataKey="time" fontSize={11} tick={{ fill: '#94a3b8' }} />
           <YAxis domain={[40, 180]} fontSize={11} tick={{ fill: '#94a3b8' }} />
           <Tooltip
@@ -109,8 +110,8 @@ function MaternalHrChart({ vitals }: { vitals: VitalSignEntry[] }) {
               <CustomTooltip active={active} payload={payload as never} label={label as string} unit="bpm" />
             )}
           />
-          <ReferenceLine y={100} stroke="#22c55e" strokeDasharray="4 4" strokeOpacity={0.6} />
-          <ReferenceLine y={60} stroke="#22c55e" strokeDasharray="4 4" strokeOpacity={0.6} />
+          <ReferenceLine y={100} stroke={COLOR.riskLow} strokeDasharray="4 4" strokeOpacity={0.6} />
+          <ReferenceLine y={60} stroke={COLOR.riskLow} strokeDasharray="4 4" strokeOpacity={0.6} />
           <Area
             type="monotone"
             dataKey="mhr"
@@ -159,7 +160,7 @@ function FetalHrChart({ vitals }: { vitals: VitalSignEntry[] }) {
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
           {/* Normal range green zone */}
-          <ReferenceArea y1={110} y2={160} fill="#22c55e" fillOpacity={0.06} />
+          <ReferenceArea y1={110} y2={160} fill={COLOR.riskLow} fillOpacity={0.06} />
           <XAxis dataKey="time" fontSize={11} tick={{ fill: '#94a3b8' }} />
           <YAxis domain={[80, 200]} fontSize={11} tick={{ fill: '#94a3b8' }} />
           <Tooltip
@@ -167,8 +168,8 @@ function FetalHrChart({ vitals }: { vitals: VitalSignEntry[] }) {
               <CustomTooltip active={active} payload={payload as never} label={label as string} unit="bpm" />
             )}
           />
-          <ReferenceLine y={160} stroke="#22c55e" strokeDasharray="4 4" strokeOpacity={0.6} />
-          <ReferenceLine y={110} stroke="#22c55e" strokeDasharray="4 4" strokeOpacity={0.6} />
+          <ReferenceLine y={160} stroke={COLOR.riskLow} strokeDasharray="4 4" strokeOpacity={0.6} />
+          <ReferenceLine y={110} stroke={COLOR.riskLow} strokeDasharray="4 4" strokeOpacity={0.6} />
           <Area
             type="monotone"
             dataKey="fhr"
@@ -227,8 +228,8 @@ function BpTrendChart({ vitals }: { vitals: VitalSignEntry[] }) {
               <CustomTooltip active={active} payload={payload as never} label={label as string} unit="mmHg" />
             )}
           />
-          <ReferenceLine y={140} stroke="#ef4444" strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: 'SBP 140', position: 'right', fill: '#ef4444', fontSize: 10 }} />
-          <ReferenceLine y={90} stroke="#f59e0b" strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: 'DBP 90', position: 'right', fill: '#f59e0b', fontSize: 10 }} />
+          <ReferenceLine y={140} stroke={COLOR.riskHigh} strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: 'SBP 140', position: 'right', fill: COLOR.riskHigh, fontSize: 10 }} />
+          <ReferenceLine y={90} stroke={COLOR.riskMedium} strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: 'DBP 90', position: 'right', fill: COLOR.riskMedium, fontSize: 10 }} />
           <Area
             type="monotone"
             dataKey="sbp"
@@ -280,8 +281,8 @@ function PphTrendChart({ vitals }: { vitals: VitalSignEntry[] }) {
         <AreaChart data={data} margin={{ top: 5, right: 15, bottom: 5, left: -10 }}>
           <defs>
             <linearGradient id="gradPph" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#ef4444" stopOpacity={0.02} />
+              <stop offset="5%" stopColor={COLOR.riskHigh} stopOpacity={0.3} />
+              <stop offset="95%" stopColor={COLOR.riskHigh} stopOpacity={0.02} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -292,16 +293,16 @@ function PphTrendChart({ vitals }: { vitals: VitalSignEntry[] }) {
               <CustomTooltip active={active} payload={payload as never} label={label as string} unit="ml" />
             )}
           />
-          <ReferenceLine y={500} stroke="#ef4444" strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: '500 ml', position: 'right', fill: '#ef4444', fontSize: 10 }} />
+          <ReferenceLine y={500} stroke={COLOR.riskHigh} strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: '500 ml', position: 'right', fill: COLOR.riskHigh, fontSize: 10 }} />
           <Area
             type="monotone"
             dataKey="pph"
             name="PPH"
-            stroke="#ef4444"
+            stroke={COLOR.riskHigh}
             strokeWidth={2}
             fill="url(#gradPph)"
-            dot={{ r: 3, fill: '#ef4444', strokeWidth: 0 }}
-            activeDot={{ r: 5, stroke: '#ef4444', strokeWidth: 2, fill: '#fff' }}
+            dot={{ r: 3, fill: COLOR.riskHigh, strokeWidth: 0 }}
+            activeDot={{ r: 5, stroke: COLOR.riskHigh, strokeWidth: 2, fill: '#fff' }}
           />
         </AreaChart>
       </ResponsiveContainer>

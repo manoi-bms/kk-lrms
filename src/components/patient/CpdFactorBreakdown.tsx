@@ -180,7 +180,7 @@ function ScoreGauge({
         </text>
       </svg>
       <div
-        className="mt-1 inline-flex items-center gap-1 rounded-sm px-2 py-0.5 font-mono text-[10px] font-bold tracking-[0.12em] text-white"
+        className="mt-1 inline-flex items-center gap-1 rounded-sm px-2 py-0.5 font-mono text-caption font-bold tracking-[0.12em] text-white"
         style={{ background: tone.color }}
       >
         <AlertTriangle className="h-2.5 w-2.5" />
@@ -222,7 +222,7 @@ function FactorRow({
       }}
     >
       <span style={{ color }}>{icon}</span>
-      <span className="flex-1 text-[12px] text-[var(--ink-navy-dim)]">{nameTh}</span>
+      <span className="flex-1 text-caption text-[var(--ink-navy-dim)]">{nameTh}</span>
       {/* Contribution bar — visually encodes how much this factor pushed the
           score toward its maximum contribution (which maps to abnormal). */}
       <div
@@ -238,7 +238,7 @@ function FactorRow({
         />
       </div>
       <span
-        className="inline-flex w-16 shrink-0 items-center justify-end rounded-sm px-1.5 py-0.5 font-mono text-[10px] font-bold tabular-nums"
+        className="inline-flex w-16 shrink-0 items-center justify-end rounded-sm px-1.5 py-0.5 font-mono text-caption font-bold tabular-nums"
         style={{
           color: sev === 'normal' || sev === 'missing' ? color : 'white',
           background: sev === 'normal' || sev === 'missing' ? 'transparent' : color,
@@ -274,16 +274,16 @@ export function CpdFactorBreakdown({
       >
         <Gauge className="h-4 w-4" style={{ color: 'var(--accent-navy)' }} />
         <div className="flex-1">
-          <h3 className="font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--ink-navy)]">
+          <h3 className="font-mono text-caption font-bold uppercase tracking-[0.12em] text-[var(--ink-navy)]">
             วิเคราะห์ปัจจัยเสี่ยง CPD
           </h3>
-          <p className="font-mono text-[10px] text-[var(--ink-navy-muted)]">
+          <p className="font-mono text-caption text-[var(--ink-navy-muted)]">
             Cephalopelvic Disproportion · คะแนนรวม {Number(score)} / {TOTAL_MAX_SCORE}
           </p>
         </div>
         {missingCount > 0 && (
           <span
-            className="inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-[0.06em]"
+            className="inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono text-caption font-bold tracking-[0.06em]"
             style={{
               color: 'var(--ink-navy-muted)',
               borderColor: 'var(--ink-navy-muted)',
@@ -302,7 +302,7 @@ export function CpdFactorBreakdown({
         style={{ borderColor: 'var(--rule-strong)' }}
       >
         <ScoreGauge score={score} riskLevel={riskLevel} maxScore={TOTAL_MAX_SCORE} />
-        <div className="flex flex-1 flex-wrap gap-3 text-[11px]">
+        <div className="flex flex-1 flex-wrap gap-3 text-caption">
           <LegendSwatch color="var(--risk-low)" label="ปกติ · 0 คะแนน" />
           <LegendSwatch color="var(--risk-medium)" label="บางส่วน · 0 < คะแนน < max" />
           <LegendSwatch color="var(--risk-high)" label="ผิดปกติเต็ม · max คะแนน" />
@@ -335,7 +335,7 @@ export function CpdFactorBreakdown({
       </div>
 
       <div
-        className="flex items-center justify-between border-t px-3 py-1.5 font-mono text-[10px] text-[var(--ink-navy-muted)]"
+        className="flex items-center justify-between border-t px-3 py-1.5 font-mono text-caption text-[var(--ink-navy-muted)]"
         style={{ borderColor: 'var(--rule-hair)' }}
       >
         <span>คำนวณเมื่อ {formatRelativeTime(calculatedAt)}</span>
@@ -355,7 +355,7 @@ function LegendSwatch({
   dashed?: boolean;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 font-mono text-[10px] text-[var(--ink-navy-muted)]">
+    <span className="inline-flex items-center gap-1.5 font-mono text-caption text-[var(--ink-navy-muted)]">
       <span
         className="inline-block h-2.5 w-4"
         style={{

@@ -13,9 +13,9 @@ interface InactiveHospitalListProps {
 function getStatusDotClass(status: ConnectionStatusEnum): string {
   switch (status) {
     case ConnectionStatusEnum.ONLINE:
-      return 'bg-green-500 animate-pulse-live';
+      return 'bg-ok animate-pulse-live';
     case ConnectionStatusEnum.OFFLINE:
-      return 'bg-red-500';
+      return 'bg-danger';
     case ConnectionStatusEnum.UNKNOWN:
     default:
       return 'bg-gray-400';

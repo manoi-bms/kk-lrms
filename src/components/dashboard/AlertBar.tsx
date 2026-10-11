@@ -57,7 +57,7 @@ function AlertTile({
       >
         <div style={{ width: 3, height: 28, background: color }} aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <div className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
+          <div className="font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
             {label}
           </div>
           <div
@@ -70,7 +70,7 @@ function AlertTile({
           </div>
         </div>
         <div
-          className="font-mono text-[32px] font-semibold leading-none tabular-nums"
+          className="font-mono text-kpi font-semibold leading-none tabular-nums"
           style={{ color, letterSpacing: '-0.02em' }}
         >
           {value}
@@ -78,11 +78,11 @@ function AlertTile({
       </TooltipTrigger>
       <TooltipContent side="bottom" className="max-w-sm whitespace-normal text-left leading-snug">
         <div className="space-y-1">
-          <div className="font-mono text-[12px] uppercase tracking-[0.14em] opacity-70">
+          <div className="font-mono text-caption uppercase tracking-[0.14em] opacity-70">
             {label}
           </div>
           <div className="text-sm font-semibold">{tooltipTitle}</div>
-          <div className="text-[13px] opacity-90">{tooltipBody}</div>
+          <div className="text-caption opacity-90">{tooltipBody}</div>
         </div>
       </TooltipContent>
     </Tooltip>
@@ -100,7 +100,7 @@ export function AlertBar({ alerts }: AlertBarProps) {
     <div
       className={cn(
         'flex items-stretch border-b border-[var(--rule-strong)]',
-        hot ? 'bg-gradient-to-r from-red-50 to-white' : 'bg-white',
+        hot ? 'bg-gradient-to-r from-danger-tint to-surface-card' : 'bg-white',
       )}
     >
       {/* Leading state label — total across the two alarm categories. */}
@@ -119,11 +119,11 @@ export function AlertBar({ alerts }: AlertBarProps) {
             className={cn('h-1.5 w-1.5 rounded-full', hot && 'animate-pulse-hi')}
             aria-hidden="true"
           />
-          <span className="font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--ink-navy-dim)]">
+          <span className="font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-dim)]">
             {hot ? 'ACTIVE ALERTS' : 'ALL CLEAR'}
           </span>
           <span
-            className="ml-auto font-mono text-[20px] font-semibold tabular-nums"
+            className="ml-auto font-mono text-title font-semibold tabular-nums"
             style={{ color: stateColor }}
           >
             {total}
@@ -134,7 +134,7 @@ export function AlertBar({ alerts }: AlertBarProps) {
             <div className="text-sm font-semibold">
               {hot ? 'สถานะรวม — มีงานค้างต้องจัดการ' : 'สถานะรวม — ปลอดเหตุการณ์'}
             </div>
-            <div className="text-[13px] opacity-90">
+            <div className="text-caption opacity-90">
               ผลรวมของ REFERRAL ACTION (ส่งต่อเกิน SLA/ฉุกเฉินค้าง) + OVERDUE ANC (ขาดนัดเกิน 35
               วัน). DUE ≤14D เป็นภาระงานล่วงหน้า ไม่นับรวมในสัญญาณเตือน.
               คลิกแต่ละช่องเพื่อเปิดหน้ารายการที่กรองไว้แล้ว.

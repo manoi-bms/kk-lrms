@@ -230,19 +230,19 @@ function LoginForm() {
 
           <div className="space-y-3">
             <div className="flex items-center gap-4 bg-white/5 rounded-xl p-4">
-              <Building2 className="h-5 w-5 shrink-0 text-emerald-400" />
+              <Building2 className="h-5 w-5 shrink-0 text-ok" />
               <span className="text-sm text-slate-300">26 โรงพยาบาลในเครือข่าย</span>
             </div>
             <div className="flex items-center gap-4 bg-white/5 rounded-xl p-4">
-              <Activity className="h-5 w-5 shrink-0 text-emerald-400" />
+              <Activity className="h-5 w-5 shrink-0 text-ok" />
               <span className="text-sm text-slate-300">CPD Score คำนวณอัตโนมัติ</span>
             </div>
             <div className="flex items-center gap-4 bg-white/5 rounded-xl p-4">
-              <BarChart3 className="h-5 w-5 shrink-0 text-emerald-400" />
+              <BarChart3 className="h-5 w-5 shrink-0 text-ok" />
               <span className="text-sm text-slate-300">Partogram ติดตามความก้าวหน้าการคลอด</span>
             </div>
             <div className="flex items-center gap-4 bg-white/5 rounded-xl p-4">
-              <Clock className="h-5 w-5 shrink-0 text-emerald-400" />
+              <Clock className="h-5 w-5 shrink-0 text-ok" />
               <span className="text-sm text-slate-300">Real-time Dashboard ทุกโรงพยาบาล</span>
             </div>
           </div>
@@ -291,21 +291,21 @@ function LoginForm() {
                 placeholder="กรอก Session ID จาก BMS"
                 disabled={loading}
                 autoFocus
-                className="h-12 rounded-xl border-slate-200 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 bg-slate-50 font-mono"
+                className="h-12 rounded-xl border-slate-200 focus-visible:ring-ok focus-visible:border-ok bg-slate-50 font-mono"
               />
             </div>
 
             {accessDenied && (
-              <div className="rounded-xl border-2 border-red-300 bg-red-50 p-4 text-sm">
+              <div className="rounded-xl border-2 border-danger/40 bg-danger-tint p-4 text-sm">
                 <div className="flex items-start gap-2 mb-2">
-                  <Shield className="h-5 w-5 shrink-0 text-red-600 mt-0.5" />
-                  <div className="text-red-800 font-semibold">
+                  <Shield className="h-5 w-5 shrink-0 text-danger-text mt-0.5" />
+                  <div className="text-danger-text font-semibold">
                     {accessDenied.reason === 'deactivated'
                       ? 'โรงพยาบาลถูกปิดการใช้งาน'
                       : 'ไม่ได้รับสิทธิ์ใช้งานระบบ'}
                   </div>
                 </div>
-                <div className="text-red-700 text-xs mb-2">
+                <div className="text-danger-text text-xs mb-2">
                   <div>
                     โรงพยาบาล:{' '}
                     <span className="font-semibold">{accessDenied.hospitalName || '—'}</span>
@@ -317,7 +317,7 @@ function LoginForm() {
                     </span>
                   </div>
                 </div>
-                <div className="text-red-700 text-xs leading-relaxed border-t border-red-200 pt-2">
+                <div className="text-danger-text text-xs leading-relaxed border-t border-danger/40 pt-2">
                   {accessDenied.reason === 'deactivated'
                     ? 'โรงพยาบาลของท่านถูกปิดการใช้งานในระบบ KK-LRMS หากท่านคิดว่าเป็นความผิดพลาด กรุณาติดต่อผู้ดูแลระบบ (สสจ.ขอนแก่น) เพื่อขอเปิดใช้งานอีกครั้ง'
                     : 'โรงพยาบาลของท่านยังไม่ได้รับการลงทะเบียนในระบบ KK-LRMS หากท่านคิดว่าเป็นความผิดพลาด หรือต้องการเข้าร่วมเครือข่าย กรุณาติดต่อผู้ดูแลระบบ (สสจ.ขอนแก่น) เพื่อขอลงทะเบียนโรงพยาบาลของท่านในระบบ'}
@@ -326,14 +326,14 @@ function LoginForm() {
             )}
 
             {!accessDenied && (error || mappedProviderError) && (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+              <div className="rounded-xl border border-danger/40 bg-danger-tint p-3 text-sm text-danger-text">
                 {error ? (
                   error
                 ) : mappedProviderError ? (
                   <>
                     <div>{mappedProviderError.message}</div>
                     {mappedProviderError.detail && (
-                      <div className="mt-1 text-xs break-words text-red-500">
+                      <div className="mt-1 text-xs break-words text-danger">
                         {mappedProviderError.detail}
                       </div>
                     )}
@@ -408,7 +408,7 @@ function LoginForm() {
             </p>
             <a
               href="/about"
-              className="inline-block text-sm text-slate-400 hover:text-teal-600 transition-colors"
+              className="inline-block text-sm text-slate-400 hover:text-brand transition-colors"
             >
               เกี่ยวกับระบบ KK-LRMS
             </a>
@@ -423,17 +423,17 @@ function LoginForm() {
         }}
       >
         <DialogContent className="sm:max-w-md p-0 overflow-hidden" showCloseButton={false}>
-          <div className="bg-gradient-to-br from-red-50 to-orange-50 px-6 pt-6 pb-5 border-b border-red-100">
+          <div className="bg-gradient-to-br from-danger-tint to-warn-tint px-6 pt-6 pb-5 border-b border-danger/40">
             <div className="flex items-start gap-4">
-              <div className="shrink-0 rounded-full bg-red-100 p-2.5 ring-4 ring-red-50">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+              <div className="shrink-0 rounded-full bg-danger-tint p-2.5 ring-4 ring-danger/40">
+                <AlertTriangle className="h-6 w-6 text-danger-text" />
               </div>
               <div className="flex-1 min-w-0">
                 <DialogHeader>
-                  <DialogTitle className="text-base font-semibold text-red-900">
+                  <DialogTitle className="text-base font-semibold text-danger-text">
                     ต้องอัปเดต HOSxP ก่อนใช้งาน
                   </DialogTitle>
-                  <DialogDescription className="text-xs text-red-700/80 mt-1">
+                  <DialogDescription className="text-xs text-danger-text/80 mt-1">
                     เวอร์ชัน HOSxP API ของโรงพยาบาลเก่ากว่าที่ระบบ KK-LRMS รองรับ
                   </DialogDescription>
                 </DialogHeader>
@@ -445,14 +445,14 @@ function LoginForm() {
             <div className="px-6 py-5 space-y-4">
               {(versionRejection.hospitalName || versionRejection.hospitalCode) && (
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  <div className="text-caption font-semibold uppercase tracking-wider text-slate-400">
                     โรงพยาบาล
                   </div>
                   <div className="mt-0.5 text-sm font-medium text-slate-800 truncate">
                     {versionRejection.hospitalName || '—'}
                   </div>
                   {versionRejection.hospitalCode && (
-                    <div className="mt-0.5 font-mono text-[11px] text-slate-500">
+                    <div className="mt-0.5 font-mono text-caption text-slate-500">
                       รหัส {versionRejection.hospitalCode}
                     </div>
                   )}
@@ -460,25 +460,25 @@ function LoginForm() {
               )}
 
               <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-lg border border-red-200 bg-red-50/60 px-3 py-2.5">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-red-500">
+                <div className="rounded-lg border border-danger/40 bg-danger-tint/60 px-3 py-2.5">
+                  <div className="text-caption font-semibold uppercase tracking-wider text-danger">
                     เวอร์ชันปัจจุบัน
                   </div>
-                  <div className="mt-0.5 font-mono text-sm font-semibold text-red-700">
+                  <div className="mt-0.5 font-mono text-sm font-semibold text-danger-text">
                     {versionRejection.currentVersion ?? '—'}
                   </div>
                 </div>
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-2.5">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
+                <div className="rounded-lg border border-ok/40 bg-ok-tint/60 px-3 py-2.5">
+                  <div className="text-caption font-semibold uppercase tracking-wider text-ok-text">
                     ต้องการอย่างน้อย
                   </div>
-                  <div className="mt-0.5 font-mono text-sm font-semibold text-emerald-700">
+                  <div className="mt-0.5 font-mono text-sm font-semibold text-ok-text">
                     {versionRejection.minVersion}
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
+              <div className="rounded-lg border border-warn/40 bg-warn-tint px-3 py-2.5 text-xs leading-relaxed text-warn-text">
                 กรุณาติดต่อผู้ดูแลระบบ HOSxP ของโรงพยาบาลเพื่ออัปเดต HOSxP เป็นเวอร์ชัน{' '}
                 <span className="font-mono font-semibold">{versionRejection.minVersion}</span>{' '}
                 ขึ้นไป จากนั้นจึงเข้าใช้งาน KK-LRMS อีกครั้ง

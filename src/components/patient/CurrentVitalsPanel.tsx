@@ -6,6 +6,7 @@
 // absence of data is itself a visual signal.
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import { HeartPulse, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
 
@@ -74,21 +75,21 @@ const STATUS_META: Record<VitalStatus, {
   normal: {
     color: 'var(--risk-low)',
     bg: 'color-mix(in srgb, #22c55e 8%, white)',
-    stroke: '#16a34a',
+    stroke: COLOR.riskLow,
     label: 'ปกติ',
     icon: CheckCircle2,
   },
   warning: {
     color: 'var(--risk-medium)',
     bg: 'color-mix(in srgb, #eab308 14%, white)',
-    stroke: '#ca8a04',
+    stroke: COLOR.riskMedium,
     label: 'เฝ้าระวัง',
     icon: AlertTriangle,
   },
   critical: {
     color: 'var(--risk-high)',
     bg: 'color-mix(in srgb, #ef4444 16%, white)',
-    stroke: '#dc2626',
+    stroke: COLOR.riskHigh,
     label: 'ผิดปกติ',
     icon: AlertTriangle,
   },
@@ -153,7 +154,7 @@ function MiniSparkline({
           y={toY(normalMax)}
           width={width}
           height={toY(normalMin) - toY(normalMax)}
-          fill="#22c55e"
+          fill={COLOR.riskLow}
           fillOpacity={0.14}
         />
       )}
@@ -218,13 +219,13 @@ function VitalItem({
     >
       <div className="flex items-start justify-between gap-2">
         <div
-          className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em]"
+          className="font-mono text-caption font-semibold uppercase tracking-[0.12em]"
           style={{ color: 'var(--ink-navy-dim)' }}
         >
           {label}
         </div>
         <div
-          className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-[0.08em]"
+          className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-caption font-bold tracking-[0.08em]"
           style={{
             background: status === 'normal' ? 'rgba(34,197,94,0.15)' : meta.color,
             color: status === 'normal' ? meta.color : 'white',
@@ -236,12 +237,12 @@ function VitalItem({
       </div>
       <div className="flex items-baseline gap-1.5">
         <span
-          className="font-mono text-[28px] font-bold leading-none tabular-nums"
+          className="font-mono text-page font-bold leading-none tabular-nums"
           style={{ color: meta.color, letterSpacing: '-0.025em' }}
         >
           {displayValue}
         </span>
-        <span className="font-mono text-[11px] text-[var(--ink-navy-muted)]">{unit}</span>
+        <span className="font-mono text-caption text-[var(--ink-navy-muted)]">{unit}</span>
         <div className="ml-auto">
           <MiniSparkline
             values={sparklineValues}
@@ -251,7 +252,7 @@ function VitalItem({
           />
         </div>
       </div>
-      <div className="flex items-center justify-between gap-2 font-mono text-[10px]">
+      <div className="flex items-center justify-between gap-2 font-mono text-caption">
         <span style={{ color: 'var(--ink-navy-muted)' }}>{normalRangeText}</span>
         <span style={{ color: 'var(--ink-navy-dim)' }}>
           {lastMeasuredAt ? formatRelativeTime(lastMeasuredAt) : '—'}
@@ -272,21 +273,21 @@ function VitalItemEmpty({ label, unit }: { label: string; unit: string }) {
       }}
     >
       <div
-        className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em]"
+        className="font-mono text-caption font-semibold uppercase tracking-[0.12em]"
         style={{ color: 'var(--ink-navy-muted)' }}
       >
         {label}
       </div>
       <div className="flex items-baseline gap-1.5">
         <span
-          className="font-mono text-[28px] font-bold leading-none text-[var(--ink-navy-muted)]"
+          className="font-mono text-page font-bold leading-none text-[var(--ink-navy-muted)]"
           style={{ letterSpacing: '-0.025em' }}
         >
           —
         </span>
-        <span className="font-mono text-[11px] text-[var(--ink-navy-muted)]">{unit}</span>
+        <span className="font-mono text-caption text-[var(--ink-navy-muted)]">{unit}</span>
       </div>
-      <div className="font-mono text-[10px] italic text-[var(--ink-navy-muted)]">ไม่มีข้อมูล</div>
+      <div className="font-mono text-caption italic text-[var(--ink-navy-muted)]">ไม่มีข้อมูล</div>
     </div>
   );
 }
@@ -365,12 +366,12 @@ export function CurrentVitalsPanel({ vitals }: CurrentVitalsPanelProps) {
     <div>
       <div className="mb-2 flex items-center gap-2">
         <HeartPulse className="h-4 w-4" style={{ color: 'var(--risk-high)' }} />
-        <h3 className="font-mono text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-navy)]">
+        <h3 className="font-mono text-caption font-semibold uppercase tracking-[0.12em] text-[var(--ink-navy)]">
           สัญญาณชีพปัจจุบัน
         </h3>
         {criticalCount > 0 && (
           <span
-            className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-[0.06em] text-white"
+            className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-caption font-bold tracking-[0.06em] text-white"
             style={{ background: 'var(--risk-high)' }}
           >
             <AlertTriangle className="h-2.5 w-2.5" />

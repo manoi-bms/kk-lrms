@@ -126,8 +126,8 @@ function InfoField({
 }) {
   return (
     <div className={cn('min-w-0', className)}>
-      <div className="text-[9px] font-semibold uppercase tracking-wide text-slate-500">{label}</div>
-      <div className="mt-0.5 whitespace-normal break-words text-[12px] font-semibold leading-tight text-slate-900">
+      <div className="text-caption font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-0.5 whitespace-normal break-words text-caption font-semibold leading-tight text-slate-900">
         {display(value)}
       </div>
     </div>
@@ -149,22 +149,22 @@ function VitalCell({
         'min-h-[42px] rounded border bg-white px-2 py-1.5',
         tone === 'vital' && 'border-cyan-200',
         tone === 'labour' && 'border-indigo-200',
-        tone === 'warning' && 'border-amber-200',
+        tone === 'warning' && 'border-warn/40',
         tone === 'default' && 'border-slate-200',
       )}
     >
       <div
         className={cn(
-          'text-[9px] font-bold uppercase tracking-wide',
+          'text-caption font-bold uppercase tracking-wide',
           tone === 'vital' && 'text-cyan-700',
           tone === 'labour' && 'text-indigo-700',
-          tone === 'warning' && 'text-amber-700',
+          tone === 'warning' && 'text-warn-text',
           tone === 'default' && 'text-slate-500',
         )}
       >
         {label}
       </div>
-      <div className="mt-0.5 whitespace-nowrap font-mono text-[12px] font-bold leading-none tabular-nums text-slate-950">
+      <div className="mt-0.5 whitespace-nowrap font-mono text-caption font-bold leading-none tabular-nums text-slate-950">
         {display(value)}
       </div>
     </div>
@@ -228,7 +228,7 @@ function PatientHeader({ occupant }: { occupant: BedOccupancy }) {
         <div className="min-w-0">
           <div className="grid gap-2 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1.35fr)] md:items-start">
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-caption font-semibold uppercase tracking-wide text-slate-500">
                 <span className="text-slate-900">AN {an}</span>
                 <span>HN {hn}</span>
                 <span>Ward {ward}</span>
@@ -256,13 +256,13 @@ function PatientHeader({ occupant }: { occupant: BedOccupancy }) {
         <div className="grid grid-cols-[auto_auto] gap-2 lg:justify-end">
           <div className="grid grid-cols-2 overflow-hidden rounded border border-slate-300 bg-slate-50 text-center">
             <div className="border-r border-slate-300 px-2.5 py-1.5">
-              <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">Bed</div>
+              <div className="text-caption font-bold uppercase tracking-wide text-slate-500">Bed</div>
               <div className="font-mono text-base font-bold leading-none text-slate-950">
                 {bedno}
               </div>
             </div>
             <div className="px-2.5 py-1.5">
-              <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
+              <div className="text-caption font-bold uppercase tracking-wide text-slate-500">
                 Room
               </div>
               <div className="font-mono text-base font-bold leading-none text-slate-950">
@@ -273,15 +273,15 @@ function PatientHeader({ occupant }: { occupant: BedOccupancy }) {
 
           <div className="flex min-w-[118px] flex-col gap-1">
             {(allergy_count ?? 0) > 0 ? (
-              <span className="rounded border border-rose-700 bg-rose-700 px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wide text-white">
+              <span className="rounded border border-danger bg-danger px-2 py-1 text-center text-caption font-bold uppercase tracking-wide text-white">
                 Allergy {allergy_count}
               </span>
             ) : (
-              <span className="rounded border border-emerald-600 bg-emerald-50 px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+              <span className="rounded border border-ok bg-ok-tint px-2 py-1 text-center text-caption font-bold uppercase tracking-wide text-ok-text">
                 NKDA
               </span>
             )}
-            <span className="rounded border border-rose-200 bg-rose-50 px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wide text-rose-700">
+            <span className="rounded border border-danger/40 bg-danger-tint px-2 py-1 text-center text-caption font-bold uppercase tracking-wide text-danger-text">
               Blood {blood_grp || '—'}
             </span>
           </div>
@@ -426,7 +426,7 @@ export function PatientDrawer({ open, occupant, onClose }: PatientDrawerProps) {
             className={cn(
               'm-2 inline-flex h-8 w-8 items-center justify-center rounded-md',
               'text-slate-500 hover:bg-slate-100 hover:text-slate-700',
-              'focus:outline-none focus:ring-2 focus:ring-emerald-500',
+              'focus:outline-none focus:ring-2 focus:ring-ok',
             )}
           >
             <X className="h-4 w-4" aria-hidden />

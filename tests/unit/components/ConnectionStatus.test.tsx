@@ -10,12 +10,12 @@ describe('ConnectionStatus', () => {
       <ConnectionStatus status={ConnectionStatusEnum.ONLINE} />,
     );
     expect(screen.getByText('ออนไลน์')).toBeTruthy();
-    // Green dot should have bg-green-500 class
+    // Green dot should have bg-ok class
     const dot = container.querySelector('[aria-hidden="true"]') as HTMLElement;
-    expect(dot.className).toContain('bg-green-500');
+    expect(dot.className).toContain('bg-ok');
     // Label color should be green
     const label = screen.getByText('ออนไลน์');
-    expect(label.style.color).toBe('rgb(34, 197, 94)'); // #22c55e
+    expect(label.style.color).toBe('rgb(63, 143, 79)'); // COLOR.riskLow
   });
 
   it('renders red dot + "ออฟไลน์" for OFFLINE status', () => {
@@ -24,9 +24,9 @@ describe('ConnectionStatus', () => {
     );
     expect(screen.getByText('ออฟไลน์')).toBeTruthy();
     const dot = container.querySelector('[aria-hidden="true"]') as HTMLElement;
-    expect(dot.className).toContain('bg-red-500');
+    expect(dot.className).toContain('bg-danger');
     const label = screen.getByText('ออฟไลน์');
-    expect(label.style.color).toBe('rgb(239, 68, 68)'); // #ef4444
+    expect(label.style.color).toBe('rgb(192, 57, 43)'); // COLOR.riskHigh
   });
 
   it('renders gray dot + "ไม่ทราบ" for UNKNOWN status', () => {

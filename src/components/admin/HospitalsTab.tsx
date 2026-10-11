@@ -4,6 +4,7 @@
 // into a single larger panel.
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { Plus, Pencil, Trash2, Building2, Database, AlertTriangle } from 'lucide-react';
@@ -125,15 +126,15 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
     return (
       <div className="border-2 bg-white px-4 py-3" style={{ borderColor: 'var(--risk-high)' }}>
         <div
-          className="mb-1 font-mono text-[11px] font-semibold uppercase tracking-[0.08em]"
+          className="mb-1 font-mono text-caption font-semibold uppercase tracking-[0.08em]"
           style={{ color: 'var(--risk-high)' }}
         >
           โหลดรายการโรงพยาบาลไม่สำเร็จ
         </div>
-        <div className="font-mono text-[12px] text-[var(--ink-navy-dim)]">
+        <div className="font-mono text-caption text-[var(--ink-navy-dim)]">
           {(error as Error).message}
         </div>
-        <div className="mt-2 font-mono text-[10px] text-[var(--ink-navy-muted)]">
+        <div className="mt-2 font-mono text-caption text-[var(--ink-navy-muted)]">
           มักเกิดเมื่อ schema DB ไม่ sync กับโค้ดล่าสุด — ลองรีสตาร์ท dev server เพื่อให้
           schema-sync ALTER column ที่ขาด
         </div>
@@ -239,7 +240,7 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
+        <div className="font-mono text-caption uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
           REGISTERED HOSPITALS · {hospitals.length}
           {(() => {
             const inactive = hospitals.filter((h) => !h.isActive).length;
@@ -258,7 +259,7 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
 
       <div className="border bg-white" style={{ borderColor: 'var(--rule-strong)' }}>
         <div
-          className="grid grid-cols-[90px,1fr,70px,130px,120px,60px,90px,110px] items-center border-b px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]"
+          className="grid grid-cols-[90px,1fr,70px,130px,120px,60px,90px,110px] items-center border-b px-3 py-2 font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]"
           style={{ borderColor: 'var(--rule-strong)' }}
         >
           <span>HCODE</span>
@@ -271,7 +272,7 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
           <span className="text-right">ACTIONS</span>
         </div>
         {hospitals.length === 0 ? (
-          <div className="px-3 py-6 text-center text-[13px] text-[var(--ink-navy-dim)]">
+          <div className="px-3 py-6 text-center text-caption text-[var(--ink-navy-dim)]">
             ยังไม่มีโรงพยาบาลในระบบ — กด &ldquo;เพิ่มโรงพยาบาล&rdquo;
           </div>
         ) : (
@@ -286,14 +287,14 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
                 background: h.isActive ? undefined : 'var(--surface-cool, #f8fafc)',
               }}
             >
-              <span className="font-mono text-[12px] text-[var(--ink-navy-dim)]">{h.hcode}</span>
+              <span className="font-mono text-caption text-[var(--ink-navy-dim)]">{h.hcode}</span>
               <span className="flex items-center gap-2">
                 <Building2 className="h-3.5 w-3.5 text-[var(--ink-navy-muted)]" />
                 <span className="truncate">{h.name}</span>
                 {!h.isActive && (
                   <span
                     title='โรงพยาบาลถูกปิดการใช้งาน — กดปุ่ม "แก้" เพื่อเปิดใช้งานอีกครั้งหรือลบข้อมูล'
-                    className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                    className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-caption font-semibold uppercase tracking-wide"
                     style={{
                       borderColor: 'var(--rule-strong)',
                       background: 'transparent',
@@ -307,11 +308,11 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
                   <>
                     <span
                       title={describeAuthenticityFailure(h)}
-                      className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                      className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-caption font-semibold uppercase tracking-wide"
                       style={{
                         borderColor: '#fecaca',
-                        background: '#fef2f2',
-                        color: '#b91c1c',
+                        background: COLOR.riskHighTint,
+                        color: COLOR.riskHighText,
                       }}
                     >
                       <AlertTriangle className="h-3 w-3" />
@@ -321,11 +322,11 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
                       type="button"
                       onClick={() => handleClearPurge(h)}
                       title="ล้างสถานะระงับ Sync ฝั่งเซิร์ฟเวอร์ — Sync จริงจะเริ่มอีกครั้งเมื่อผู้ใช้จากโรงพยาบาลนี้เปิด KK-LRMS จาก HOSxP"
-                      className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide hover:bg-emerald-100"
+                      className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-caption font-semibold tracking-wide hover:bg-ok-tint"
                       style={{
                         borderColor: '#86efac',
-                        background: '#ecfdf5',
-                        color: '#065f46',
+                        background: COLOR.riskLowTint,
+                        color: COLOR.riskLowText,
                       }}
                       disabled={busy}
                     >
@@ -334,17 +335,17 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
                   </>
                 )}
               </span>
-              <span className="font-mono text-[11px]">{h.level}</span>
-              <span className="font-mono text-[10px] text-[var(--ink-navy-dim)]">
+              <span className="font-mono text-caption">{h.level}</span>
+              <span className="font-mono text-caption text-[var(--ink-navy-dim)]">
                 {SERVICE_TYPE_LABEL[h.serviceType ?? ''] ?? '—'}
               </span>
-              <span className="font-mono text-[11px] text-[var(--ink-navy-dim)]">
+              <span className="font-mono text-caption text-[var(--ink-navy-dim)]">
                 {h.provinceCode
                   ? `${provinceByCode.get(h.provinceCode) ?? '-'} · ${h.provinceCode}`
                   : '—'}
               </span>
               <span
-                className="font-mono text-[11px]"
+                className="font-mono text-caption"
                 style={{ color: h.isActive ? 'var(--risk-low)' : 'var(--ink-navy-muted)' }}
               >
                 {h.isActive ? 'YES' : 'NO'}
@@ -355,7 +356,7 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
                   const perTable = dataCountsData?.counts?.[h.hcode]?.perTable;
                   if (dataCountsData === undefined) {
                     return (
-                      <span className="font-mono text-[11px] text-[var(--ink-navy-muted)]">…</span>
+                      <span className="font-mono text-caption text-[var(--ink-navy-muted)]">…</span>
                     );
                   }
                   const tooltip = perTable
@@ -369,7 +370,7 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
                       type="button"
                       onClick={() => setEditHospital(h)}
                       title={`คลิกเพื่อจัดการข้อมูล\n${tooltip}`}
-                      className="inline-flex items-center gap-1 border px-1.5 py-0.5 font-mono text-[11px] tabular-nums hover:bg-[var(--accent-navy-soft)]"
+                      className="inline-flex items-center gap-1 border px-1.5 py-0.5 font-mono text-caption tabular-nums hover:bg-[var(--accent-navy-soft)]"
                       style={{
                         borderColor: 'var(--rule-strong)',
                         color: total && total > 0 ? 'var(--accent-navy)' : 'var(--ink-navy-muted)',
@@ -386,7 +387,7 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
               <span className="flex justify-end gap-1">
                 <button
                   onClick={() => setEditHospital(h)}
-                  className="inline-flex items-center gap-1 border px-2 py-1 font-mono text-[11px] hover:bg-[var(--accent-navy-soft)]"
+                  className="inline-flex items-center gap-1 border px-2 py-1 font-mono text-caption hover:bg-[var(--accent-navy-soft)]"
                   style={{ borderColor: 'var(--rule-strong)', color: 'var(--ink-navy-dim)' }}
                   disabled={busy}
                 >
@@ -395,8 +396,8 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
                 </button>
                 <button
                   onClick={() => handleDelete(h)}
-                  className="inline-flex items-center gap-1 border px-2 py-1 font-mono text-[11px] hover:bg-red-50"
-                  style={{ borderColor: 'var(--rule-strong)', color: '#b91c1c' }}
+                  className="inline-flex items-center gap-1 border px-2 py-1 font-mono text-caption hover:bg-danger-tint"
+                  style={{ borderColor: 'var(--rule-strong)', color: COLOR.riskHighText }}
                   disabled={busy}
                 >
                   <Trash2 className="h-3 w-3" />
@@ -415,7 +416,7 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
             <DialogTitle>เพิ่มโรงพยาบาลจากทะเบียน MOPH</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <p className="text-[12px] text-[var(--ink-navy-dim)]">
+            <p className="text-caption text-[var(--ink-navy-dim)]">
               ค้นหาในจังหวัดปัจจุบัน ({provinceByCode.get(activeProvince) ?? activeProvince}) — มี{' '}
               {availableMoph.length} รายการที่ยังไม่ถูกเพิ่ม
             </p>
@@ -437,7 +438,7 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
               ))}
             </select>
             <div>
-              <label className="mb-1 block font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+              <label className="mb-1 block font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
                 LEVEL
               </label>
               <select
@@ -454,7 +455,7 @@ export function HospitalsTab({ autoEditHcode, onAutoEditConsumed }: HospitalsTab
               </select>
             </div>
             {addMessage ? (
-              <div className="text-[12px]" style={{ color: '#b91c1c' }}>
+              <div className="text-caption" style={{ color: COLOR.riskHighText }}>
                 {addMessage}
               </div>
             ) : null}

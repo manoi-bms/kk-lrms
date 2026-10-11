@@ -180,10 +180,10 @@ function BulkAddBody({ open, onClose, provinceCode, provinceName, onAdded }: Pro
         style={{ borderColor: 'var(--rule-strong)' }}
       >
         <DialogTitle className="flex flex-col gap-0.5">
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
+          <div className="font-mono text-caption uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
             BULK ADD · จังหวัด {provinceCode}
           </div>
-          <div className="text-[16px] font-semibold" style={{ color: 'var(--ink-navy)' }}>
+          <div className="text-body-lg font-semibold" style={{ color: 'var(--ink-navy)' }}>
             เพิ่มโรงพยาบาลในจังหวัด{provinceName ? ` ${provinceName}` : ''}
           </div>
         </DialogTitle>
@@ -197,14 +197,14 @@ function BulkAddBody({ open, onClose, provinceCode, provinceName, onAdded }: Pro
           <LoadingState message="กำลังโหลดทะเบียน MOPH..." />
         ) : available.length === 0 ? (
           <div
-            className="border bg-white px-4 py-6 text-center font-mono text-[12px] text-[var(--ink-navy-dim)]"
+            className="border bg-white px-4 py-6 text-center font-mono text-caption text-[var(--ink-navy-dim)]"
             style={{ borderColor: 'var(--rule-strong)' }}
           >
             ไม่มีโรงพยาบาลเหลืออยู่ในทะเบียน MOPH ของจังหวัดนี้ที่ยังไม่ถูกเพิ่ม
           </div>
         ) : (
           <>
-            <div className="mb-2 flex items-center justify-between font-mono text-[11px]">
+            <div className="mb-2 flex items-center justify-between font-mono text-caption">
               <button
                 type="button"
                 onClick={toggleAll}
@@ -229,7 +229,7 @@ function BulkAddBody({ open, onClose, provinceCode, provinceName, onAdded }: Pro
 
             <div className="border bg-white" style={{ borderColor: 'var(--rule-strong)' }}>
               <div
-                className="grid gap-2 border-b px-3 py-2 font-mono text-[10px] tracking-[0.1em] text-[var(--ink-navy-muted)]"
+                className="grid gap-2 border-b px-3 py-2 font-mono text-caption tracking-[0.1em] text-[var(--ink-navy-muted)]"
                 style={{
                   gridTemplateColumns: '40px 80px 1fr 60px 60px',
                   borderColor: 'var(--rule-strong)',
@@ -247,7 +247,7 @@ function BulkAddBody({ open, onClose, provinceCode, provinceName, onAdded }: Pro
                 return (
                   <label
                     key={m.hcode}
-                    className="grid cursor-pointer items-center gap-2 border-b px-3 py-2 text-[13px] hover:bg-[var(--accent-navy-soft)] last:border-b-0"
+                    className="grid cursor-pointer items-center gap-2 border-b px-3 py-2 text-caption hover:bg-[var(--accent-navy-soft)] last:border-b-0"
                     style={{
                       gridTemplateColumns: '40px 80px 1fr 60px 60px',
                       borderColor: 'var(--rule-hair)',
@@ -262,15 +262,15 @@ function BulkAddBody({ open, onClose, provinceCode, provinceName, onAdded }: Pro
                       disabled={busy}
                       className="h-4 w-4"
                     />
-                    <span className="font-mono text-[11px] text-[var(--ink-navy-dim)]">
+                    <span className="font-mono text-caption text-[var(--ink-navy-dim)]">
                       {m.hcode}
                     </span>
                     <span className="flex items-center gap-1.5 truncate">
                       <Building2 className="h-3.5 w-3.5 text-[var(--ink-navy-muted)]" />
                       <span className="truncate">{m.name}</span>
                     </span>
-                    <span className="font-mono text-[11px] text-[var(--ink-navy-dim)]">{lvl}</span>
-                    <span className="text-right font-mono text-[11px] text-[var(--ink-navy-dim)]">
+                    <span className="font-mono text-caption text-[var(--ink-navy-dim)]">{lvl}</span>
+                    <span className="text-right font-mono text-caption text-[var(--ink-navy-dim)]">
                       {m.bedCount ?? '—'}
                     </span>
                   </label>
@@ -278,14 +278,14 @@ function BulkAddBody({ open, onClose, provinceCode, provinceName, onAdded }: Pro
               })}
             </div>
 
-            <p className="mt-2 font-mono text-[10px] leading-snug text-[var(--ink-navy-muted)]">
+            <p className="mt-2 font-mono text-caption leading-snug text-[var(--ink-navy-muted)]">
               ระบบจะเลือก LEVEL จาก hospital_type_id และตั้ง service_type ให้ตามค่าเริ่มต้น —
               สามารถแก้ไขรายตัวได้ในแท็บ &ldquo;โรงพยาบาล&rdquo; หลังเพิ่ม
             </p>
 
             {errors.length > 0 ? (
               <div
-                className="mt-3 space-y-1 border px-3 py-2 font-mono text-[11px]"
+                className="mt-3 space-y-1 border px-3 py-2 font-mono text-caption"
                 style={{ borderColor: 'var(--risk-high)', color: 'var(--risk-high)' }}
               >
                 <div className="flex items-center gap-1.5 font-semibold">

@@ -1,6 +1,7 @@
 // T041: ConnectionStatus — status dot + label + last sync timestamp
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import { ConnectionStatus as ConnectionStatusEnum } from '@/types/domain';
 import { cn } from '@/lib/utils';
 import { formatThaiDate, formatThaiTime } from '@/lib/utils';
@@ -13,14 +14,14 @@ interface ConnectionStatusProps {
 
 const STATUS_CONFIG = {
   [ConnectionStatusEnum.ONLINE]: {
-    color: '#22c55e',
+    color: COLOR.riskLow,
     label: 'ออนไลน์',
-    dotClass: 'bg-green-500',
+    dotClass: 'bg-ok',
   },
   [ConnectionStatusEnum.OFFLINE]: {
-    color: '#ef4444',
+    color: COLOR.riskHigh,
     label: 'ออฟไลน์',
-    dotClass: 'bg-red-500',
+    dotClass: 'bg-danger',
   },
   [ConnectionStatusEnum.UNKNOWN]: {
     color: '#9ca3af',

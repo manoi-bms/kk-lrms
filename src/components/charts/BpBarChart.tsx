@@ -1,6 +1,7 @@
 // T077: BpBarChart — grouped SBP/DBP bars with hypertension reference lines
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import {
   ResponsiveContainer,
   BarChart,
@@ -60,9 +61,9 @@ export function BpBarChart({ vitals }: BpBarChartProps) {
           />
 
           {/* Hypertension reference line */}
-          <ReferenceLine y={140} stroke="#ef4444" strokeDasharray="3 3" label="140" />
+          <ReferenceLine y={140} stroke={COLOR.riskHigh} strokeDasharray="3 3" label="140" />
           {/* Hypotension reference line */}
-          <ReferenceLine y={90} stroke="#eab308" strokeDasharray="3 3" label="90" />
+          <ReferenceLine y={90} stroke={COLOR.riskMedium} strokeDasharray="3 3" label="90" />
 
           <Bar dataKey="sbp" fill="#3b82f6" radius={[4, 4, 0, 0]} />
           <Bar dataKey="dbp" fill="#93c5fd" radius={[4, 4, 0, 0]} />

@@ -18,6 +18,7 @@ describe('mapColorClass', () => {
     ['bg', 'emerald', 100, 'bg-ok-tint'], ['text', 'green', 800, 'text-ok-text'],
     ['bg', 'teal', 50, 'bg-brand-soft'], ['bg', 'teal', 600, 'bg-brand'], ['text', 'teal', 700, 'text-brand'],
     ['fill', 'rose', 500, 'fill-danger'],
+    ['ring', 'red', 100, 'ring-danger/40'], ['ring', 'amber', 500, 'ring-warn'],
   ])('%s-%s-%i → %s', (prop, hue, shade, out) => expect(mapColorClass(prop, hue, shade)).toBe(out));
   it('gradients and unknown hues are left for manual review', () => {
     expect(mapColorClass('from', 'red', 500)).toBeNull();

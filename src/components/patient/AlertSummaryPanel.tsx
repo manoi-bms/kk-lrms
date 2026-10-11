@@ -57,7 +57,7 @@ export function AlertSummaryPanel({ alerts, observations }: AlertSummaryPanelPro
   return (
     <div
       data-testid="alert-summary-panel"
-      className="rounded-2xl border-l-4 border-l-orange-400 bg-orange-50/40 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+      className="rounded-2xl border-l-4 border-l-orange-400 bg-warn-tint/40 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
     >
       <div className="space-y-3">
         {grouped.map((group) => (
@@ -88,7 +88,7 @@ export function AlertSummaryPanel({ alerts, observations }: AlertSummaryPanelPro
                     ({SECTION_LABEL_TH[item.alert.section]}, {item.time})
                   </span>
                   {item.count > 1 && (
-                    <span className="ml-1 rounded bg-slate-200 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-700">
+                    <span className="ml-1 rounded bg-slate-200 px-1.5 py-0.5 font-mono text-caption font-semibold text-slate-700">
                       ×{item.count}
                     </span>
                   )}

@@ -8,6 +8,7 @@
 // the app's air-traffic-control aesthetic and only ever showed labor data.
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import { use, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
@@ -252,20 +253,20 @@ function PartographAuditPanel({ audit }: { audit: PartographAudit | null | undef
           title="คุณภาพการบันทึก Partograph"
           body={`ผู้คลอดที่รับใหม่ใน ${audit.windowDays} วันที่ผ่านมา และมีบันทึก partograph อย่างน้อย 1 จุด — รายชื่อด้านล่างคือรายที่ยังไม่มีบันทึกเลย ใช้ติดตามกับห้องคลอดได้เป็นรายกรณี`}
           trigger={
-            <div className="cursor-help font-mono text-[12px] uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]" />
+            <div className="cursor-help font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]" />
           }
         >
           PARTOGRAPH QUALITY · {audit.windowDays}D
         </KpiTip>
-        <span className="font-mono text-[14px] font-semibold tabular-nums" style={{ color }}>
+        <span className="font-mono text-label font-semibold tabular-nums" style={{ color }}>
           {pct}%{' '}
-          <span className="font-normal text-[12px] text-[var(--ink-navy-muted)]">
+          <span className="font-normal text-caption text-[var(--ink-navy-muted)]">
             ({audit.withPartograph}/{audit.laborRecent} ราย)
           </span>
         </span>
       </div>
       {uncharted.length === 0 ? (
-        <div className="px-3 py-2 font-mono text-[12px]" style={{ color: 'var(--risk-low)' }}>
+        <div className="px-3 py-2 font-mono text-caption" style={{ color: 'var(--risk-low)' }}>
           บันทึกครบทุกราย
         </div>
       ) : (
@@ -273,23 +274,23 @@ function PartographAuditPanel({ audit }: { audit: PartographAudit | null | undef
           {uncharted.map((a) => (
             <div
               key={a.an}
-              className="flex flex-wrap items-center gap-2 border-b px-3 py-1.5 text-[13px]"
+              className="flex flex-wrap items-center gap-2 border-b px-3 py-1.5 text-caption"
               style={{ borderColor: 'var(--rule-hair)' }}
             >
               <span
-                className="border px-1 py-px font-mono text-[11px] font-semibold"
+                className="border px-1 py-px font-mono text-caption font-semibold"
                 style={{ color: 'var(--risk-high)', borderColor: 'var(--risk-high)' }}
               >
                 ไม่มีบันทึก
               </span>
               <span className="text-[var(--ink-navy)]">{maskName(a.name)}</span>
-              <span className="font-mono text-[11px] text-[var(--ink-navy-muted)]">
+              <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
                 AN {a.an} · ADMIT {fmtAuditDate(a.admitDate)} ·{' '}
                 {AUDIT_STATUS_TH[a.laborStatus] ?? a.laborStatus}
               </span>
             </div>
           ))}
-          <div className="px-3 py-1.5 font-mono text-[11px] text-[var(--ink-navy-muted)]">
+          <div className="px-3 py-1.5 font-mono text-caption text-[var(--ink-navy-muted)]">
             บันทึกแล้ว {audit.withPartograph} ราย · ยังไม่บันทึก {uncharted.length} ราย
           </div>
         </div>
@@ -314,10 +315,10 @@ function ancConcerns(j: JourneyListItem): Array<{ label: string; warn?: boolean 
 function ConcernChip({ label, warn }: { label: string; warn?: boolean }) {
   return (
     <span
-      className="ml-1.5 inline-block rounded-sm px-1.5 py-0.5 align-middle font-mono text-[10px] tracking-[0.06em]"
+      className="ml-1.5 inline-block rounded-sm px-1.5 py-0.5 align-middle font-mono text-caption tracking-[0.06em]"
       style={{
-        background: warn ? '#fff5d8' : '#fde2dc',
-        color: warn ? '#92660b' : '#9b2c1c',
+        background: warn ? '#fff5d8' : COLOR.riskHighTint,
+        color: warn ? '#92660b' : COLOR.riskHighText,
         fontWeight: 700,
       }}
     >
@@ -340,26 +341,26 @@ function KpiCell({ group, label, value, unit, sub, valueColor, riskMix }: KpiPro
   return (
     <div className="relative px-5 py-3" style={{ borderRight: '1px solid var(--rule-strong)' }}>
       <div
-        className="absolute right-3 top-1 font-mono text-[8px] tracking-[0.16em] opacity-50"
+        className="absolute right-3 top-1 font-mono text-caption tracking-[0.16em] opacity-50"
         style={{ color: 'var(--ink-navy-muted)' }}
       >
         {group}
       </div>
-      <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
+      <div className="font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
         {label}
       </div>
       <div
-        className="mt-1 font-mono text-[26px] font-semibold leading-none tabular-nums"
+        className="mt-1 font-mono text-page font-semibold leading-none tabular-nums"
         style={{ color: valueColor ?? 'var(--ink-navy)', letterSpacing: '-0.02em' }}
       >
         {value}
         {unit && (
-          <span className="ml-1.5 text-[12px] font-normal text-[var(--ink-navy-muted)]">
+          <span className="ml-1.5 text-caption font-normal text-[var(--ink-navy-muted)]">
             {unit}
           </span>
         )}
       </div>
-      {sub && <div className="mt-1 font-mono text-[11px] text-[var(--ink-navy-dim)]">{sub}</div>}
+      {sub && <div className="mt-1 font-mono text-caption text-[var(--ink-navy-dim)]">{sub}</div>}
       {riskMix && riskMix.low + riskMix.medium + riskMix.high > 0 && (
         <div
           className="mt-2 flex h-1 overflow-hidden rounded-sm"
@@ -387,21 +388,21 @@ function Sig({ label, value, unit, sub, alarm, warn }: SigProps) {
   const color = alarm ? '#9b2c1c' : warn ? '#92660b' : 'var(--ink-navy)';
   return (
     <div className="border-r border-[var(--rule-strong)] px-3 py-2.5 last:border-r-0">
-      <div className="font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+      <div className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
         {label}
       </div>
       <div
-        className="mt-0.5 font-mono text-[20px] font-semibold leading-tight tabular-nums"
+        className="mt-0.5 font-mono text-title font-semibold leading-tight tabular-nums"
         style={{ color, letterSpacing: '-0.02em' }}
       >
         {value}
         {unit && (
-          <span className="ml-1 text-[10px] font-normal text-[var(--ink-navy-muted)]">{unit}</span>
+          <span className="ml-1 text-caption font-normal text-[var(--ink-navy-muted)]">{unit}</span>
         )}
       </div>
       {sub && (
         <div
-          className="mt-0.5 font-mono text-[10px]"
+          className="mt-0.5 font-mono text-caption"
           style={{ color: alarm ? '#9b2c1c' : 'var(--ink-navy-muted)' }}
         >
           {sub}
@@ -445,34 +446,34 @@ function LaborRow({ p, isSelected, onSelect, onOpen }: LaborRowProps) {
     >
       <div style={{ height: '100%', alignSelf: 'stretch', background: tierColor(tier) }} />
       <div>
-        <div className="text-[13px] font-medium text-[var(--ink-navy)] leading-tight">
+        <div className="text-caption font-medium text-[var(--ink-navy)] leading-tight">
           {maskName(p.name)}
           {concerns.slice(0, 2).map((c) => (
             <ConcernChip key={c.label} label={c.label} warn={c.warn} />
           ))}
         </div>
-        <div className="mt-0.5 font-mono text-[11px] text-[var(--ink-navy-muted)]">
+        <div className="mt-0.5 font-mono text-caption text-[var(--ink-navy-muted)]">
           {p.age}y · G{p.gravida ?? '-'} · AN {p.an}
         </div>
       </div>
-      <div className="text-center font-mono text-[11px] text-[var(--ink-navy-dim)]">
+      <div className="text-center font-mono text-caption text-[var(--ink-navy-dim)]">
         {p.ga_weeks != null ? `${p.ga_weeks}w` : '—'}
       </div>
       <div className="flex flex-col">
-        <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
+        <span className="font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
           CERVIX
         </span>
-        <span className="font-mono text-[12px] font-semibold text-[var(--ink-navy)]">
+        <span className="font-mono text-caption font-semibold text-[var(--ink-navy)]">
           {cervix != null ? `${cervix} cm` : '—'}
         </span>
       </div>
       <div
-        className="text-right font-mono text-[12px] font-semibold tabular-nums"
+        className="text-right font-mono text-caption font-semibold tabular-nums"
         style={{ color: tierColor(tier) }}
       >
         {p.cpd_score != null ? `${p.cpd_score}%` : '—'}
         {admitH != null && (
-          <div className="font-mono text-[9px] font-normal text-[var(--ink-navy-muted)]">
+          <div className="font-mono text-caption font-normal text-[var(--ink-navy-muted)]">
             {Math.floor(admitH)}h
           </div>
         )}
@@ -514,34 +515,34 @@ function AncRow({ j, isSelected, onSelect, onOpen }: AncRowProps) {
     >
       <div style={{ height: '100%', alignSelf: 'stretch', background: tierColor(tier) }} />
       <div>
-        <div className="text-[13px] font-medium text-[var(--ink-navy)] leading-tight">
+        <div className="text-caption font-medium text-[var(--ink-navy)] leading-tight">
           {maskName(j.name)}
           {concerns.slice(0, 2).map((c) => (
             <ConcernChip key={c.label} label={c.label} warn={c.warn} />
           ))}
         </div>
-        <div className="mt-0.5 font-mono text-[11px] text-[var(--ink-navy-muted)]">
+        <div className="mt-0.5 font-mono text-caption text-[var(--ink-navy-muted)]">
           {j.age}y · G{j.gravida ?? '-'}P{j.para ?? 0} · HN {j.hn}
         </div>
       </div>
-      <div className="text-center font-mono text-[11px] text-[var(--ink-navy-dim)]">
-        <span className="text-[14px] font-semibold text-[var(--ink-navy)]">{j.gaWeeks ?? '—'}</span>
+      <div className="text-center font-mono text-caption text-[var(--ink-navy-dim)]">
+        <span className="text-label font-semibold text-[var(--ink-navy)]">{j.gaWeeks ?? '—'}</span>
         <span className="opacity-60">w</span>
       </div>
       <div className="flex flex-col">
-        <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
+        <span className="font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
           VISITS
         </span>
-        <span className="font-mono text-[12px] font-semibold text-[var(--ink-navy)]">
+        <span className="font-mono text-caption font-semibold text-[var(--ink-navy)]">
           {j.ancVisitCount}/8
         </span>
       </div>
       <div className="flex flex-col">
-        <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
+        <span className="font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
           LAST ANC
         </span>
         <span
-          className="font-mono text-[11px]"
+          className="font-mono text-caption"
           style={{
             color: lastOverdue ? '#9b2c1c' : 'var(--ink-navy-dim)',
             fontWeight: lastOverdue ? 700 : 400,
@@ -578,14 +579,14 @@ function GroupHeader({
       }}
     >
       <div>
-        <span className="font-mono text-[11px] uppercase tracking-[0.14em] font-semibold text-[var(--accent-navy)]">
+        <span className="font-mono text-caption uppercase tracking-[0.14em] font-semibold text-[var(--accent-navy)]">
           {title}
         </span>
         {sub && (
-          <span className="ml-2 font-mono text-[10px] text-[var(--ink-navy-muted)]">{sub}</span>
+          <span className="ml-2 font-mono text-caption text-[var(--ink-navy-muted)]">{sub}</span>
         )}
       </div>
-      <div className="font-mono text-[11px] font-semibold text-[var(--accent-navy)] tabular-nums">
+      <div className="font-mono text-caption font-semibold text-[var(--accent-navy)] tabular-nums">
         {count}
         {hr != null && hr > 0 && <span className="ml-2 text-[var(--risk-high)]">· HR3 {hr}</span>}
       </div>
@@ -601,10 +602,10 @@ function EmptyPreview({ message }: { message: string }) {
       className="flex h-full flex-col items-center justify-center p-10 text-center"
       style={{ minHeight: 480 }}
     >
-      <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
+      <div className="font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
         SELECT A PATIENT
       </div>
-      <p className="mt-2 max-w-sm text-[12px] text-[var(--ink-navy-dim)]">{message}</p>
+      <p className="mt-2 max-w-sm text-caption text-[var(--ink-navy-dim)]">{message}</p>
     </div>
   );
 }
@@ -636,10 +637,10 @@ function LaborPreview({ patient, hcode }: { patient: LaborPatient; hcode: string
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-[18px] font-bold leading-tight text-[var(--ink-navy)]">
+            <div className="text-title font-bold leading-tight text-[var(--ink-navy)]">
               {maskName(patient.name)}
             </div>
-            <div className="mt-1 font-mono text-[12px] text-[var(--ink-navy-muted)]">
+            <div className="mt-1 font-mono text-caption text-[var(--ink-navy-muted)]">
               {patient.age}y · G{patient.gravida ?? '-'} · HN {patient.hn} · AN {patient.an}
             </div>
             {concerns.length > 0 && (
@@ -653,7 +654,7 @@ function LaborPreview({ patient, hcode }: { patient: LaborPatient; hcode: string
           <button
             type="button"
             onClick={() => router.push(`/patients/${buildPatientId(hcode, patient.an)}`)}
-            className="inline-flex items-center gap-1 border bg-white px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.06em]"
+            className="inline-flex items-center gap-1 border bg-white px-2.5 py-1 font-mono text-caption uppercase tracking-[0.06em]"
             style={{ borderColor: 'var(--accent-navy)', color: 'var(--accent-navy)' }}
           >
             เปิดรายละเอียด <ExternalLink className="h-3 w-3" />
@@ -700,10 +701,10 @@ function LaborPreview({ patient, hcode }: { patient: LaborPatient; hcode: string
           className="mb-2 flex items-baseline justify-between border-b pb-1"
           style={{ borderColor: 'var(--rule-strong)' }}
         >
-          <div className="font-mono text-[11px] font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
+          <div className="font-mono text-caption font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
             <span className="text-[var(--ink-navy-muted)] mr-1.5">02</span>STAGE / PROGRESS
           </div>
-          <div className="font-mono text-[10px] tracking-[0.08em] text-[var(--ink-navy-muted)]">
+          <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
             {patient.labor_status}
           </div>
         </div>
@@ -796,10 +797,10 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-[18px] font-bold leading-tight text-[var(--ink-navy)]">
+            <div className="text-title font-bold leading-tight text-[var(--ink-navy)]">
               {maskName(journey.name)}
             </div>
-            <div className="mt-1 font-mono text-[12px] text-[var(--ink-navy-muted)]">
+            <div className="mt-1 font-mono text-caption text-[var(--ink-navy-muted)]">
               {journey.age}y · G{journey.gravida ?? '-'}P{journey.para ?? 0} · HN {journey.hn}
             </div>
             {(risk?.triggeredRules?.length ?? 0) > 0 && (
@@ -821,7 +822,7 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
           <button
             type="button"
             onClick={() => router.push(`/pregnancies/${journey.id}`)}
-            className="inline-flex items-center gap-1 whitespace-nowrap border bg-white px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.06em]"
+            className="inline-flex items-center gap-1 whitespace-nowrap border bg-white px-2.5 py-1 font-mono text-caption uppercase tracking-[0.06em]"
             style={{ borderColor: 'var(--accent-navy)', color: 'var(--accent-navy)' }}
           >
             เปิดรายละเอียด <ExternalLink className="h-3 w-3" />
@@ -863,16 +864,16 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
           className="mb-2 flex items-baseline justify-between border-b pb-1"
           style={{ borderColor: 'var(--rule-strong)' }}
         >
-          <div className="font-mono text-[11px] font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
+          <div className="font-mono text-caption font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
             <span className="text-[var(--ink-navy-muted)] mr-1.5">02</span>PREGNANCY TIMELINE
           </div>
-          <div className="font-mono text-[10px] tracking-[0.08em] text-[var(--ink-navy-muted)]">
+          <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
             {journey.lmp ? `LMP ${journey.lmp.slice(0, 10)}` : 'LMP —'}
             {journey.edc ? ` · EDC ${journey.edc.slice(0, 10)}` : ''}
           </div>
         </div>
         <div className="bg-white p-3" style={{ border: '1px solid var(--rule-strong)' }}>
-          <div className="mb-2 flex justify-between font-mono text-[11px] text-[var(--ink-navy-muted)]">
+          <div className="mb-2 flex justify-between font-mono text-caption text-[var(--ink-navy-muted)]">
             <span>
               GA:{' '}
               <span className="font-semibold text-[var(--ink-navy)]">
@@ -900,7 +901,7 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
               style={{ width: `${edcPct}%`, background: 'var(--accent-navy)' }}
             />
           </div>
-          <div className="mt-1 flex justify-between font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
+          <div className="mt-1 flex justify-between font-mono text-caption uppercase tracking-[0.08em] text-[var(--ink-navy-muted)]">
             <span>LMP</span>
             <span>T1 12w</span>
             <span>T2 27w</span>
@@ -917,11 +918,11 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
             className="mb-2 flex items-baseline justify-between border-b pb-1"
             style={{ borderColor: 'var(--rule-strong)' }}
           >
-            <div className="font-mono text-[11px] font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
+            <div className="font-mono text-caption font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
               <span className="text-[var(--ink-navy-muted)] mr-1.5">03</span>
               RISK RULES TRIGGERED
             </div>
-            <div className="font-mono text-[10px] tracking-[0.08em] text-[var(--ink-navy-muted)]">
+            <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
               screened {risk.screenedAt.slice(0, 10)}
             </div>
           </div>
@@ -932,10 +933,10 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
                 return (
                   <div
                     key={rid}
-                    className="flex items-center gap-2 px-3 py-1.5 text-[12px]"
+                    className="flex items-center gap-2 px-3 py-1.5 text-caption"
                     style={{ borderBottom: '1px solid var(--rule-hair)' }}
                   >
-                    <span className="font-mono text-[10px] text-[var(--ink-navy-muted)]">
+                    <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
                       {rid}
                     </span>
                   </div>
@@ -944,24 +945,24 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
               const isHr3 = r.level === 'HR3';
               const isHr2 = r.level === 'HR2';
               const bg = isHr3 ? '#fde2dc' : isHr2 ? '#fff5d8' : 'rgba(234,179,8,0.18)';
-              const ink = isHr3 ? '#9b2c1c' : '#92660b';
+              const ink = isHr3 ? '#9b2c1c' : COLOR.riskMediumText;
               return (
                 <div
                   key={rid}
-                  className="grid items-center gap-2 px-3 py-1.5 text-[12px]"
+                  className="grid items-center gap-2 px-3 py-1.5 text-caption"
                   style={{
                     gridTemplateColumns: '60px 1fr auto',
                     borderBottom: '1px solid var(--rule-hair)',
                   }}
                 >
                   <span
-                    className="text-center font-mono text-[10px] font-bold"
+                    className="text-center font-mono text-caption font-bold"
                     style={{ background: bg, color: ink, padding: '2px 0' }}
                   >
                     {r.level}
                   </span>
                   <span className="text-[var(--ink-navy)]">{r.labelTh}</span>
-                  <span className="font-mono text-[10px] text-[var(--ink-navy-muted)]">
+                  <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
                     {r.source.replace(/_/g, ' ')}
                   </span>
                 </div>
@@ -978,11 +979,11 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
             className="mb-2 flex items-baseline justify-between border-b pb-1"
             style={{ borderColor: 'var(--rule-strong)' }}
           >
-            <div className="font-mono text-[11px] font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
+            <div className="font-mono text-caption font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
               <span className="text-[var(--ink-navy-muted)] mr-1.5">04</span>
               ANC VISIT TIMELINE · BP
             </div>
-            <div className="font-mono text-[10px] tracking-[0.08em] text-[var(--ink-navy-muted)]">
+            <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
               {visitsChrono.length} visits · {journey.ancVisitCount} expected
             </div>
           </div>
@@ -1001,11 +1002,11 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
           className="mb-2 flex items-baseline justify-between border-b pb-1"
           style={{ borderColor: 'var(--rule-strong)' }}
         >
-          <div className="font-mono text-[11px] font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
+          <div className="font-mono text-caption font-semibold tracking-[0.1em] text-[var(--ink-navy)]">
             <span className="text-[var(--ink-navy-muted)] mr-1.5">05</span>
             LAB SNAPSHOT
           </div>
-          <div className="font-mono text-[10px] tracking-[0.08em] text-[var(--ink-navy-muted)]">
+          <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
             booking + latest
           </div>
         </div>
@@ -1057,11 +1058,11 @@ function LabCell({
         borderBottom: '1px solid var(--rule-hair)',
       }}
     >
-      <div className="font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+      <div className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
         {label}
       </div>
       <div
-        className="mt-0.5 font-mono text-[12px] font-semibold"
+        className="mt-0.5 font-mono text-caption font-semibold"
         style={{
           color: isAlarm ? '#9b2c1c' : isPending ? 'var(--ink-navy-muted)' : 'var(--ink-navy)',
           fontWeight: isAlarm ? 700 : isPending ? 400 : 600,
@@ -1347,30 +1348,30 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
       >
         <button
           onClick={() => router.push('/hospitals')}
-          className="inline-flex items-center gap-1 border bg-white px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.06em] text-[var(--ink-navy-muted)]"
+          className="inline-flex items-center gap-1 border bg-white px-2.5 py-1 font-mono text-caption uppercase tracking-[0.06em] text-[var(--ink-navy-muted)]"
           style={{ borderColor: 'var(--rule-strong)' }}
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Back
         </button>
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
+          <div className="font-mono text-caption uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
             PROVINCIAL REGISTRY · HOSPITAL · MISSION CONSOLE
           </div>
-          <h1 className="mt-0.5 text-[24px] font-bold leading-tight tracking-tight text-[var(--ink-navy)]">
+          <h1 className="mt-0.5 text-page font-bold leading-tight tracking-tight text-[var(--ink-navy)]">
             {hospitalName}
           </h1>
         </div>
         <div className="ml-auto flex items-center gap-2">
           {hospital?.level && (
             <span
-              className="border px-2 py-0.5 font-mono text-[11px] tracking-[0.06em] text-[var(--ink-navy-dim)]"
+              className="border px-2 py-0.5 font-mono text-caption tracking-[0.06em] text-[var(--ink-navy-dim)]"
               style={{ borderColor: 'var(--rule-strong)' }}
             >
               {hospital.level}
             </span>
           )}
           <span
-            className="border px-2 py-0.5 font-mono text-[11px] tracking-[0.06em] text-[var(--ink-navy-dim)]"
+            className="border px-2 py-0.5 font-mono text-caption tracking-[0.06em] text-[var(--ink-navy-dim)]"
             style={{ borderColor: 'var(--rule-strong)' }}
           >
             {hcode}
@@ -1379,7 +1380,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
             <ConnectionStatus
               status={hospital.connectionStatus as ConnectionStatusEnum}
               lastSyncAt={hospital.lastSyncAt ?? null}
-              className="text-[11px]"
+              className="text-caption"
             />
           )}
         </div>
@@ -1478,47 +1479,47 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
             className="flex items-baseline justify-between border-b px-5 py-2"
             style={{ borderColor: 'var(--accent-navy)' }}
           >
-            <div className="font-mono text-[12px] tracking-[0.1em] text-[var(--ink-navy)]">
+            <div className="font-mono text-caption tracking-[0.1em] text-[var(--ink-navy)]">
               <span className="mr-1.5 text-[var(--ink-navy-muted)]">02</span>
               ผู้คลอดที่จะส่งต่อมา · GA ≥ {incomingData?.minGaWeeks ?? 34} สัปดาห์
             </div>
-            <div className="font-mono text-[10px] tracking-[0.08em] text-[var(--ink-navy-muted)]">
+            <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
               {incomingCount} ราย ·{' '}
               {incomingItems.length === incomingCount ? 'ทั้งหมด' : `แสดง ${incomingItems.length}`}
             </div>
           </div>
           <div className="overflow-x-auto" style={{ maxHeight: 320 }}>
-            <table className="w-full border-collapse text-[13px]">
+            <table className="w-full border-collapse text-caption">
               <thead className="sticky top-0 bg-[var(--surface-cool)] text-[var(--ink-navy-muted)]">
                 <tr>
-                  <th className="px-5 py-1.5 text-left font-mono text-[10px] uppercase tracking-[0.1em]">
+                  <th className="px-5 py-1.5 text-left font-mono text-caption uppercase tracking-[0.1em]">
                     HN
                   </th>
-                  <th className="px-3 py-1.5 text-left font-mono text-[10px] uppercase tracking-[0.1em]">
+                  <th className="px-3 py-1.5 text-left font-mono text-caption uppercase tracking-[0.1em]">
                     ชื่อ
                   </th>
-                  <th className="px-3 py-1.5 text-right font-mono text-[10px] uppercase tracking-[0.1em]">
+                  <th className="px-3 py-1.5 text-right font-mono text-caption uppercase tracking-[0.1em]">
                     อายุ
                   </th>
-                  <th className="px-3 py-1.5 text-right font-mono text-[10px] uppercase tracking-[0.1em]">
+                  <th className="px-3 py-1.5 text-right font-mono text-caption uppercase tracking-[0.1em]">
                     G/P
                   </th>
-                  <th className="px-3 py-1.5 text-right font-mono text-[10px] uppercase tracking-[0.1em]">
+                  <th className="px-3 py-1.5 text-right font-mono text-caption uppercase tracking-[0.1em]">
                     GA
                   </th>
-                  <th className="px-3 py-1.5 text-right font-mono text-[10px] uppercase tracking-[0.1em]">
+                  <th className="px-3 py-1.5 text-right font-mono text-caption uppercase tracking-[0.1em]">
                     EFW
                   </th>
-                  <th className="px-3 py-1.5 text-right font-mono text-[10px] uppercase tracking-[0.1em]">
+                  <th className="px-3 py-1.5 text-right font-mono text-caption uppercase tracking-[0.1em]">
                     EDC / วันที่เหลือ
                   </th>
-                  <th className="px-3 py-1.5 text-center font-mono text-[10px] uppercase tracking-[0.1em]">
+                  <th className="px-3 py-1.5 text-center font-mono text-caption uppercase tracking-[0.1em]">
                     ANC
                   </th>
-                  <th className="px-3 py-1.5 text-center font-mono text-[10px] uppercase tracking-[0.1em]">
+                  <th className="px-3 py-1.5 text-center font-mono text-caption uppercase tracking-[0.1em]">
                     เหตุผล
                   </th>
-                  <th className="px-5 py-1.5 text-left font-mono text-[10px] uppercase tracking-[0.1em]">
+                  <th className="px-5 py-1.5 text-left font-mono text-caption uppercase tracking-[0.1em]">
                     จาก
                   </th>
                 </tr>
@@ -1539,7 +1540,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
                       style={{ borderColor: 'var(--rule-hair)' }}
                       onClick={() => router.push(`/pregnancies/${p.id}`)}
                     >
-                      <td className="px-5 py-1.5 font-mono text-[12px] tabular-nums text-[var(--ink-navy)]">
+                      <td className="px-5 py-1.5 font-mono text-caption tabular-nums text-[var(--ink-navy)]">
                         {p.hn}
                       </td>
                       <td className="px-3 py-1.5 text-[var(--ink-navy)]">{maskName(p.name)}</td>
@@ -1559,14 +1560,14 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
                       >
                         {p.edc ? p.edc.slice(0, 10) : '—'}
                         {p.daysToEdc != null && (
-                          <span className="ml-1.5 text-[10px] text-[var(--ink-navy-muted)]">
+                          <span className="ml-1.5 text-caption text-[var(--ink-navy-muted)]">
                             ({p.daysToEdc < 0 ? `เลย ${Math.abs(p.daysToEdc)}` : `${p.daysToEdc}`}d)
                           </span>
                         )}
                       </td>
                       <td className="px-3 py-1.5 text-center">
                         <span
-                          className="inline-block border px-1.5 py-0.5 font-mono text-[10px]"
+                          className="inline-block border px-1.5 py-0.5 font-mono text-caption"
                           style={{
                             color: tierColor(riskTier),
                             borderColor: tierColor(riskTier),
@@ -1575,11 +1576,11 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
                           {p.ancRiskLevel}
                         </span>
                       </td>
-                      <td className="px-3 py-1.5 text-center font-mono text-[10px] text-[var(--ink-navy-dim)]">
+                      <td className="px-3 py-1.5 text-center font-mono text-caption text-[var(--ink-navy-dim)]">
                         {p.triggers.join('+') || '—'}
                       </td>
-                      <td className="px-5 py-1.5 text-[12px] text-[var(--ink-navy-dim)]">
-                        <span className="font-mono text-[10px] text-[var(--ink-navy-muted)]">
+                      <td className="px-5 py-1.5 text-caption text-[var(--ink-navy-dim)]">
+                        <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
                           [{p.fromHcode}]
                         </span>{' '}
                         {p.fromHospitalName}
@@ -1600,7 +1601,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
       >
         <button
           onClick={() => setTab('labor')}
-          className="-mb-px flex items-center gap-2 px-5 py-2.5 text-[14px]"
+          className="-mb-px flex items-center gap-2 px-5 py-2.5 text-label"
           style={{
             color: tab === 'labor' ? 'var(--ink-navy)' : 'var(--ink-navy-muted)',
             fontWeight: tab === 'labor' ? 700 : 500,
@@ -1610,7 +1611,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
         >
           LABOR WARD
           <span
-            className="rounded-full px-2 py-0.5 font-mono text-[10px] tabular-nums"
+            className="rounded-full px-2 py-0.5 font-mono text-caption tabular-nums"
             style={{
               background: tab === 'labor' ? 'var(--accent-navy-soft)' : 'var(--rule-hair)',
               color: tab === 'labor' ? 'var(--accent-navy)' : 'var(--ink-navy-muted)',
@@ -1620,8 +1621,8 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
           </span>
           {laborAlarmCount > 0 && (
             <span
-              className="rounded-sm px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.08em]"
-              style={{ background: '#fde2dc', color: '#9b2c1c' }}
+              className="rounded-sm px-1.5 py-0.5 font-mono text-caption font-bold uppercase tracking-[0.08em]"
+              style={{ background: COLOR.riskHighTint, color: COLOR.riskHighText }}
             >
               {laborAlarmCount} ALARM
             </span>
@@ -1629,7 +1630,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
         </button>
         <button
           onClick={() => setTab('anc')}
-          className="-mb-px flex items-center gap-2 px-5 py-2.5 text-[14px]"
+          className="-mb-px flex items-center gap-2 px-5 py-2.5 text-label"
           style={{
             color: tab === 'anc' ? 'var(--ink-navy)' : 'var(--ink-navy-muted)',
             fontWeight: tab === 'anc' ? 700 : 500,
@@ -1638,7 +1639,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
         >
           ANC REGISTRY
           <span
-            className="rounded-full px-2 py-0.5 font-mono text-[10px] tabular-nums"
+            className="rounded-full px-2 py-0.5 font-mono text-caption tabular-nums"
             style={{
               background: tab === 'anc' ? 'var(--accent-navy-soft)' : 'var(--rule-hair)',
               color: tab === 'anc' ? 'var(--accent-navy)' : 'var(--ink-navy-muted)',
@@ -1675,13 +1676,13 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
             className="mb-2 flex items-baseline justify-between border-b pb-1"
             style={{ borderColor: 'var(--accent-navy)' }}
           >
-            <div className="font-mono text-[12px] tracking-[0.1em] text-[var(--ink-navy)]">
+            <div className="font-mono text-caption tracking-[0.1em] text-[var(--ink-navy)]">
               <span className="text-[var(--ink-navy-muted)] mr-1.5">01</span>
               {tab === 'labor'
                 ? 'LABOR FLOOR · เรียงตามความเสี่ยง'
                 : 'ANC LIST · เรียงตามไตรมาส / ความเสี่ยง'}
             </div>
-            <div className="font-mono text-[10px] tracking-[0.08em] text-[var(--ink-navy-muted)]">
+            <div className="font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
               {tab === 'labor'
                 ? labor.length < laborTotal
                   ? `แสดง ${labor.length} จาก ${laborTotal} PATIENTS`
@@ -1700,7 +1701,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
                   className="border bg-white py-10 text-center"
                   style={{ borderColor: 'var(--rule-strong)' }}
                 >
-                  <p className="font-mono text-[11px] text-[var(--ink-navy-muted)]">
+                  <p className="font-mono text-caption text-[var(--ink-navy-muted)]">
                     ไม่มีผู้คลอดในขณะนี้
                   </p>
                 </div>
@@ -1727,7 +1728,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
               className="border bg-white py-10 text-center"
               style={{ borderColor: 'var(--rule-strong)' }}
             >
-              <p className="font-mono text-[11px] text-[var(--ink-navy-muted)]">
+              <p className="font-mono text-caption text-[var(--ink-navy-muted)]">
                 ยังไม่มีหญิงตั้งครรภ์ลงทะเบียนกับโรงพยาบาลนี้
               </p>
             </div>

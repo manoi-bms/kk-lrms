@@ -40,7 +40,9 @@ export function mapColorClass(prop: string, hue: string, shade: number): string 
   if (prop === 'bg') return shade <= 300 ? `bg-${s}-tint` : `bg-${s}`;
   if (prop === 'text') return shade <= 500 ? `text-${s}` : `text-${s}-text`;
   if (prop === 'border') return shade <= 300 ? `border-${s}/40` : `border-${s}`;
-  return SIMPLE_PROPS.has(prop) ? `${prop}-${s}` : null;
+  if (!SIMPLE_PROPS.has(prop)) return null;
+  // Light shades (ring-red-100/200) are faint edges; keep them faint, like border.
+  return shade <= 300 && prop !== 'fill' && prop !== 'stroke' ? `${prop}-${s}/40` : `${prop}-${s}`;
 }
 
 const PREFIX = '((?:[a-z0-9-]+:)*)';

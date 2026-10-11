@@ -8,6 +8,7 @@
 // full step trail.
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import useSWR from 'swr';
 import { useMemo, useState } from 'react';
 import { Activity, AlertTriangle, RefreshCw } from 'lucide-react';
@@ -81,11 +82,11 @@ function outcomeStyle(outcome: RunOutcome | 'never'): {
 } {
   switch (outcome) {
     case 'success':
-      return { bg: '#d1fae5', ink: '#065f46', label: 'SUCCESS' };
+      return { bg: COLOR.riskLowTint, ink: COLOR.riskLowText, label: 'SUCCESS' };
     case 'partial':
-      return { bg: '#fef3c7', ink: '#92400e', label: 'PARTIAL' };
+      return { bg: COLOR.riskMediumTint, ink: COLOR.riskMediumText, label: 'PARTIAL' };
     case 'failed':
-      return { bg: '#fee2e2', ink: '#991b1b', label: 'FAILED' };
+      return { bg: COLOR.riskHighTint, ink: COLOR.riskHighText, label: 'FAILED' };
     case 'running':
       return { bg: '#dbeafe', ink: '#1e3a8a', label: 'RUNNING' };
     case 'never':
@@ -170,7 +171,7 @@ export function SyncOverviewTab() {
         className="flex flex-wrap items-center gap-2 border bg-white px-3 py-2"
         style={{ borderColor: 'var(--rule-strong)' }}
       >
-        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+        <span className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
           FILTER
         </span>
         {(
@@ -187,7 +188,7 @@ export function SyncOverviewTab() {
               key={f.k}
               type="button"
               onClick={() => setFilter(f.k)}
-              className="inline-flex items-center gap-1 border px-2 py-0.5 font-mono text-[11px]"
+              className="inline-flex items-center gap-1 border px-2 py-0.5 font-mono text-caption"
               style={{
                 borderColor: active ? 'var(--accent-navy)' : 'var(--rule-strong)',
                 background: active ? 'var(--accent-navy-soft)' : 'white',
@@ -199,7 +200,7 @@ export function SyncOverviewTab() {
             </button>
           );
         })}
-        <span className="ml-auto inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
+        <span className="ml-auto inline-flex items-center gap-2 font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
           AUTO-REFRESH 15s
           <button
             type="button"
@@ -214,8 +215,8 @@ export function SyncOverviewTab() {
 
       {error && (
         <div
-          className="border bg-white px-3 py-2 text-[13px] text-[#991b1b]"
-          style={{ borderColor: '#fee2e2', background: '#fef2f2' }}
+          className="border bg-white px-3 py-2 text-caption text-danger-text"
+          style={{ borderColor: COLOR.riskHighTint, background: COLOR.riskHighTint }}
         >
           โหลดสถานะ sync ไม่สำเร็จ
         </div>
@@ -223,7 +224,7 @@ export function SyncOverviewTab() {
 
       {isLoading && !data && (
         <div
-          className="border bg-white px-4 py-6 text-center font-mono text-[11px] text-[var(--ink-navy-muted)]"
+          className="border bg-white px-4 py-6 text-center font-mono text-caption text-[var(--ink-navy-muted)]"
           style={{ borderColor: 'var(--rule-strong)' }}
         >
           กำลังโหลด…
@@ -232,7 +233,7 @@ export function SyncOverviewTab() {
 
       {data && visible.length === 0 && (
         <div
-          className="border bg-white px-4 py-6 text-center font-mono text-[11px] text-[var(--ink-navy-muted)]"
+          className="border bg-white px-4 py-6 text-center font-mono text-caption text-[var(--ink-navy-muted)]"
           style={{ borderColor: 'var(--rule-strong)' }}
         >
           ไม่มีโรงพยาบาลในตัวกรองนี้
@@ -245,7 +246,7 @@ export function SyncOverviewTab() {
           style={{ borderColor: 'var(--rule-strong)' }}
         >
           <div
-            className="grid items-center gap-3 border-b px-3 py-2 font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]"
+            className="grid items-center gap-3 border-b px-3 py-2 font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]"
             style={{
               gridTemplateColumns: '70px 1fr 90px 100px 90px 1.4fr',
               borderColor: 'var(--rule-strong)',
@@ -283,7 +284,7 @@ export function SyncOverviewTab() {
                   }}
                 >
                   <span
-                    className="text-center font-mono text-[10px] font-bold uppercase tracking-[0.1em]"
+                    className="text-center font-mono text-caption font-bold uppercase tracking-[0.1em]"
                     style={{
                       background: tone.bg,
                       color: tone.ink,
@@ -294,18 +295,18 @@ export function SyncOverviewTab() {
                   </span>
                   <span className="min-w-0">
                     <span
-                      className="text-[13px] font-medium"
+                      className="text-caption font-medium"
                       style={{ color: 'var(--ink-navy)' }}
                     >
                       {h.name}
                     </span>
                     <span
-                      className="ml-1.5 font-mono text-[10px] tabular-nums text-[var(--ink-navy-muted)]"
+                      className="ml-1.5 font-mono text-caption tabular-nums text-[var(--ink-navy-muted)]"
                     >
                       {h.hcode}
                     </span>
                     <span
-                      className="ml-1 border px-1 font-mono text-[9px]"
+                      className="ml-1 border px-1 font-mono text-caption"
                       style={{
                         color: 'var(--ink-navy-muted)',
                         borderColor: 'var(--rule-hair)',
@@ -315,12 +316,12 @@ export function SyncOverviewTab() {
                     </span>
                   </span>
                   <span
-                    className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--ink-navy-muted)]"
+                    className="font-mono text-caption uppercase tracking-[0.06em] text-[var(--ink-navy-muted)]"
                   >
                     {run?.trigger ?? '—'}
                   </span>
                   <span
-                    className="font-mono text-[10px] tabular-nums text-[var(--ink-navy-dim)]"
+                    className="font-mono text-caption tabular-nums text-[var(--ink-navy-dim)]"
                     title={
                       run?.startedAt
                         ? new Date(run.startedAt).toLocaleString('th-TH')
@@ -330,12 +331,12 @@ export function SyncOverviewTab() {
                     {formatRelative(run?.startedAt ?? null)}
                   </span>
                   <span
-                    className="font-mono text-[10px] tabular-nums text-[var(--ink-navy-dim)]"
+                    className="font-mono text-caption tabular-nums text-[var(--ink-navy-dim)]"
                   >
                     {formatDuration(run?.durationMs ?? null)}
                   </span>
                   <span
-                    className="min-w-0 truncate text-[12px]"
+                    className="min-w-0 truncate text-caption"
                     style={{
                       color:
                         outcome === 'failed'
@@ -349,7 +350,7 @@ export function SyncOverviewTab() {
                     {outcome === 'failed' && (
                       <AlertTriangle
                         className="mr-1 inline h-3 w-3"
-                        style={{ color: '#991b1b' }}
+                        style={{ color: COLOR.riskHighText }}
                       />
                     )}
                     {errorOrSummary}

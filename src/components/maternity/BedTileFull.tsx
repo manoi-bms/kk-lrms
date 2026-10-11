@@ -18,6 +18,7 @@
 // component self-contained until the rule of three triggers extraction).
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import type { BedOccupancyFull } from '@/types/maternity-ward';
 import type { ConnectionConfig } from '@/types/bms-browser';
 import type { MaternalScreenSummaryItem } from '@/types/api';
@@ -73,9 +74,9 @@ const C = {
   mute: '#64748B',
   // Status / accent
   accent: '#1565C0',
-  ok: '#059669',
-  warn: '#D97706',
-  crit: '#DC2626',
+  ok: COLOR.riskLow,
+  warn: COLOR.riskMedium,
+  crit: COLOR.riskHigh,
   // Categorical
   cVitals: '#0891B2',
   cVitalsBg: '#ECFEFF',
@@ -85,13 +86,13 @@ const C = {
   cContBg: '#F5F3FF',
   cFhr: '#E11D48',
   cFhrBg: '#FFF1F2',
-  cInterv: '#059669',
-  cIntervBg: '#ECFDF5',
+  cInterv: COLOR.riskLow,
+  cIntervBg: COLOR.riskLowTint,
   // Status pill fill
-  pActive: '#059669',
+  pActive: COLOR.riskLow,
   pLatent: '#2563EB',
-  pTrans: '#D97706',
-  pCrit: '#DC2626',
+  pTrans: COLOR.riskMedium,
+  pCrit: COLOR.riskHigh,
 } as const;
 
 const FONT_SANS = "'Sarabun', system-ui, -apple-system, sans-serif";

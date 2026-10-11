@@ -65,17 +65,17 @@ export default function AdminPage() {
         style={{ borderBottom: '1px solid var(--rule-strong)' }}
       >
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
+          <div className="font-mono text-caption uppercase tracking-[0.18em] text-[var(--ink-navy-muted)]">
             PROVINCIAL REGISTRY · ADMIN
           </div>
           <h1
-            className="mt-0.5 text-[22px] font-bold leading-tight tracking-tight"
+            className="mt-0.5 text-title font-bold leading-tight tracking-tight"
             style={{ color: 'var(--ink-navy)' }}
           >
             ตั้งค่าระบบ
           </h1>
         </div>
-        <p className="font-mono text-[11px] text-[var(--ink-navy-muted)]">
+        <p className="font-mono text-caption text-[var(--ink-navy-muted)]">
           จังหวัดหลัก · ทะเบียนโรงพยาบาล · BMS Tunnel · Webhook API Keys · Sync Status · Online
           Users · Simulation
         </p>
@@ -107,7 +107,7 @@ export default function AdminPage() {
                 key={t.k}
                 onClick={() => setActiveTab(t.k)}
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-[11px] tracking-[0.06em] transition-colors',
+                  'inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-caption tracking-[0.06em] transition-colors',
                   active ? 'font-semibold' : 'font-normal hover:bg-[var(--accent-navy-soft)]',
                 )}
                 style={{

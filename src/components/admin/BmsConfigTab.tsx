@@ -214,16 +214,16 @@ export function BmsConfigTab() {
               borderRight: i < kpis.length - 1 ? '1px solid var(--rule-strong)' : undefined,
             }}
           >
-            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
+            <div className="font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
               {k.k}
             </div>
             <div
-              className="font-mono text-[28px] font-semibold leading-none tabular-nums"
+              className="font-mono text-page font-semibold leading-none tabular-nums"
               style={{ color: k.color, letterSpacing: '-0.02em' }}
             >
               {k.v}
             </div>
-            <div className="font-mono text-[10px] text-[var(--ink-navy-dim)]">{k.label}</div>
+            <div className="font-mono text-caption text-[var(--ink-navy-dim)]">{k.label}</div>
           </div>
         ))}
       </div>
@@ -247,17 +247,17 @@ export function BmsConfigTab() {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="truncate text-[13px] font-medium text-[var(--ink-navy)]">
+                    <span className="truncate text-caption font-medium text-[var(--ink-navy)]">
                       {h.name}
                     </span>
                     <span
-                      className="shrink-0 rounded-sm border px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-[var(--ink-navy-dim)]"
+                      className="shrink-0 rounded-sm border px-1.5 py-0.5 font-mono text-caption tabular-nums text-[var(--ink-navy-dim)]"
                       style={{ borderColor: 'var(--rule-strong)' }}
                     >
                       {h.level}
                     </span>
                   </div>
-                  <div className="mt-0.5 font-mono text-[10px] tabular-nums text-[var(--ink-navy-muted)]">
+                  <div className="mt-0.5 font-mono text-caption tabular-nums text-[var(--ink-navy-muted)]">
                     {h.hcode}
                   </div>
                 </div>
@@ -270,7 +270,7 @@ export function BmsConfigTab() {
                 </button>
               </div>
 
-              <div className="flex items-center gap-1.5 font-mono text-[11px]">
+              <div className="flex items-center gap-1.5 font-mono text-caption">
                 <TunnelIcon className="h-3 w-3" style={{ color: tunnelStatusMeta.color }} />
                 <span
                   className={
@@ -283,9 +283,9 @@ export function BmsConfigTab() {
                 </span>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption">
                 <span
-                  className="inline-flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-[0.06em]"
+                  className="inline-flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 font-mono text-caption font-semibold tracking-[0.06em]"
                   style={{
                     color: tunnelStatusMeta.color,
                     borderColor: tunnelStatusMeta.color,
@@ -294,11 +294,11 @@ export function BmsConfigTab() {
                   <TunnelIcon className="h-3 w-3" />
                   {tunnelStatusMeta.label}
                 </span>
-                <span className="font-mono text-[10px] text-[var(--ink-navy-muted)]">
+                <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
                   {formatLastSync(h.lastSyncAt)}
                 </span>
                 {h.bmsConfig?.databaseType && (
-                  <span className="inline-flex items-center gap-1 font-mono text-[10px] text-[var(--ink-navy-muted)]">
+                  <span className="inline-flex items-center gap-1 font-mono text-caption text-[var(--ink-navy-muted)]">
                     <Database className="h-3 w-3" />
                     {h.bmsConfig.databaseType}
                   </span>
@@ -332,7 +332,7 @@ export function BmsConfigTab() {
 
             {saveMessage && (
               <div
-                className="border px-3 py-2 font-mono text-[11px]"
+                className="border px-3 py-2 font-mono text-caption"
                 style={{
                   borderColor: saveMessage.includes('สำเร็จ')
                     ? 'var(--risk-low)'
@@ -346,7 +346,7 @@ export function BmsConfigTab() {
 
             {testResult && (
               <div
-                className="border px-3 py-2 font-mono text-[11px]"
+                className="border px-3 py-2 font-mono text-caption"
                 style={{
                   borderColor: testResult.connected ? 'var(--risk-low)' : 'var(--risk-high)',
                   color: testResult.connected ? 'var(--risk-low)' : 'var(--risk-high)',

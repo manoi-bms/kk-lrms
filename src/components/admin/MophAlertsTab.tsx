@@ -7,6 +7,7 @@
 // hospital-scoped. DELETE soft-deletes (is_active=false) via the API.
 'use client';
 
+import { COLOR } from '@/config/design-tokens';
 import { useState } from 'react';
 import useSWR from 'swr';
 import { Bell, Plus, Trash2, X, Check } from 'lucide-react';
@@ -164,20 +165,20 @@ export function MophAlertsTab() {
     <div className="space-y-4">
       <div className="flex items-baseline gap-2">
         <Bell className="h-4 w-4 text-[var(--accent-navy)]" />
-        <h2 className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--ink-navy)' }}>
+        <h2 className="text-body font-bold tracking-tight" style={{ color: 'var(--ink-navy)' }}>
           ผู้รับการแจ้งเตือน MOPH Prompt (ศูนย์กลางจังหวัด)
         </h2>
-        <span className="font-mono text-[11px] text-[var(--ink-navy-muted)]">
+        <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
           จังหวัด {provinceCode} · {activeCount} ใช้งาน · {monitors.length - activeCount} ปิด
         </span>
       </div>
-      <p className="font-mono text-[11px] text-[var(--ink-navy-muted)]">
+      <p className="font-mono text-caption text-[var(--ink-navy-muted)]">
         ผู้รับเหล่านี้จะได้รับแจ้งเตือน LINE เมื่อมีกรณีเสี่ยงสูง/ฉุกเฉินจากโรงพยาบาลใดๆ ในจังหวัด
       </p>
 
       {alertStatus?.eventQueue && (
         <div
-          className="font-mono text-[11px] px-3 py-2 border"
+          className="font-mono text-caption px-3 py-2 border"
           style={{
             borderColor:
               alertStatus.eventQueue.awaitingRecipients > 0 ? '#d97706' : 'var(--rule-strong)',
@@ -187,7 +188,7 @@ export function MophAlertsTab() {
           เหตุการณ์รอผู้รับ {alertStatus.eventQueue.awaitingRecipients} · หมดอายุโดยไม่ได้ส่ง{' '}
           {alertStatus.eventQueue.expired}
           {alertStatus.eventQueue.awaitingRecipients > 0 && (
-            <span className="ml-2 text-amber-700">
+            <span className="ml-2 text-warn-text">
               เพิ่มหรือเปิดใช้งานผู้รับแจ้งเตือนเพื่อส่งเหตุการณ์ของวันนี้
             </span>
           )}
@@ -196,10 +197,10 @@ export function MophAlertsTab() {
 
       {message && (
         <div
-          className="font-mono text-[12px] px-3 py-2"
+          className="font-mono text-caption px-3 py-2"
           style={{
-            color: message.tone === 'ok' ? 'var(--accent-navy)' : '#dc2626',
-            background: message.tone === 'ok' ? 'var(--accent-navy-soft)' : '#fef2f2',
+            color: message.tone === 'ok' ? 'var(--accent-navy)' : COLOR.riskHigh,
+            background: message.tone === 'ok' ? 'var(--accent-navy-soft)' : COLOR.riskHighTint,
           }}
         >
           {message.text}
@@ -208,12 +209,12 @@ export function MophAlertsTab() {
 
       {/* Add/Edit form */}
       <div className="border p-4 space-y-3" style={{ borderColor: 'var(--rule-strong)' }}>
-        <div className="font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
+        <div className="font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
           {editing ? 'แก้ไขผู้รับเตือน' : 'เพิ่มผู้รับเตือนใหม่'}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <label className="space-y-1">
-            <span className="font-mono text-[11px] text-[var(--ink-navy-muted)]">
+            <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
               CID (13 หลัก)
             </span>
             <Input
@@ -224,7 +225,7 @@ export function MophAlertsTab() {
             />
           </label>
           <label className="space-y-1">
-            <span className="font-mono text-[11px] text-[var(--ink-navy-muted)]">ชื่อ</span>
+            <span className="font-mono text-caption text-[var(--ink-navy-muted)]">ชื่อ</span>
             <Input
               value={form.name}
               onChange={(e) => setField('name', e.target.value)}
@@ -232,7 +233,7 @@ export function MophAlertsTab() {
             />
           </label>
           <label className="space-y-1">
-            <span className="font-mono text-[11px] text-[var(--ink-navy-muted)]">ตำแหน่ง</span>
+            <span className="font-mono text-caption text-[var(--ink-navy-muted)]">ตำแหน่ง</span>
             <Input
               value={form.position}
               onChange={(e) => setField('position', e.target.value)}
@@ -246,7 +247,7 @@ export function MophAlertsTab() {
               onChange={(e) => setField('isActive', e.target.checked)}
               className="h-4 w-4"
             />
-            <span className="font-mono text-[11px] text-[var(--ink-navy-muted)]">ใช้งาน</span>
+            <span className="font-mono text-caption text-[var(--ink-navy-muted)]">ใช้งาน</span>
           </label>
         </div>
         <div className="flex gap-2">
@@ -273,13 +274,13 @@ export function MophAlertsTab() {
       ) : error ? (
         <ErrorState message="โหลดผู้รับเตือนไม่สำเร็จ" />
       ) : monitors.length === 0 ? (
-        <div className="font-mono text-[12px] text-[var(--ink-navy-muted)] py-6 text-center">
+        <div className="font-mono text-caption text-[var(--ink-navy-muted)] py-6 text-center">
           ยังไม่มีผู้รับเตือน — เพิ่มด้านบน
         </div>
       ) : (
         <div className="border" style={{ borderColor: 'var(--rule-strong)' }}>
           <div
-            className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-2 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]"
+            className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-2 px-3 py-2 font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]"
             style={{ borderBottom: '1px solid var(--rule-strong)' }}
           >
             <div>ชื่อ</div>
@@ -294,16 +295,16 @@ export function MophAlertsTab() {
               className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-2 px-3 py-2 items-center"
               style={{ borderBottom: '1px solid var(--rule)' }}
             >
-              <div className="text-[13px]" style={{ color: 'var(--ink-navy)' }}>
+              <div className="text-caption" style={{ color: 'var(--ink-navy)' }}>
                 {m.name}
               </div>
-              <code className="font-mono text-[12px] text-[var(--ink-navy-dim)]">
+              <code className="font-mono text-caption text-[var(--ink-navy-dim)]">
                 {maskCid(m.cid)}
               </code>
-              <div className="text-[12px] text-[var(--ink-navy-muted)]">{m.position ?? '—'}</div>
+              <div className="text-caption text-[var(--ink-navy-muted)]">{m.position ?? '—'}</div>
               <div>
                 {m.isActive ? (
-                  <Check className="h-3.5 w-3.5 text-green-600" />
+                  <Check className="h-3.5 w-3.5 text-ok-text" />
                 ) : (
                   <X className="h-3.5 w-3.5 text-[var(--ink-navy-muted)]" />
                 )}
@@ -314,7 +315,7 @@ export function MophAlertsTab() {
                   size="sm"
                   onClick={() => startEdit(m)}
                   disabled={busy || !!deleteBusyId}
-                  className="h-7 px-2 text-[11px]"
+                  className="h-7 px-2 text-caption"
                 >
                   แก้ไข
                 </Button>
@@ -323,7 +324,7 @@ export function MophAlertsTab() {
                   size="sm"
                   onClick={() => handleDelete(m)}
                   disabled={busy || deleteBusyId === m.id}
-                  className="h-7 px-2 text-[11px]"
+                  className="h-7 px-2 text-caption"
                 >
                   {deleteBusyId === m.id ? '...' : <Trash2 className="h-3 w-3" />}
                 </Button>

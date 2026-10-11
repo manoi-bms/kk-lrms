@@ -333,7 +333,7 @@ export default function DashboardPage() {
                 />
               </div>
               <div
-                className="flex justify-between font-mono text-[13px] tracking-[0.12em]"
+                className="flex justify-between font-mono text-caption tracking-[0.12em]"
                 style={{ color: 'var(--kiosk-dim)' }}
               >
                 <span>
@@ -358,7 +358,7 @@ export default function DashboardPage() {
 
         {/* Bottom status strip */}
         <div
-          className="flex gap-5 border-t px-7 py-2 font-mono text-[13px] tracking-[0.14em]"
+          className="flex gap-5 border-t px-7 py-2 font-mono text-caption tracking-[0.14em]"
           style={{ borderColor: 'var(--kiosk-rule)', color: 'var(--kiosk-dim)' }}
         >
           <span>KK-LRMS</span>
@@ -449,7 +449,7 @@ export default function DashboardPage() {
       {showOnboardingError && (
         <div
           role="alert"
-          className="flex items-start gap-3 border-b px-5 py-3 font-mono text-[14px] leading-snug"
+          className="flex items-start gap-3 border-b px-5 py-3 font-mono text-label leading-snug"
           style={{
             background: 'color-mix(in srgb, var(--risk-high) 10%, white)',
             borderColor: 'var(--risk-high)',
@@ -495,7 +495,7 @@ export default function DashboardPage() {
         <div className="min-w-0 border-r border-[var(--rule-strong)]">
           {/* 00 — Dashboard-specific control strip */}
           <div
-            className="flex flex-wrap items-center gap-3 bg-white px-5 py-2 font-mono text-[13px]"
+            className="flex flex-wrap items-center gap-3 bg-white px-5 py-2 font-mono text-caption"
             style={{ borderBottom: '1px solid var(--rule-strong)', color: 'var(--ink-navy-dim)' }}
           >
             <span className="inline-flex items-center gap-1.5">
@@ -570,7 +570,7 @@ export default function DashboardPage() {
               <button
                 onClick={() => triggerSync()}
                 disabled={syncing}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-sm border bg-white px-2.5 py-1.5 font-mono text-[13px] font-medium tracking-[0.06em] transition-colors hover:bg-[var(--accent-navy-soft)] disabled:opacity-50"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-sm border bg-white px-2.5 py-1.5 font-mono text-caption font-medium tracking-[0.06em] transition-colors hover:bg-[var(--accent-navy-soft)] disabled:opacity-50"
                 style={{ borderColor: 'var(--rule-strong)', color: 'var(--ink-navy-dim)' }}
                 title="ดึงข้อมูลทันที"
               >
@@ -579,7 +579,7 @@ export default function DashboardPage() {
               </button>
               <button
                 onClick={toggleKiosk}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-sm px-2.5 py-1.5 font-mono text-[13px] font-semibold tracking-[0.06em] text-white transition-colors"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-sm px-2.5 py-1.5 font-mono text-caption font-semibold tracking-[0.06em] text-white transition-colors"
                 style={{ background: 'var(--accent-navy)' }}
                 title="เปิดโหมดจอภาพ (Kiosk Mode)"
               >
@@ -639,13 +639,13 @@ export default function DashboardPage() {
           >
             <div className="flex items-center justify-between border-b border-[var(--rule-strong)] px-4 py-2.5">
               <div className="flex items-baseline gap-2.5">
-                <span className="font-mono text-[12px] font-bold tracking-[0.18em] text-[var(--accent-navy)]">
+                <span className="font-mono text-caption font-bold tracking-[0.18em] text-[var(--accent-navy)]">
                   03
                 </span>
-                <span className="font-mono text-[14px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-navy)]">
+                <span className="font-mono text-label font-semibold uppercase tracking-[0.1em] text-[var(--ink-navy)]">
                   Province overview
                 </span>
-                <span className="font-mono text-[12px] text-[var(--ink-navy-muted)]">
+                <span className="font-mono text-caption text-[var(--ink-navy-muted)]">
                   {onlineCount}/{hospitals.length} ONLINE
                 </span>
               </div>
@@ -653,7 +653,7 @@ export default function DashboardPage() {
                 <button
                   onClick={() => setOverviewMode('map')}
                   className={cn(
-                    'cursor-pointer border-b-[1.5px] bg-transparent px-2 py-0.5 font-mono text-[12px] tracking-[0.1em]',
+                    'cursor-pointer border-b-[1.5px] bg-transparent px-2 py-0.5 font-mono text-caption tracking-[0.1em]',
                     overviewMode === 'map' ? 'font-semibold' : 'font-normal',
                   )}
                   style={{
@@ -666,7 +666,7 @@ export default function DashboardPage() {
                 <button
                   onClick={() => setOverviewMode('list')}
                   className={cn(
-                    'cursor-pointer border-b-[1.5px] bg-transparent px-2 py-0.5 font-mono text-[12px] tracking-[0.1em]',
+                    'cursor-pointer border-b-[1.5px] bg-transparent px-2 py-0.5 font-mono text-caption tracking-[0.1em]',
                     overviewMode === 'list' ? 'font-semibold' : 'font-normal',
                   )}
                   style={{
@@ -678,7 +678,7 @@ export default function DashboardPage() {
                 </button>
                 <button
                   onClick={() => setOverviewOpen(true)}
-                  className="ml-1 inline-flex cursor-pointer items-center gap-1 rounded-sm bg-transparent px-1.5 py-0.5 font-mono text-[12px] tracking-[0.1em] transition-colors hover:bg-[var(--accent-navy-soft)]"
+                  className="ml-1 inline-flex cursor-pointer items-center gap-1 rounded-sm bg-transparent px-1.5 py-0.5 font-mono text-caption tracking-[0.1em] transition-colors hover:bg-[var(--accent-navy-soft)]"
                   style={{ color: 'var(--ink-navy-muted)' }}
                   aria-label="ขยายแผนที่เต็มจอ"
                   title="ขยายเต็มจอ"
@@ -711,7 +711,7 @@ export default function DashboardPage() {
                     className="max-h-[36%] min-h-0 overflow-auto border-t border-[var(--rule-strong)]"
                     style={{ flexShrink: 0 }}
                   >
-                    <div className="sticky top-0 z-10 flex justify-between border-b border-[var(--rule-hair)] bg-white px-3 py-1 font-mono text-[12px] tracking-[0.12em] text-[var(--ink-navy-muted)]">
+                    <div className="sticky top-0 z-10 flex justify-between border-b border-[var(--rule-hair)] bg-white px-3 py-1 font-mono text-caption tracking-[0.12em] text-[var(--ink-navy-muted)]">
                       <span>HOSPITAL · SORTED BY SEVERITY</span>
                       <span>{hospitals.length}</span>
                     </div>
@@ -725,7 +725,7 @@ export default function DashboardPage() {
                 </>
               ) : (
                 <div className="min-h-0 flex-1 overflow-auto">
-                  <div className="sticky top-0 z-10 flex justify-between border-b border-[var(--rule-strong)] bg-white px-3 py-1.5 font-mono text-[12px] tracking-[0.12em] text-[var(--ink-navy-muted)]">
+                  <div className="sticky top-0 z-10 flex justify-between border-b border-[var(--rule-strong)] bg-white px-3 py-1.5 font-mono text-caption tracking-[0.12em] text-[var(--ink-navy-muted)]">
                     <span>HOSPITAL · SORTED BY SEVERITY</span>
                     <span>{hospitals.length} NODES</span>
                   </div>
@@ -745,12 +745,12 @@ export default function DashboardPage() {
             Kept simple: single fixed height, no sticky. */}
         <div className="border-t border-[var(--rule-strong)] bg-white lg:hidden">
           <div className="flex items-center justify-between border-b border-[var(--rule-strong)] px-4 py-2">
-            <span className="font-mono text-[14px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-navy)]">
+            <span className="font-mono text-label font-semibold uppercase tracking-[0.1em] text-[var(--ink-navy)]">
               Province overview
             </span>
             <button
               onClick={() => setOverviewOpen(true)}
-              className="inline-flex items-center gap-1 rounded-sm border border-[var(--rule-strong)] px-2 py-0.5 font-mono text-[12px] tracking-[0.1em] text-[var(--ink-navy-dim)]"
+              className="inline-flex items-center gap-1 rounded-sm border border-[var(--rule-strong)] px-2 py-0.5 font-mono text-caption tracking-[0.1em] text-[var(--ink-navy-dim)]"
             >
               <Expand className="h-3 w-3" />
               EXPAND
@@ -780,7 +780,7 @@ export default function DashboardPage() {
 
       {/* Footer */}
       <div
-        className="flex justify-between border-t border-[var(--rule-strong)] px-5 py-2.5 font-mono text-[12px] tracking-[0.1em] text-[var(--ink-navy-muted)]"
+        className="flex justify-between border-t border-[var(--rule-strong)] px-5 py-2.5 font-mono text-caption tracking-[0.1em] text-[var(--ink-navy-muted)]"
         style={{ background: 'var(--surface-cool)' }}
       >
         <span>KK-LRMS · PPHO WAR-ROOM · MCH PROVINCIAL NETWORK</span>
@@ -826,13 +826,13 @@ export default function DashboardPage() {
             style={{ borderColor: 'var(--rule-strong)', background: 'var(--accent-navy)' }}
           >
             <div className="flex items-baseline gap-3">
-              <span className="font-mono text-[12px] font-bold tracking-[0.18em] text-[#ffe89a]">
+              <span className="font-mono text-caption font-bold tracking-[0.18em] text-[#ffe89a]">
                 03
               </span>
-              <DialogTitle className="text-[18px] font-semibold uppercase tracking-[0.08em] text-white">
+              <DialogTitle className="text-title font-semibold uppercase tracking-[0.08em] text-white">
                 Province overview
               </DialogTitle>
-              <DialogDescription className="font-mono text-[13px] tracking-[0.12em] text-white/70">
+              <DialogDescription className="font-mono text-caption tracking-[0.12em] text-white/70">
                 {onlineCount}/{hospitals.length} ONLINE · ESC TO CLOSE
               </DialogDescription>
             </div>
@@ -840,7 +840,7 @@ export default function DashboardPage() {
               <button
                 onClick={() => setOverviewMode('map')}
                 className={cn(
-                  'cursor-pointer rounded-sm px-3 py-1.5 font-mono text-[13px] tracking-[0.1em] transition-colors',
+                  'cursor-pointer rounded-sm px-3 py-1.5 font-mono text-caption tracking-[0.1em] transition-colors',
                   overviewMode === 'map'
                     ? 'bg-white font-semibold'
                     : 'bg-white/10 text-white hover:bg-white/20',
@@ -852,7 +852,7 @@ export default function DashboardPage() {
               <button
                 onClick={() => setOverviewMode('list')}
                 className={cn(
-                  'cursor-pointer rounded-sm px-3 py-1.5 font-mono text-[13px] tracking-[0.1em] transition-colors',
+                  'cursor-pointer rounded-sm px-3 py-1.5 font-mono text-caption tracking-[0.1em] transition-colors',
                   overviewMode === 'list'
                     ? 'bg-white font-semibold'
                     : 'bg-white/10 text-white hover:bg-white/20',
@@ -887,7 +887,7 @@ export default function DashboardPage() {
               </div>
             )}
             <div className="flex min-h-0 flex-col overflow-hidden bg-white p-4">
-              <div className="mb-2 flex justify-between px-1 font-mono text-[12px] tracking-[0.12em] text-[var(--ink-navy-muted)]">
+              <div className="mb-2 flex justify-between px-1 font-mono text-caption tracking-[0.12em] text-[var(--ink-navy-muted)]">
                 <span>HOSPITAL · SORTED BY SEVERITY</span>
                 <span>{hospitals.length} NODES</span>
               </div>
@@ -910,25 +910,25 @@ export default function DashboardPage() {
             style={{ borderColor: 'var(--rule-strong)', background: 'white' }}
           >
             <div className="flex items-start justify-between gap-3">
-              <DialogTitle className="font-mono text-[17px] uppercase tracking-[0.08em] text-[var(--ink-navy)]">
+              <DialogTitle className="font-mono text-body-lg uppercase tracking-[0.08em] text-[var(--ink-navy)]">
                 HOSxP sync status
               </DialogTitle>
               <button
                 type="button"
                 onClick={copyHosxpSyncReport}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-sm border px-2 py-1 font-mono text-[13px] uppercase tracking-[0.08em] text-[var(--ink-navy-dim)] hover:bg-[var(--surface-cool)]"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-sm border px-2 py-1 font-mono text-caption uppercase tracking-[0.08em] text-[var(--ink-navy-dim)] hover:bg-[var(--surface-cool)]"
                 style={{ borderColor: 'var(--rule-strong)' }}
               >
                 <Copy className="h-3.5 w-3.5" />
                 {hosxpReportCopied ? 'Copied' : 'Copy report'}
               </button>
             </div>
-            <DialogDescription className="text-[15px] text-[var(--ink-navy-dim)]">
+            <DialogDescription className="text-body text-[var(--ink-navy-dim)]">
               {hosxpSyncHelp}
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[calc(92vh-96px)] space-y-3 overflow-y-auto bg-white p-5 text-[15px] text-[var(--ink-navy-dim)]">
-            <div className="grid grid-cols-[150px_1fr] gap-x-4 gap-y-2 font-mono text-[14px]">
+          <div className="max-h-[calc(92vh-96px)] space-y-3 overflow-y-auto bg-white p-5 text-body text-[var(--ink-navy-dim)]">
+            <div className="grid grid-cols-[150px_1fr] gap-x-4 gap-y-2 font-mono text-label">
               <span className="text-[var(--ink-navy-muted)]">STATUS</span>
               <span className="font-semibold text-[var(--ink-navy)]">{hosxpSyncStatus}</span>
               <span className="text-[var(--ink-navy-muted)]">PHASE</span>
@@ -1011,7 +1011,7 @@ export default function DashboardPage() {
 
             {(hosxpSyncState?.error || hosxpSyncState?.lastError) && (
               <div
-                className="border px-3 py-2 font-mono text-[14px] leading-relaxed"
+                className="border px-3 py-2 font-mono text-label leading-relaxed"
                 style={{
                   borderColor: 'var(--risk-high)',
                   background: 'color-mix(in srgb, var(--risk-high) 7%, white)',
@@ -1028,7 +1028,7 @@ export default function DashboardPage() {
 
             {!hosxpSyncState?.error && !hosxpSyncState?.lastError && (
               <div
-                className="border px-3 py-2 font-mono text-[14px] leading-relaxed"
+                className="border px-3 py-2 font-mono text-label leading-relaxed"
                 style={{
                   borderColor: 'var(--rule-strong)',
                   background: 'var(--surface-cool)',
@@ -1048,7 +1048,7 @@ export default function DashboardPage() {
             )}
 
             <div
-              className="border font-mono text-[14px]"
+              className="border font-mono text-label"
               style={{ borderColor: 'var(--rule-strong)' }}
             >
               <div
@@ -1113,7 +1113,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="border-t pt-3" style={{ borderColor: 'var(--rule-hair)' }}>
-              <div className="font-mono text-[13px] uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
+              <div className="font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
                 Checks
               </div>
               <div className="mt-1 leading-relaxed">
