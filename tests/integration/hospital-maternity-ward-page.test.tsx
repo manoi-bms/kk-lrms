@@ -499,6 +499,20 @@ describe('Hospital maternity ward page — load failures are not an empty ward (
     expectNoEmptyBoard(container);
   });
 
+  it('the ward LIST failing on first load: "ลองใหม่" refetches the ward list and recovers', async () => {
+    const s = wardScenario(Date.now());
+    openSession();
+    mockListWards.mockRejectedValueOnce(new Error('wards down')).mockResolvedValue([...s.wards]);
+    mockListInventory.mockResolvedValue([...s.beds]);
+    mockListOccupancyFull.mockResolvedValue([...s.occupancy]);
+    render(PAGE);
+    await screen.findByText('wards down', undefined, { timeout: 3000 });
+    expect(mockListWards).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getAllByRole('button', { name: /ลองใหม่/ })[0]);
+    expect(await screen.findByText(/ลัดดา ท\./, undefined, { timeout: 3000 })).toBeInTheDocument();
+    expect(mockListWards).toHaveBeenCalledTimes(2);
+  });
+
   it('a refresh failing AFTER a good load keeps the last good board under a stale banner', async () => {
     const s = wardScenario(Date.now());
     openSession();

@@ -103,6 +103,7 @@ export default function HospitalMaternityWardPage() {
     failingSince,
     health,
     lastUpdatedAt,
+    mutateWards,
     mutateBeds,
     mutateOccupancy,
   } = useMaternityWardStateFull();
@@ -135,6 +136,9 @@ export default function HospitalMaternityWardPage() {
   }, [config]);
 
   const refresh = () => {
+    // The ward list is the key for beds + occupancy: with no ward yet (list
+    // failed) only refetching it can recover the board.
+    void mutateWards();
     void mutateBeds();
     void mutateOccupancy();
   };

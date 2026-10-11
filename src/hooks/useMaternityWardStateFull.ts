@@ -52,6 +52,7 @@ export interface MaternityWardStateFull {
   /** ISO time of the last successful occupancy fetch FOR THE CURRENT WARD —
    *  the board's "ข้อมูล HOSxP ณ". Null after a ward switch until it loads. */
   lastUpdatedAt: string | null;
+  mutateWards: () => Promise<unknown>;
   mutateBeds: () => Promise<unknown>;
   mutateOccupancy: () => Promise<unknown>;
 }
@@ -79,7 +80,7 @@ export function useMaternityWardStateFull(): MaternityWardStateFull {
       return next;
     });
 
-  const { data: wards, error: wardsErr } = useSWR(
+  const { data: wards, error: wardsErr, mutate: mutateWards } = useSWR(
     config ? ['maternity-wards', config.apiUrl] : null,
     () => listMaternityWards(config!),
     {
@@ -175,6 +176,7 @@ export function useMaternityWardStateFull(): MaternityWardStateFull {
     failingSince,
     health,
     lastUpdatedAt,
+    mutateWards: () => mutateWards(),
     mutateBeds: () => mutateBeds(),
     mutateOccupancy: () => mutateOccupancy(),
   };
