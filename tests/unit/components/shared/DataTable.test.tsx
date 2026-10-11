@@ -82,4 +82,17 @@ describe('DataTable', () => {
     const { container } = render(<DataTable columns={columns} rows={rows} rowKey={(r) => r.an} />);
     expect(container.querySelector('thead')!.className).not.toContain('sticky');
   });
+  it('row keys ignore events from nested controls', () => {
+    const onRowClick = vi.fn();
+    const cols: DataTableColumn<Row>[] = [
+      { key: 'name', header: 'ผู้คลอด', cell: (r) => <button type="button">เปิด {r.an}</button> },
+    ];
+    render(
+      <DataTable columns={cols} rows={rows} rowKey={(r) => r.an} onRowClick={onRowClick} rowLabel={(r) => r.name} />,
+    );
+    const btn = screen.getByRole('button', { name: 'เปิด AN1' });
+    expect(fireEvent.keyDown(btn, { key: 'Enter' })).toBe(true);
+    expect(fireEvent.keyDown(btn, { key: ' ' })).toBe(true);
+    expect(onRowClick).not.toHaveBeenCalled();
+  });
 });

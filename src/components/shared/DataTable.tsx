@@ -45,6 +45,8 @@ const SKELETON_ROWS = 3;
 
 function activateOnKeys<T>(row: T, onRowClick: (row: T) => void) {
   return (e: KeyboardEvent<HTMLTableRowElement>) => {
+    // Keys from a nested button/link/input belong to that control, not the row.
+    if (e.target !== e.currentTarget) return;
     if (e.key !== 'Enter' && e.key !== ' ') return;
     e.preventDefault(); // Space would otherwise scroll the page
     onRowClick(row);
