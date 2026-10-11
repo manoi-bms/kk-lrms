@@ -22,7 +22,7 @@ import { ProvinceMap } from '@/components/dashboard/ProvinceMap';
 import { StageKPICards } from '@/components/dashboard/StageKPICards';
 import { ShiftSummary } from '@/components/dashboard/ShiftSummary';
 import { SectionLabel } from '@/components/dashboard/shared';
-import { KioskHeader } from '@/components/dashboard/KioskHeader';
+import { KioskDashboard } from '@/components/dashboard/province/KioskDashboard';
 import { OnlineUsersBadge } from '@/components/dashboard/OnlineUsersBadge';
 // SimulationControl was moved to /admin (Simulation tab) on 2026-04-22 so
 // the dashboard header stays compact for clinical users. Still dev/admin-
@@ -255,129 +255,27 @@ export default function DashboardPage() {
   ).length;
   const ancFallback = continuum ? { hr3: continuum.anc.hr3, dueSoon: continuum.anc.dueSoon } : null;
 
-  // ═══════════════════════════════════════════════════════════════
-  // KIOSK MODE — 1920×1080 wall display, dark phosphor-glow palette
-  // ═══════════════════════════════════════════════════════════════
+  // KIOSK MODE — frozen wall display (src/components/dashboard/province/KioskDashboard.tsx)
   if (isKiosk) {
     return (
-      <div
-        className="min-h-screen text-[var(--kiosk-ink)]"
-        style={{
-          background: 'var(--kiosk-bg)',
-          backgroundImage:
-            'radial-gradient(ellipse at 50% 0%, rgba(87,196,255,0.06), transparent 55%)',
-        }}
-      >
-        <KioskHeader
-          updatedAt={updatedAt}
-          onExit={exitKiosk}
-          onlineCount={freshCount}
-          totalCount={hospitals.length}
-        />
-
-        {dataStale && (
-          <ErrorState
-            variant="banner"
-            message="การเชื่อมต่อล้มเหลว — แสดงข้อมูลเดิมจากแคช"
-            lastUpdatedAt={updatedAt}
-            onRetry={refreshAll}
-          />
-        )}
-
-        <div className="px-7 pt-4 pb-4 space-y-4">
-          {/* 01 — Alerts ribbon (kiosk variant) */}
-          <div
-            className="border"
-            style={{ borderColor: 'var(--kiosk-rule)', background: 'var(--kiosk-panel)' }}
-          >
-            <AlertBar alerts={alerts} />
-          </div>
-
-          {/* 02 — Province vitals (reuses normal component; will need kiosk variant later) */}
-          <div
-            className="border"
-            style={{ borderColor: 'var(--kiosk-rule)', background: 'var(--kiosk-panel)' }}
-          >
-            <ProvinceVitalsStrip summary={summary} trends={trends} continuum={continuum} />
-          </div>
-
-          {/* 03+04 — HIGH-risk + Province map (side-by-side, kiosk privacy on list) */}
-          <div className="grid grid-cols-12 gap-4">
-            <div
-              className="col-span-7 border p-4"
-              style={{ borderColor: 'var(--kiosk-rule)', background: 'var(--kiosk-panel)' }}
-            >
-              <HighRiskPatientList
-                patients={highRiskPatients}
-                isLoading={hrLoading}
-                variant="kiosk"
-                maxRows={8}
-                ancFallback={ancFallback}
-                totalActive={summary?.totalActive}
-                totalHigh={summary?.totalHigh}
-              />
-            </div>
-            <div
-              className="col-span-5 flex flex-col gap-3 border p-4"
-              style={{ borderColor: 'var(--kiosk-rule)', background: 'var(--kiosk-panel)' }}
-            >
-              <SectionLabel idx={4} right={<span>{hospitals.length} NODES</span>}>
-                Province map
-              </SectionLabel>
-              <div
-                className="flex-1 border"
-                style={{ borderColor: 'var(--kiosk-rule)', minHeight: 360 }}
-              >
-                <ProvinceMap
-                  hospitals={hospitals}
-                  selected={selectedHospital}
-                  onSelect={openHospitalDetail}
-                  mode="kiosk"
-                  size="full"
-                />
-              </div>
-              <div
-                className="flex justify-between font-mono text-caption tracking-[0.12em]"
-                style={{ color: 'var(--kiosk-dim)' }}
-              >
-                <span>
-                  <span style={{ color: 'var(--kiosk-high)' }}>●</span> HIGH
-                </span>
-                <span>
-                  <span style={{ color: 'var(--kiosk-med)' }}>●</span> MED
-                </span>
-                <span>
-                  <span style={{ color: 'var(--kiosk-low)' }}>●</span> LOW
-                </span>
-                <span>
-                  <span style={{ color: 'var(--kiosk-dim)' }}>○</span> IDLE
-                </span>
-                <span>
-                  <span style={{ color: 'var(--kiosk-high)' }}>✕</span> OFFLINE
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom status strip */}
-        <div
-          className="flex gap-5 border-t px-7 py-2 font-mono text-caption tracking-[0.14em]"
-          style={{ borderColor: 'var(--kiosk-rule)', color: 'var(--kiosk-dim)' }}
-        >
-          <span>KK-LRMS</span>
-          <span>PPHO WAR-ROOM</span>
-          <span>MCH PROVINCIAL NETWORK</span>
-          <span className="flex-1" />
-          <span style={{ color: sseState === 'connected' ? undefined : 'var(--kiosk-med)' }}>
-            {sseMeta.stream}
-          </span>
-          <span>
-            {freshCount}/{reportingHospitals.length} DATA FRESH
-          </span>
-          <span style={{ color: 'var(--kiosk-ink)' }}>ESC TO EXIT</span>
-        </div>
-      </div>
+      <KioskDashboard
+        hospitals={hospitals}
+        summary={summary}
+        trends={trends}
+        continuum={continuum}
+        alerts={alerts}
+        highRiskPatients={highRiskPatients}
+        hrLoading={hrLoading}
+        updatedAt={updatedAt}
+        dataStale={dataStale}
+        onRetry={refreshAll}
+        freshCount={freshCount}
+        reportingCount={reportingHospitals.length}
+        sseState={sseState}
+        selectedHospital={selectedHospital}
+        onSelectHospital={openHospitalDetail}
+        onExit={exitKiosk}
+      />
     );
   }
 
