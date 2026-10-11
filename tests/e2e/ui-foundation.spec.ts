@@ -43,6 +43,12 @@ async function login(page: Page, log: string[]) {
 }
 
 test.describe('UI foundation', () => {
+  test('illustrations are public: unauthenticated request returns 200 image/*', async ({ request }) => {
+    const res = await request.get('/illustrations/login-hero.webp', { maxRedirects: 0 });
+    expect(res.status()).toBe(200);
+    expect(res.headers()['content-type']).toMatch(/^image\//);
+  });
+
   test('login page renders in Sarabun with no page errors @snapshot', async ({ page }, testInfo) => {
     const log = attachDebugLogging(page);
     for (const w of WIDTHS) {
