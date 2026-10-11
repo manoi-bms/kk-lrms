@@ -13,9 +13,12 @@ const PRIVATE_OUT = 'e2e-private/ui-foundation';
 const WIDTHS = [1440, 1024, 768] as const;
 const AUTH_ROUTES = ['/', '/pregnancies', '/hospitals', '/referrals', '/outcomes', '/hospital-maternity-ward', '/profile'];
 const SESSION = process.env.E2E_BMS_SESSION_ID;
+// Dashboard screenshots can show masked names / AN — gitignored e2e-private only.
+const DASH_OUT = 'e2e-private/ui-dashboard';
 
 mkdirSync(PUBLIC_OUT, { recursive: true });
 mkdirSync(PRIVATE_OUT, { recursive: true });
+mkdirSync(DASH_OUT, { recursive: true });
 
 async function login(page: Page, log: string[]) {
   await page.goto('/login');
@@ -85,5 +88,84 @@ test.describe('UI foundation', () => {
     await expect(page.locator('header.sticky')).toBeHidden();
     log.push('kiosk-mode: aside + header.sticky hidden');
     await flushDebugLog(log, testInfo);
+  });
+
+  test('provincial dashboard: no overflow, KPI numbers on one line, one presence badge @dashboard', async ({ page }, testInfo) => {
+    test.skip(!SESSION, 'requires E2E_BMS_SESSION_ID');
+    const log = attachDebugLogging(page);
+    await login(page, log);
+    for (const w of WIDTHS) {
+      await page.setViewportSize({ width: w, height: 900 });
+      const dash = page
+        .waitForResponse((r) => new URL(r.url()).pathname === '/api/dashboard', { timeout: 20_000 })
+        .catch(() => null);
+      await page.goto('/');
+      const res = await dash;
+      log.push(`/ @${w}: /api/dashboard ${res ? res.status() : 'no request'}`);
+      await expect(page.getByRole('heading', { level: 1, name: 'ภาพรวมจังหวัดขอนแก่น' })).toBeVisible();
+      const m = await page.evaluate(() => {
+        const lines = (el: HTMLElement) =>
+          Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight));
+        const values = [...document.querySelectorAll<HTMLElement>('[data-kpi-value]')];
+        const labels = [...document.querySelectorAll<HTMLElement>('[data-kpi-label]')];
+        return {
+          scrollWidth: document.documentElement.scrollWidth,
+          clientWidth: document.documentElement.clientWidth,
+          kpis: values.length,
+          wrappedValues: values.filter((el) => lines(el) > 1).map((el) => el.textContent?.trim()),
+          overflowingValues: values.filter((el) => el.scrollWidth > el.clientWidth + 1).map((el) => el.textContent?.trim()),
+          tallLabels: labels.filter((el) => lines(el) > 2).map((el) => el.textContent?.trim()),
+          presenceBadges: document.querySelectorAll('[aria-label$="online users"]').length,
+          twoColumns: getComputedStyle(document.querySelector('[data-testid="province-overview"]')!).position === 'sticky',
+        };
+      });
+      log.push(`/ @${w}: ${JSON.stringify(m)}`);
+      expect(m.scrollWidth, `/ @${w} scrolls horizontally`).toBeLessThanOrEqual(m.clientWidth);
+      expect(m.kpis).toBeGreaterThan(10);
+      expect(m.wrappedValues, `/ @${w} KPI numbers wrapped`).toEqual([]);
+      expect(m.overflowingValues, `/ @${w} KPI numbers overflow their tile`).toEqual([]);
+      expect(m.tallLabels, `/ @${w} KPI labels over two lines`).toEqual([]);
+      expect(m.presenceBadges, `/ @${w} online-users badge count`).toBe(1);
+      expect(m.twoColumns).toBe(w === 1440); // container ≥ 1160px only at 1440
+      await page.screenshot({ path: `${DASH_OUT}/${TAG}-root-${w}.png`, fullPage: true });
+    }
+
+    // The sticky overview panel must stay below the sticky shell header.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/');
+    await expect(page.getByTestId('province-overview')).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, 900));
+    await page.waitForTimeout(200);
+    const pos = await page.evaluate(() => ({
+      headerBottom: document.querySelector('header.sticky')!.getBoundingClientRect().bottom,
+      panelTop: document.querySelector('[data-testid="province-overview"]')!.getBoundingClientRect().top,
+      scrollY: window.scrollY,
+      headerVar: getComputedStyle(document.documentElement).getPropertyValue('--app-header-h'),
+    }));
+    log.push(`/ @1440 after scroll: ${JSON.stringify(pos)}`);
+    expect(pos.scrollY).toBeGreaterThan(0);
+    expect(pos.panelTop).toBeGreaterThanOrEqual(pos.headerBottom - 1);
+    await page.screenshot({ path: `${DASH_OUT}/${TAG}-root-1440-scrolled.png` });
+    await flushDebugLog(log, testInfo);
+    expect(log.filter((l) => l.includes('PAGEERROR'))).toEqual([]);
+  });
+
+  test('kiosk button enters the frozen kiosk and hides the shell @dashboard', async ({ page }, testInfo) => {
+    test.skip(!SESSION, 'requires E2E_BMS_SESSION_ID');
+    const log = attachDebugLogging(page);
+    await login(page, log);
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.goto('/');
+    await page.getByRole('button', { name: /โหมดจอภาพ/ }).click();
+    await expect(page.getByText('PPHO WAR-ROOM')).toBeVisible();
+    await expect(page.locator('header.sticky')).toBeHidden();
+    await expect(page.locator('aside').first()).toBeHidden();
+    log.push('kiosk via button: war-room footer visible, shell hidden');
+    await page.screenshot({ path: `${DASH_OUT}/${TAG}-kiosk-1920.png` });
+    await page.getByRole('button', { name: 'Exit kiosk mode' }).click();
+    await expect(page.getByRole('heading', { level: 1, name: 'ภาพรวมจังหวัดขอนแก่น' })).toBeVisible();
+    log.push('kiosk exit: page heading back');
+    await flushDebugLog(log, testInfo);
+    expect(log.filter((l) => l.includes('PAGEERROR'))).toEqual([]);
   });
 });
