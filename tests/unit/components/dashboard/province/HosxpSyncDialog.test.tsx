@@ -1,0 +1,47 @@
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { HosxpSyncDialog } from '@/components/dashboard/province/HosxpSyncDialog';
+import type { OnboardHosxpSyncState } from '@/hooks/useOnboardHosxpSync';
+
+const state: OnboardHosxpSyncState = {
+  ran: true,
+  phase: 'querying_hosxp',
+  successCount: 2,
+  cycleCount: 3,
+  lastSteps: [
+    { at: '2026-10-11T03:00:00Z', cycle: 3, name: 'fetch_ipt', status: 'success', message: 'ok', counts: { rows: 4 } },
+  ],
+};
+
+function setClipboard(writeText: (t: string) => Promise<void>) {
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+}
+afterEach(() => vi.restoreAllMocks());
+
+describe('HosxpSyncDialog', () => {
+  it('Thai title, verbatim diagnostic fields and step log', () => {
+    render(<HosxpSyncDialog open onOpenChange={vi.fn()} state={state} status="QUERYING" help="ช่วยเหลือ" />);
+    expect(screen.getByRole('dialog', { name: 'สถานะการดึงข้อมูลจาก HOSxP' })).toBeInTheDocument();
+    expect(screen.getByText('QUERYING')).toBeInTheDocument();
+    expect(screen.getByText('fetch_ipt')).toBeInTheDocument();
+    expect(screen.getByText('rows=4')).toBeInTheDocument();
+  });
+  it('copies the report and confirms', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    setClipboard(writeText);
+    render(<HosxpSyncDialog open onOpenChange={vi.fn()} state={state} status="QUERYING" help="h" />);
+    fireEvent.click(screen.getByRole('button', { name: /คัดลอกรายงาน/ }));
+    expect(await screen.findByText('คัดลอกแล้ว')).toBeInTheDocument();
+    expect(writeText.mock.calls[0][0]).toContain('STATUS: QUERYING');
+  });
+  it('a failed copy says what to do instead of failing silently', async () => {
+    setClipboard(vi.fn().mockRejectedValue(new Error('denied')));
+    render(<HosxpSyncDialog open onOpenChange={vi.fn()} state={state} status="QUERYING" help="h" />);
+    fireEvent.click(screen.getByRole('button', { name: /คัดลอกรายงาน/ }));
+    expect(await screen.findByText(/คัดลอกไม่สำเร็จ — เลือกข้อความแล้วกด Ctrl\+C/)).toBeInTheDocument();
+  });
+  it('empty step log is explained in Thai', () => {
+    render(<HosxpSyncDialog open onOpenChange={vi.fn()} state={{ ran: true }} status="STARTING" help="h" />);
+    expect(screen.getByText(/ยังไม่มีบันทึกขั้นตอน/)).toBeInTheDocument();
+  });
+});
