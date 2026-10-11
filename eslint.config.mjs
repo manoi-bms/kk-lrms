@@ -9,7 +9,7 @@ const designAllowlist = JSON.parse(
 const eslintConfig = [
   ...nextConfig,
   {
-    ignores: ['node_modules/', '.next/', 'dist/', 'build/', 'coverage/', '*.min.js'],
+    ignores: ['node_modules/', '.next/', '.claude/', '.superpowers/', 'dist/', 'build/', 'coverage/', '*.min.js'],
   },
   {
     files: ['src/app/**/*.{ts,tsx}', 'src/components/**/*.{ts,tsx}'],
