@@ -564,7 +564,7 @@ function HospitalTooltip({ pin, kiosk }: { pin: PinEntry; kiosk: boolean }) {
   const { live, name, level, hcode } = pin;
   // Tooltip backdrop is forced dark via .kk-map-tooltip CSS so the same
   // white-on-navy palette works in both light and kiosk app modes.
-  const ink = '#e6ecf5';
+  const ink = mapPalette('kiosk').tooltipInk;
   const muted = 'rgba(255,255,255,0.65)';
   const ruleColor = 'rgba(255,255,255,0.18)';
   // The tooltip surface is dark in BOTH modes (.kk-map-tooltip), so the light

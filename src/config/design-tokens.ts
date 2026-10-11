@@ -98,7 +98,8 @@ export type TypeToken = keyof typeof TYPE_SCALE;
 export const MIN_TEXT_PX = TYPE_SCALE.caption.px;
 
 /** A token colour at partial opacity, for canvases that cannot use
- *  Tailwind's `/alpha` syntax (Leaflet paths, inline legends). */
+ *  Tailwind's `/alpha` syntax (Leaflet paths, inline legends).
+ *  Expects a 6-digit `#rrggbb` hex; shorthand or rgb() strings are not parsed. */
 export function withAlpha(hex: string, alpha: number): string {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;

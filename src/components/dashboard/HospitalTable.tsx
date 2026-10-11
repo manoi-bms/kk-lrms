@@ -326,8 +326,8 @@ export function HospitalTable({
                   title={`ผู้คลอดในห้องคลอด ${h.counts.total} ราย`}
                 >
                   <span className="text-caption" style={{ color: inkMuted }}>
-                ห้องคลอด
-              </span>{' '}
+                    ห้องคลอด
+                  </span>{' '}
                   {h.counts.total || '–'}
                 </div>
                 <div
