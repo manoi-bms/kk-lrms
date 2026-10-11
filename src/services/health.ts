@@ -1,8 +1,7 @@
 // T109: Health check service — centralized health status logic
 
 import type { DatabaseAdapter } from '@/db/adapter';
-import { classifySyncHealth } from '@/config/hospital-network';
-import { EXEMPT_HCODES } from '@/lib/hospital-access-guard';
+import { classifySyncHealth, isNonReportingHcode } from '@/config/hospital-network';
 import { cacheStatus } from '@/lib/cache';
 
 export interface HealthStatus {
@@ -39,7 +38,7 @@ export async function getHealthStatus(db: DatabaseAdapter): Promise<HealthStatus
         connection_status: string;
         last_sync_at: string | Date | null;
       }>('SELECT hcode, connection_status, last_sync_at FROM hospitals WHERE is_active = true')
-    ).filter((h) => !EXEMPT_HCODES.has(h.hcode)); // pseudo-hospitals never sync
+    ).filter((h) => !isNonReportingHcode(h.hcode)); // pseudo-hospitals never sync
     const now = new Date();
     hospitalConnections.total = hospitals.length;
 

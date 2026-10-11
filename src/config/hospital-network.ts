@@ -14,6 +14,16 @@ export const SYNC_HEALTH = {
   criticalAfterHours: 24,
 } as const;
 
+/** Pseudo-hospitals that never sync: '00000' reserved system account, '99999'
+ *  provincial/admin testing account. They are exempt from the access guard and
+ *  excluded from every freshness count, map and roster. Client-safe: this file
+ *  must never read env or import server-only modules. */
+export const NON_REPORTING_HCODES = ['00000', '99999'] as const;
+
+export function isNonReportingHcode(hcode: string | null | undefined): boolean {
+  return !!hcode && (NON_REPORTING_HCODES as readonly string[]).includes(hcode);
+}
+
 export type SyncHealthClass = 'ok' | 'stale' | 'critical' | 'never' | 'blocked';
 
 /** Classify one hospital's data freshness. BLOCKED (auth/purge) always wins;

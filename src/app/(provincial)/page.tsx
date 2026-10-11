@@ -31,7 +31,7 @@ import { HospitalDetailDialog } from '@/components/dashboard/HospitalDetailDialo
 import { LoadingState } from '@/components/shared/LoadingState';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { ConnectionStatus as ConnectionStatusEnum } from '@/types/domain';
-import { classifySyncHealth } from '@/config/hospital-network';
+import { classifySyncHealth, isNonReportingHcode } from '@/config/hospital-network';
 import { Copy, Info, Monitor, RefreshCw, Maximize2, Expand } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -247,7 +247,10 @@ export default function DashboardPage() {
   ).length;
   // Data freshness beats transport status: a hospital can be ONLINE with a
   // two-week-old sync. Same classifier as the /hospitals board.
-  const freshCount = hospitals.filter(
+  // Pseudo-hospitals (00000/99999) never sync: excluded from numerator and
+  // denominator so this agrees with the status strip.
+  const reportingHospitals = hospitals.filter((h) => !isNonReportingHcode(h.hcode));
+  const freshCount = reportingHospitals.filter(
     (h) => classifySyncHealth(h.syncStatus, h.lastSyncAt) === 'ok',
   ).length;
   const ancFallback = continuum ? { hr3: continuum.anc.hr3, dueSoon: continuum.anc.dueSoon } : null;
@@ -370,7 +373,7 @@ export default function DashboardPage() {
             {sseMeta.stream}
           </span>
           <span>
-            {freshCount}/{hospitals.length} DATA FRESH
+            {freshCount}/{reportingHospitals.length} DATA FRESH
           </span>
           <span style={{ color: 'var(--kiosk-ink)' }}>ESC TO EXIT</span>
         </div>
@@ -512,7 +515,7 @@ export default function DashboardPage() {
             </span>
             <span className="tabular-nums">
               <span className="font-semibold text-[var(--ink-navy)]">{freshCount}</span>
-              <span className="text-[var(--ink-navy-muted)]">/{hospitals.length}</span> ข้อมูลสด
+              <span className="text-[var(--ink-navy-muted)]">/{reportingHospitals.length}</span> ข้อมูลสด
             </span>
             <OnlineUsersBadge />
             {updatedAt && (
@@ -793,7 +796,7 @@ export default function DashboardPage() {
             {sseMeta.stream}
           </span>
           <span>
-            {freshCount}/{hospitals.length} DATA FRESH
+            {freshCount}/{reportingHospitals.length} DATA FRESH
           </span>
           <OnlineUsersBadge />
           <button

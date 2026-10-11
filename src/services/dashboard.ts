@@ -108,6 +108,36 @@ export interface DashboardResult {
   updatedAt: string;
 }
 
+export type DerivedSyncStatus = 'OK' | 'BLOCKED' | 'NEVER_SYNCED';
+
+/**
+ * The one sync verdict for a hospital row (dashboard, hospital list, status
+ * strip). Precedence:
+ *   1. data_purged_at non-null -> BLOCKED ('purged_pending_reonboard'),
+ *      even if the authenticity probe later wrote 'authentic' (it
+ *      shouldn't, since the cooldown blocks polling, but be explicit).
+ *   2. last_authenticity_status in failure set -> BLOCKED.
+ *   3. No BMS config row at all -> NEVER_SYNCED.
+ *   4. last_sync_at null but has config -> NEVER_SYNCED (onboarded but
+ *      first cycle hasn't completed).
+ *   5. Otherwise OK.
+ */
+export function deriveSyncStatus(h: {
+  has_bms_config: number | boolean | null;
+  last_authenticity_status: string | null;
+  data_purged_at: string | Date | null;
+  last_sync_at: string | Date | null;
+}): { syncStatus: DerivedSyncStatus; syncBlockedReason: string | null } {
+  const hasConfig = h.has_bms_config === true || h.has_bms_config === 1;
+  const status = h.last_authenticity_status;
+  if (h.data_purged_at)
+    return { syncStatus: 'BLOCKED', syncBlockedReason: 'purged_pending_reonboard' };
+  if (status && SYNC_FAILURE_STATUSES.has(status))
+    return { syncStatus: 'BLOCKED', syncBlockedReason: status };
+  if (!hasConfig || !h.last_sync_at) return { syncStatus: 'NEVER_SYNCED', syncBlockedReason: null };
+  return { syncStatus: 'OK', syncBlockedReason: null };
+}
+
 export async function getProvinceDashboard(db: DatabaseAdapter): Promise<DashboardResult> {
   // Get all active hospitals + their BMS sync verdict so the map and the
   // hospital list can render BLOCKED separately from OFFLINE. LEFT JOIN so
@@ -134,30 +164,7 @@ export async function getProvinceDashboard(db: DatabaseAdapter): Promise<Dashboa
     // downstream consumers (map, mobile clients) get numbers.
     const lat = h.lat === null ? null : Number(h.lat);
     const lon = h.lon === null ? null : Number(h.lon);
-    // Sync verdict precedence:
-    //   1. data_purged_at non-null → BLOCKED ('purged_pending_reonboard'),
-    //      even if the authenticity probe later wrote 'authentic' (it
-    //      shouldn't, since the cooldown blocks polling, but be explicit).
-    //   2. last_authenticity_status in failure set → BLOCKED.
-    //   3. No BMS config row at all → NEVER_SYNCED.
-    //   4. last_sync_at null but has config → NEVER_SYNCED (onboarded but
-    //      first cycle hasn't completed).
-    //   5. Otherwise OK.
-    const hasConfig = h.has_bms_config === true || h.has_bms_config === 1;
-    const status = h.last_authenticity_status;
-    let syncStatus: 'OK' | 'BLOCKED' | 'NEVER_SYNCED' = 'OK';
-    let syncBlockedReason: string | null = null;
-    if (h.data_purged_at) {
-      syncStatus = 'BLOCKED';
-      syncBlockedReason = 'purged_pending_reonboard';
-    } else if (status && SYNC_FAILURE_STATUSES.has(status)) {
-      syncStatus = 'BLOCKED';
-      syncBlockedReason = status;
-    } else if (!hasConfig) {
-      syncStatus = 'NEVER_SYNCED';
-    } else if (!h.last_sync_at) {
-      syncStatus = 'NEVER_SYNCED';
-    }
+    const { syncStatus, syncBlockedReason } = deriveSyncStatus(h);
     hospitalMap.set(h.hcode, {
       hcode: h.hcode,
       name: h.name,

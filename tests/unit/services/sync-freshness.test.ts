@@ -17,12 +17,22 @@ describe('getSyncFreshness', () => {
       ['h4', '77652', null], // never
       ['h5', '11004', new Date(NOW.getTime() + 3_600_000).toISOString()], // future-dated
       ['h99', '99999', mins(60 * 24 * 10)], // exempt pseudo-hospital
+      ['h6', '11006', mins(2)], // recent sync but purged -> BLOCKED
     ];
     for (const [id, hcode, last] of rows) {
       await db.query(
         `INSERT INTO hospitals (id, hcode, name, level, is_active, connection_status, last_sync_at, created_at, updated_at)
          VALUES (?, ?, ?, 'A_S', true, 'ONLINE', ?, NOW(), NOW())`,
         [id, hcode, `รพ.${hcode}`, last],
+      );
+    }
+    // Every reporting hospital is onboarded (a BMS config row), as in production;
+    // deriveSyncStatus treats a missing row as NEVER_SYNCED.
+    for (const [id] of rows) {
+      await db.query(
+        `INSERT INTO hospital_bms_config (id, hospital_id, tunnel_url, data_purged_at, created_at, updated_at)
+         VALUES (?, ?, 'https://x', ?, NOW(), NOW())`,
+        [`cfg-${id}`, id, id === 'h6' ? mins(1) : null],
       );
     }
     await db.query(
@@ -38,9 +48,9 @@ describe('getSyncFreshness', () => {
   it('province summary excludes exempt hcodes and classifies every feed', async () => {
     const s = await getSyncFreshness(db, { hcode: null, now: NOW });
     expect(s.province).toEqual({
-      reporting: 5,
+      reporting: 6,
       fresh: 1,
-      stale: 3, // 18-day, 90-min, future-dated
+      stale: 4, // 18-day, 90-min, future-dated, BLOCKED (purged)
       never: 1,
       highRisk: 1,
       lastSyncAt: mins(5),
@@ -57,7 +67,7 @@ describe('getSyncFreshness', () => {
   it.each(['99999', '00000', '55555', undefined])('exempt/unregistered/missing hcode %p → own null, no throw', async (hcode) => {
     const s = await getSyncFreshness(db, { hcode, now: NOW });
     expect(s.own).toBeNull();
-    expect(s.province.reporting).toBe(5);
+    expect(s.province.reporting).toBe(6);
   });
 
   it('own block never leaks another hospital', async () => {
@@ -71,5 +81,22 @@ describe('getSyncFreshness', () => {
     expect(future.own?.health).toBe('stale');
     const never = await getSyncFreshness(db, { hcode: '77652', now: NOW });
     expect(never.own?.health).toBe('never');
+  });
+
+  it('a BLOCKED hospital with a recent sync is not fresh, and own.health is blocked', async () => {
+    const own = await getSyncFreshness(db, { hcode: '11006', now: NOW });
+    expect(own.own?.health).toBe('blocked');
+    const s = await getSyncFreshness(db, { hcode: null, now: NOW });
+    expect(s.province.fresh).toBe(1); // only 11000
+  });
+
+  it('a hospital with no BMS config row is never-synced, like the dashboard', async () => {
+    await db.query(
+      `INSERT INTO hospitals (id, hcode, name, level, is_active, connection_status, last_sync_at, created_at, updated_at)
+       VALUES ('h7','11007','รพ.11007','A_S',true,'ONLINE',?,NOW(),NOW())`,
+      [mins(1)],
+    );
+    const s = await getSyncFreshness(db, { hcode: '11007', now: NOW });
+    expect(s.own?.health).toBe('never');
   });
 });
