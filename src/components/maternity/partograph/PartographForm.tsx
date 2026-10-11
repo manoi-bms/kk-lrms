@@ -13,6 +13,7 @@ import type {
   PartographObservationDto,
 } from '@/types/api';
 import { countBySeverity } from '@/services/partogram';
+import { MIN_TEXT_PX } from '@/config/design-tokens';
 
 export interface PartographFormHeader {
   an: string;
@@ -188,11 +189,11 @@ function RowLabel({ x, y, w, h, title, subtitle }: {
       <line x1={x + w} y1={y} x2={x + w} y2={y + h} stroke={C.LINE} />
       {subtitle ? (
         <>
-          <text x={x + 8} y={y + 14} fontSize={10} fontWeight={700} fill={C.SECT_LBL}>{title}</text>
-          <text x={x + 8} y={y + 26} fontSize={10} fontWeight={700} fill={C.SECT_LBL}>{subtitle}</text>
+          <text x={x + 8} y={y + 14} fontSize={MIN_TEXT_PX} fontWeight={700} fill={C.SECT_LBL}>{title}</text>
+          <text x={x + 8} y={y + 26} fontSize={MIN_TEXT_PX} fontWeight={700} fill={C.SECT_LBL}>{subtitle}</text>
         </>
       ) : (
-        <text x={x + 8} y={y + h / 2 + 4} fontSize={10} fontWeight={700} fill={C.SECT_LBL}>{title}</text>
+        <text x={x + 8} y={y + h / 2 + 4} fontSize={MIN_TEXT_PX} fontWeight={700} fill={C.SECT_LBL}>{title}</text>
       )}
     </g>
   );
@@ -238,10 +239,10 @@ function HeaderStrip({ x, y, w, h, header }: {
       {/* Title with drop-shadow */}
       <text x={x + 16} y={y + 30} fontSize={20} fontWeight={800} fill={C.SHADOW}>PARTOGRAPH</text>
       <text x={x + 14} y={y + 28} fontSize={20} fontWeight={800} fill={C.TITLE}>PARTOGRAPH</text>
-      <text x={x + w - 180} y={y + 30} fontSize={10} fill={C.LINE}>LABOUR PROGRESS MONITORING</text>
-      <text x={x + 14} y={y + 54} fontSize={11} fill={C.LABEL}>{line1}</text>
+      <text x={x + w - 180} y={y + 30} fontSize={MIN_TEXT_PX} fill={C.LINE}>LABOUR PROGRESS MONITORING</text>
+      <text x={x + 14} y={y + 54} fontSize={MIN_TEXT_PX} fill={C.LABEL}>{line1}</text>
       {line2Parts.length > 0 && (
-        <text x={x + 14} y={y + 72} fontSize={10} fill={C.LINE}>{line2Parts.join('      ')}</text>
+        <text x={x + 14} y={y + 72} fontSize={MIN_TEXT_PX} fill={C.LINE}>{line2Parts.join('      ')}</text>
       )}
     </g>
   );
@@ -299,7 +300,7 @@ function CdssBanner({ x, y, w, h, alerts }: {
     pills.push(
       <g key={label}>
         <rect x={pillX - pillW} y={y + 8} width={pillW} height={22} fill={color} rx={3} />
-        <text x={pillX - pillW + 7} y={y + 24} fontSize={11} fontWeight={700} fill="#fff">{label}</text>
+        <text x={pillX - pillW + 7} y={y + 24} fontSize={MIN_TEXT_PX} fontWeight={700} fill="#fff">{label}</text>
       </g>,
     );
     pillX -= pillW + 6;
@@ -309,7 +310,7 @@ function CdssBanner({ x, y, w, h, alerts }: {
   if (nCrit > 0) pill(`วิกฤต ${nCrit}`, severityColor('CRITICAL'));
 
   // Rough chars-that-fit for the message column. Subtract pill column + some
-  // breathing room; at fontSize=11 a Thai char ≈ 8px, Latin ≈ 6.5px.
+  // breathing room; at fontSize=13 a Thai char ≈ 8px, Latin ≈ 6.5px.
   const messageColX = x + 92;
   const messageColW = w - (messageColX - x) - 16;
   const maxChars = Math.floor(messageColW / 7);
@@ -337,10 +338,10 @@ function CdssBanner({ x, y, w, h, alerts }: {
         return (
           <g key={i}>
             <rect x={x + 22} y={ry} width={60} height={ROW_H - 2} fill={severityColor(a.severity)} rx={2} />
-            <text x={x + 52} y={ry + ROW_H - 5} fontSize={10} fontWeight={700} fill="#fff" textAnchor="middle">
+            <text x={x + 52} y={ry + ROW_H - 5} fontSize={MIN_TEXT_PX} fontWeight={700} fill="#fff" textAnchor="middle">
               {tagLabel}
             </text>
-            <text x={messageColX} y={ry + ROW_H - 4} fontSize={11} fill={C.LABEL}>
+            <text x={messageColX} y={ry + ROW_H - 4} fontSize={MIN_TEXT_PX} fill={C.LABEL}>
               {truncate(msg, maxChars)}
             </text>
           </g>
@@ -350,7 +351,7 @@ function CdssBanner({ x, y, w, h, alerts }: {
         <text
           x={x + 22}
           y={LIST_TOP + renderList.length * ROW_H + ROW_H - 4}
-          fontSize={11}
+          fontSize={MIN_TEXT_PX}
           fontWeight={700}
           fill={C.LINE}
         >
@@ -390,7 +391,7 @@ function FhrStrip({ x, y, w, h, obs, firstMs }: {
   for (let v = yMin; v <= yMax; v += 10) {
     const gy = yToPx(v);
     grid.push(<line key={`g${v}`} x1={chartLeft} y1={gy} x2={chartRight} y2={gy} stroke={C.MINOR} />);
-    grid.push(<text key={`t${v}`} x={chartLeft - 22} y={gy + 4} fontSize={9} fill={C.LABEL}>{v}</text>);
+    grid.push(<text key={`t${v}`} x={chartLeft - 22} y={gy + 4} fontSize={MIN_TEXT_PX} fill={C.LABEL}>{v}</text>);
   }
 
   return (
@@ -422,7 +423,7 @@ function FhrStrip({ x, y, w, h, obs, firstMs }: {
             {abn && (
               <g>
                 <rect x={p.px + 6} y={p.py - 9} width={30} height={13} fill="#fff" />
-                <text x={p.px + 9} y={p.py + 1} fontSize={10} fontWeight={700} fill={C.ABN}>{v}</text>
+                <text x={p.px + 9} y={p.py + 1} fontSize={MIN_TEXT_PX} fontWeight={700} fill={C.ABN}>{v}</text>
               </g>
             )}
           </g>
@@ -512,7 +513,7 @@ function CategoricalStrip({
             <text
               x={px}
               y={y + h / 2 + 4}
-              fontSize={11}
+              fontSize={MIN_TEXT_PX}
               fontWeight={s.bold ? 700 : 400}
               fill={s.color}
               textAnchor="middle"
@@ -564,7 +565,7 @@ function CervixStrip({ x, y, w, h, obs, firstMs }: {
   for (let v = yMin; v <= yMax; v++) {
     const gy = yToPx(v);
     grid.push(<line key={`g${v}`} x1={chartLeft} y1={gy} x2={chartRight} y2={gy} stroke={C.MINOR} />);
-    grid.push(<text key={`t${v}`} x={chartLeft - 14} y={gy + 4} fontSize={9} fill={C.LABEL}>{v}</text>);
+    grid.push(<text key={`t${v}`} x={chartLeft - 14} y={gy + 4} fontSize={MIN_TEXT_PX} fill={C.LABEL}>{v}</text>);
   }
 
   return (
@@ -575,11 +576,11 @@ function CervixStrip({ x, y, w, h, obs, firstMs }: {
       <HourGrid x={chartLeft} y={chartTop} w={chartRight - chartLeft} h={chartBottom - chartTop} />
       {/* Phase labels */}
       {firstDilHour > 0 && (
-        <text x={chartLeft + (firstDilHour * P.HOUR_W) / 2 - 30} y={y + 14} fontSize={10} fontWeight={700} fill={C.SECT_LBL}>
+        <text x={chartLeft + (firstDilHour * P.HOUR_W) / 2 - 30} y={y + 14} fontSize={MIN_TEXT_PX} fontWeight={700} fill={C.SECT_LBL}>
           LATENT PHASE
         </text>
       )}
-      <text x={activeX + 10} y={y + 14} fontSize={10} fontWeight={700} fill={C.SECT_LBL}>
+      <text x={activeX + 10} y={y + 14} fontSize={MIN_TEXT_PX} fontWeight={700} fill={C.SECT_LBL}>
         ACTIVE PHASE
       </text>
       <line x1={activeX} y1={y} x2={activeX} y2={chartTop - 1} stroke={C.MAJOR} />
@@ -604,12 +605,12 @@ function CervixStrip({ x, y, w, h, obs, firstMs }: {
         const angle = (Math.atan2(alertEndY - alertStartY, alertEndX - alertStartX) * 180) / Math.PI;
         return (
           <>
-            <text x={mx} y={my - 6} fontSize={11} fontWeight={700} fill={C.ALERT}
+            <text x={mx} y={my - 6} fontSize={MIN_TEXT_PX} fontWeight={700} fill={C.ALERT}
                   transform={`rotate(${angle}, ${mx}, ${my})`} textAnchor="middle">
               ALERT
             </text>
             {actionStartX < chartRight && (
-              <text x={(actionStartX + actionEndX) / 2} y={my - 6} fontSize={11} fontWeight={700} fill={C.ACTION}
+              <text x={(actionStartX + actionEndX) / 2} y={my - 6} fontSize={MIN_TEXT_PX} fontWeight={700} fill={C.ACTION}
                     transform={`rotate(${angle}, ${(actionStartX + actionEndX) / 2}, ${my})`} textAnchor="middle">
                 ACTION
               </text>
@@ -658,7 +659,7 @@ function DescentStrip({ x, y, w, h, obs, firstMs }: {
   for (let v = yMin; v <= yMax; v++) {
     const gy = yToPx(v);
     grid.push(<line key={`g${v}`} x1={chartLeft} y1={gy} x2={chartRight} y2={gy} stroke={C.MINOR} />);
-    grid.push(<text key={`t${v}`} x={chartLeft - 12} y={gy + 4} fontSize={9} fill={C.LABEL}>{v}</text>);
+    grid.push(<text key={`t${v}`} x={chartLeft - 12} y={gy + 4} fontSize={MIN_TEXT_PX} fill={C.LABEL}>{v}</text>);
   }
 
   return (
@@ -690,7 +691,7 @@ function HoursStrip({ x, y, w, h }: { x: number; y: number; w: number; h: number
   for (let i = 1; i <= P.MAX_HOURS; i++) {
     const cx = chartLeft + (i - 1) * P.HOUR_W + P.HOUR_W / 2;
     cells.push(
-      <text key={i} x={cx} y={y + h / 2 + 4} fontSize={11} fontWeight={700} fill={C.SECT_LBL} textAnchor="middle">
+      <text key={i} x={cx} y={y + h / 2 + 4} fontSize={MIN_TEXT_PX} fontWeight={700} fill={C.SECT_LBL} textAnchor="middle">
         {i}
       </text>,
     );
@@ -724,7 +725,7 @@ function TimeStrip({ x, y, w, h, obs, firstMs }: {
         const px = obsX(o, firstMs);
         if (px < chartLeft || px > chartRight) return null;
         return (
-          <text key={o.id} x={px} y={y + h / 2 + 4} fontSize={9} fill={C.LABEL} textAnchor="middle">
+          <text key={o.id} x={px} y={y + h / 2 + 4} fontSize={MIN_TEXT_PX} fill={C.LABEL} textAnchor="middle">
             {formatHHmm(o.observeDatetime)}
           </text>
         );
@@ -753,7 +754,7 @@ function ContractionsStrip({ x, y, w, h, obs, firstMs }: {
     rowGrid.push(<line key={`r${j}`} x1={chartLeft} y1={ly} x2={chartRight} y2={ly} stroke={C.MINOR} />);
     if (j >= 1 && j <= 5) {
       rowGrid.push(
-        <text key={`rt${j}`} x={chartLeft - 10} y={chartTop + (5 - j) * cellH + cellH / 2 + 4} fontSize={9} fill={C.LABEL}>
+        <text key={`rt${j}`} x={chartLeft - 10} y={chartTop + (5 - j) * cellH + cellH / 2 + 4} fontSize={MIN_TEXT_PX} fill={C.LABEL}>
           {j}
         </text>,
       );
@@ -765,8 +766,8 @@ function ContractionsStrip({ x, y, w, h, obs, firstMs }: {
       {/* Label column */}
       <rect x={x} y={y} width={P.LEFT_W} height={h} fill={C.ROW_ALT} />
       <line x1={x + P.LEFT_W} y1={y} x2={x + P.LEFT_W} y2={y + h} stroke={C.LINE} />
-      <text x={x + 8} y={y + 14} fontSize={10} fontWeight={700} fill={C.SECT_LBL}>CONTRACTIONS</text>
-      <text x={x + 8} y={y + 26} fontSize={10} fontWeight={700} fill={C.SECT_LBL}>PER 10 MIN</text>
+      <text x={x + 8} y={y + 14} fontSize={MIN_TEXT_PX} fontWeight={700} fill={C.SECT_LBL}>CONTRACTIONS</text>
+      <text x={x + 8} y={y + 26} fontSize={MIN_TEXT_PX} fontWeight={700} fill={C.SECT_LBL}>PER 10 MIN</text>
       {/* Legend swatches */}
       {[
         { yOff: 38, fill: C.CONTR_MILD, stroke: C.CONTR_MILD_PEN, label: 'mild  <25 sec' },
@@ -775,7 +776,7 @@ function ContractionsStrip({ x, y, w, h, obs, firstMs }: {
       ].map((l) => (
         <g key={l.label}>
           <rect x={x + 8} y={y + l.yOff} width={12} height={10} fill={l.fill} stroke={l.stroke} />
-          <text x={x + 24} y={y + l.yOff + 9} fontSize={9} fill={C.LABEL}>{l.label}</text>
+          <text x={x + 24} y={y + l.yOff + 9} fontSize={MIN_TEXT_PX} fill={C.LABEL}>{l.label}</text>
         </g>
       ))}
       <rect x={chartLeft} y={chartTop} width={chartRight - chartLeft} height={chartBottom - chartTop} fill={C.BG} />
@@ -836,7 +837,7 @@ function PulseBpStrip({ x, y, w, h, obs, firstMs }: {
   for (let v = yMin; v <= yMax; v += 20) {
     const gy = yToPx(v);
     grid.push(<line key={`g${v}`} x1={chartLeft} y1={gy} x2={chartRight} y2={gy} stroke={C.MINOR} />);
-    grid.push(<text key={`t${v}`} x={chartLeft - 22} y={gy + 4} fontSize={9} fill={C.LABEL}>{v}</text>);
+    grid.push(<text key={`t${v}`} x={chartLeft - 22} y={gy + 4} fontSize={MIN_TEXT_PX} fill={C.LABEL}>{v}</text>);
   }
 
   // Pulse polyline.

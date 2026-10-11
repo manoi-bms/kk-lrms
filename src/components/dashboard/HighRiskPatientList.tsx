@@ -6,6 +6,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { MIN_TEXT_PX } from '@/config/design-tokens';
 import { cn, formatRelativeTime, buildPatientId } from '@/lib/utils';
 import { maskName } from '@/lib/pii-mask';
 import type { CdssSeverity } from '@/types/api';
@@ -117,7 +118,7 @@ function LaborStageCell({
   const ruleStrong = isKiosk ? 'var(--kiosk-rule)' : 'var(--rule-strong)';
   const ruleHair = isKiosk ? 'var(--kiosk-rule)' : 'var(--rule-hair)';
   return (
-    <div style={{ fontSize: isKiosk ? 13 : 11, lineHeight: 1.25 }}>
+    <div style={{ fontSize: isKiosk ? 13 : MIN_TEXT_PX, lineHeight: 1.25 }}>
       <span
         className="inline-block border px-1.5 py-0.5 font-mono tracking-[0.04em] whitespace-nowrap"
         style={{
@@ -129,7 +130,7 @@ function LaborStageCell({
         {delivered ? 'คลอดแล้ว' : 'รอคลอด'}
       </span>
       {delivered && (
-        <div className="font-mono" style={{ color: inkMuted, fontSize: 10 }}>
+        <div className="font-mono" style={{ color: inkMuted, fontSize: MIN_TEXT_PX }}>
           {admitTime(deliveredAt)}
         </div>
       )}
@@ -395,11 +396,11 @@ export function HighRiskPatientList({
                 <div>
                   <RiskChip riskLevel={p.riskLevel} variant={variant} />
                 </div>
-                <div className="font-mono" style={{ color: ink, fontSize: isKiosk ? 14 : 12 }}>
+                <div className="font-mono" style={{ color: ink, fontSize: isKiosk ? 14 : MIN_TEXT_PX }}>
                   <div className="font-semibold">{p.an}</div>
                   <div
                     className="font-normal"
-                    style={{ color: inkMuted, fontSize: isKiosk ? 11 : 10 }}
+                    style={{ color: inkMuted, fontSize: isKiosk ? 11 : MIN_TEXT_PX }}
                   >
                     HN {p.hn}
                   </div>
@@ -409,7 +410,7 @@ export function HighRiskPatientList({
                     <div className="truncate">
                       {p.name ? maskName(p.name) : <span style={{ color: inkMuted }}>ไม่ระบุ</span>}
                     </div>
-                    <div className="font-mono" style={{ color: inkMuted, fontSize: 11 }}>
+                    <div className="font-mono" style={{ color: inkMuted, fontSize: MIN_TEXT_PX }}>
                       {p.age != null ? `อายุ ${p.age}` : '—'}
                     </div>
                   </div>
@@ -421,7 +422,7 @@ export function HighRiskPatientList({
                   {p.gaWeeks != null ? (
                     <>
                       {p.gaWeeks}
-                      <span style={{ color: inkMuted, fontSize: isKiosk ? 11 : 10 }}>w</span>
+                      <span style={{ color: inkMuted, fontSize: isKiosk ? 11 : MIN_TEXT_PX }}>w</span>
                     </>
                   ) : (
                     '—'
@@ -451,10 +452,10 @@ export function HighRiskPatientList({
                 >
                   {p.cpdScore}
                 </div>
-                <div className="truncate" style={{ color: ink, fontSize: isKiosk ? 14 : 12 }}>
+                <div className="truncate" style={{ color: ink, fontSize: isKiosk ? 14 : MIN_TEXT_PX }}>
                   {p.hospital}
                 </div>
-                <div className="font-mono" style={{ color: ink, fontSize: isKiosk ? 14 : 12 }}>
+                <div className="font-mono" style={{ color: ink, fontSize: isKiosk ? 14 : MIN_TEXT_PX }}>
                   {admitTime(p.admitDate)}
                   {(() => {
                     const elapsed = admitElapsed(p.admitDate);
@@ -462,7 +463,7 @@ export function HighRiskPatientList({
                       <div
                         style={{
                           color: inkMuted,
-                          fontSize: isKiosk ? 11 : 10,
+                          fontSize: isKiosk ? 11 : MIN_TEXT_PX,
                           fontWeight: 400,
                         }}
                       >
@@ -477,7 +478,7 @@ export function HighRiskPatientList({
                     className="font-mono"
                     style={{
                       color: freshness.stale ? inkMuted : inkDim,
-                      fontSize: 11,
+                      fontSize: MIN_TEXT_PX,
                     }}
                   >
                     {freshness.text}
@@ -502,7 +503,7 @@ export function HighRiskPatientList({
                 {!isKiosk && (
                   <div
                     className="truncate font-mono"
-                    style={{ color: inkDim, fontSize: 11 }}
+                    style={{ color: inkDim, fontSize: MIN_TEXT_PX }}
                     title={p.note ?? undefined}
                   >
                     {p.note ?? ''}

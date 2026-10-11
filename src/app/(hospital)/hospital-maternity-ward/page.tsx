@@ -15,7 +15,7 @@
 //   * Cx / Stn / FHR / contractions / oxytocin / IV / amniotic
 //                                    → ipt_labour_partograph (latest by observe_datetime)
 'use client';
-import { COLOR } from '@/config/design-tokens';
+import { COLOR, MIN_TEXT_PX } from '@/config/design-tokens';
 import { useEffect, useState } from 'react';
 import { useBmsSession } from '@/hooks/useBmsSession';
 import { useMaternityWardStateFull } from '@/hooks/useMaternityWardStateFull';
@@ -349,7 +349,7 @@ export default function HospitalMaternityWardPage() {
               display: 'flex',
               alignItems: 'center',
               gap: 14,
-              fontSize: 11,
+              fontSize: MIN_TEXT_PX,
               letterSpacing: '0.22em',
               textTransform: 'uppercase',
               color: SLATE_MUTE,
@@ -386,7 +386,7 @@ export default function HospitalMaternityWardPage() {
                   alignItems: 'center',
                   gap: 6,
                   fontFamily: FONT_MONO,
-                  fontSize: 11,
+                  fontSize: MIN_TEXT_PX,
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   color: SLATE_MUTE,
@@ -399,7 +399,7 @@ export default function HospitalMaternityWardPage() {
                   onChange={(e) => setSelectedWard(e.target.value)}
                   style={{
                     fontFamily: FONT_MONO,
-                    fontSize: 12,
+                    fontSize: MIN_TEXT_PX,
                     fontWeight: 600,
                     color: SLATE_INK,
                     border: `1px solid ${SLATE_INK}`,
@@ -424,7 +424,7 @@ export default function HospitalMaternityWardPage() {
             display: 'grid',
             gap: 4,
             fontFamily: FONT_MONO,
-            fontSize: 11,
+            fontSize: MIN_TEXT_PX,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
             color: SLATE_MUTE,
@@ -466,7 +466,7 @@ export default function HospitalMaternityWardPage() {
             background: ACCENT_BLUE,
             color: 'white',
             fontFamily: FONT_MONO,
-            fontSize: 11,
+            fontSize: MIN_TEXT_PX,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             fontWeight: 700,
@@ -529,7 +529,7 @@ export default function HospitalMaternityWardPage() {
             <div
               style={{
                 fontFamily: FONT_MONO,
-                fontSize: 10,
+                fontSize: MIN_TEXT_PX,
                 letterSpacing: '0.22em',
                 textTransform: 'uppercase',
                 color: SLATE_MUTE,
@@ -555,7 +555,7 @@ export default function HospitalMaternityWardPage() {
               <div
                 style={{
                   fontFamily: FONT_MONO,
-                  fontSize: 10,
+                  fontSize: MIN_TEXT_PX,
                   letterSpacing: '0.1em',
                   color: SLATE_MUTE,
                   marginTop: 8,

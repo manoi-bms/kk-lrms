@@ -1,7 +1,7 @@
 // VitalTrendCharts — 4 time-series area charts for HR, FHR, BP, PPH trends
 'use client';
 
-import { COLOR } from '@/config/design-tokens';
+import { COLOR, MIN_TEXT_PX } from '@/config/design-tokens';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -103,8 +103,8 @@ function MaternalHrChart({ vitals }: { vitals: VitalSignEntry[] }) {
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
           {/* Normal range green zone */}
           <ReferenceArea y1={60} y2={100} fill={COLOR.riskLow} fillOpacity={0.06} />
-          <XAxis dataKey="time" fontSize={11} tick={{ fill: '#94a3b8' }} />
-          <YAxis domain={[40, 180]} fontSize={11} tick={{ fill: '#94a3b8' }} />
+          <XAxis dataKey="time" fontSize={MIN_TEXT_PX} tick={{ fill: '#94a3b8' }} />
+          <YAxis domain={[40, 180]} fontSize={MIN_TEXT_PX} tick={{ fill: '#94a3b8' }} />
           <Tooltip
             content={({ active, payload, label }) => (
               <CustomTooltip active={active} payload={payload as never} label={label as string} unit="bpm" />
@@ -161,8 +161,8 @@ function FetalHrChart({ vitals }: { vitals: VitalSignEntry[] }) {
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
           {/* Normal range green zone */}
           <ReferenceArea y1={110} y2={160} fill={COLOR.riskLow} fillOpacity={0.06} />
-          <XAxis dataKey="time" fontSize={11} tick={{ fill: '#94a3b8' }} />
-          <YAxis domain={[80, 200]} fontSize={11} tick={{ fill: '#94a3b8' }} />
+          <XAxis dataKey="time" fontSize={MIN_TEXT_PX} tick={{ fill: '#94a3b8' }} />
+          <YAxis domain={[80, 200]} fontSize={MIN_TEXT_PX} tick={{ fill: '#94a3b8' }} />
           <Tooltip
             content={({ active, payload, label }) => (
               <CustomTooltip active={active} payload={payload as never} label={label as string} unit="bpm" />
@@ -221,15 +221,15 @@ function BpTrendChart({ vitals }: { vitals: VitalSignEntry[] }) {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis dataKey="time" fontSize={11} tick={{ fill: '#94a3b8' }} />
-          <YAxis domain={[40, 200]} fontSize={11} tick={{ fill: '#94a3b8' }} />
+          <XAxis dataKey="time" fontSize={MIN_TEXT_PX} tick={{ fill: '#94a3b8' }} />
+          <YAxis domain={[40, 200]} fontSize={MIN_TEXT_PX} tick={{ fill: '#94a3b8' }} />
           <Tooltip
             content={({ active, payload, label }) => (
               <CustomTooltip active={active} payload={payload as never} label={label as string} unit="mmHg" />
             )}
           />
-          <ReferenceLine y={140} stroke={COLOR.riskHigh} strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: 'SBP 140', position: 'right', fill: COLOR.riskHigh, fontSize: 10 }} />
-          <ReferenceLine y={90} stroke={COLOR.riskMedium} strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: 'DBP 90', position: 'right', fill: COLOR.riskMedium, fontSize: 10 }} />
+          <ReferenceLine y={140} stroke={COLOR.riskHigh} strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: 'SBP 140', position: 'right', fill: COLOR.riskHigh, fontSize: MIN_TEXT_PX }} />
+          <ReferenceLine y={90} stroke={COLOR.riskMedium} strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: 'DBP 90', position: 'right', fill: COLOR.riskMedium, fontSize: MIN_TEXT_PX }} />
           <Area
             type="monotone"
             dataKey="sbp"
@@ -286,14 +286,14 @@ function PphTrendChart({ vitals }: { vitals: VitalSignEntry[] }) {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis dataKey="time" fontSize={11} tick={{ fill: '#94a3b8' }} />
-          <YAxis domain={[0, 1000]} fontSize={11} tick={{ fill: '#94a3b8' }} />
+          <XAxis dataKey="time" fontSize={MIN_TEXT_PX} tick={{ fill: '#94a3b8' }} />
+          <YAxis domain={[0, 1000]} fontSize={MIN_TEXT_PX} tick={{ fill: '#94a3b8' }} />
           <Tooltip
             content={({ active, payload, label }) => (
               <CustomTooltip active={active} payload={payload as never} label={label as string} unit="ml" />
             )}
           />
-          <ReferenceLine y={500} stroke={COLOR.riskHigh} strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: '500 ml', position: 'right', fill: COLOR.riskHigh, fontSize: 10 }} />
+          <ReferenceLine y={500} stroke={COLOR.riskHigh} strokeDasharray="4 4" strokeOpacity={0.7} label={{ value: '500 ml', position: 'right', fill: COLOR.riskHigh, fontSize: MIN_TEXT_PX }} />
           <Area
             type="monotone"
             dataKey="pph"

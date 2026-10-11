@@ -8,7 +8,7 @@
 // a "+N more" footer appears.
 'use client';
 
-import { COLOR } from '@/config/design-tokens';
+import { COLOR, MIN_TEXT_PX } from '@/config/design-tokens';
 import { useState } from 'react';
 import useSWR from 'swr';
 import { UsersRound } from 'lucide-react';
@@ -94,7 +94,7 @@ export function OnlineUsersBadge() {
             className="mb-1.5 flex items-baseline justify-between"
             style={{
               fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
-              fontSize: 9,
+              fontSize: MIN_TEXT_PX,
               letterSpacing: '0.14em',
               color: 'rgba(230,236,245,0.7)',
             }}
@@ -107,7 +107,7 @@ export function OnlineUsersBadge() {
               <li
                 key={u.userId}
                 className="flex items-baseline gap-2"
-                style={{ fontSize: 12, lineHeight: 1.3 }}
+                style={{ fontSize: MIN_TEXT_PX, lineHeight: 1.3 }}
               >
                 <span
                   className="inline-block flex-shrink-0 rounded-full"
@@ -127,7 +127,7 @@ export function OnlineUsersBadge() {
                       marginLeft: 6,
                       fontFamily:
                         'ui-monospace, Menlo, Consolas, monospace',
-                      fontSize: 10,
+                      fontSize: MIN_TEXT_PX,
                     }}
                   >
                     {u.hospitalCode}
@@ -135,7 +135,7 @@ export function OnlineUsersBadge() {
                   <div
                     style={{
                       color: 'rgba(230,236,245,0.55)',
-                      fontSize: 10,
+                      fontSize: MIN_TEXT_PX,
                       marginTop: 1,
                     }}
                   >
@@ -145,7 +145,7 @@ export function OnlineUsersBadge() {
                 <span
                   style={{
                     fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
-                    fontSize: 10,
+                    fontSize: MIN_TEXT_PX,
                     color: 'rgba(230,236,245,0.6)',
                     flexShrink: 0,
                   }}
@@ -161,7 +161,7 @@ export function OnlineUsersBadge() {
               className="mt-2 border-t pt-1.5"
               style={{
                 borderColor: 'rgba(255,255,255,0.18)',
-                fontSize: 10,
+                fontSize: MIN_TEXT_PX,
                 color: 'rgba(230,236,245,0.6)',
                 fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
               }}

@@ -9,6 +9,7 @@
 import { CheckCircle2, AlertTriangle, HelpCircle, Gauge } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
 import { CPD_FACTOR_WEIGHTS } from '@/config/risk-levels';
+import { MIN_TEXT_PX } from '@/config/design-tokens';
 
 interface CpdFactorBreakdownProps {
   score: number;
@@ -172,7 +173,7 @@ function ScoreGauge({
           y={cy + 14}
           textAnchor="middle"
           fontFamily="monospace"
-          fontSize={10}
+          fontSize={MIN_TEXT_PX}
           fill="var(--ink-navy-muted)"
           letterSpacing="0.1em"
         >

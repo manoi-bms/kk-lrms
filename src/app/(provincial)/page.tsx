@@ -41,6 +41,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { MIN_TEXT_PX } from '@/config/design-tokens';
 
 // Truthful SSE health indicator — `chip` feeds the control strip, `stream`
 // feeds the kiosk strip and footer. Driven by useSSE().connectionState so a
@@ -461,7 +462,7 @@ export default function DashboardPage() {
             style={{
               background: 'var(--risk-high)',
               color: 'white',
-              fontSize: '10px',
+              fontSize: MIN_TEXT_PX,
             }}
           >
             HOSxP WEBHOOK
@@ -480,7 +481,7 @@ export default function DashboardPage() {
               border: '1px solid var(--rule-strong)',
               background: 'white',
               color: 'var(--ink-navy-dim)',
-              fontSize: '10px',
+              fontSize: MIN_TEXT_PX,
             }}
           >
             ซ่อน

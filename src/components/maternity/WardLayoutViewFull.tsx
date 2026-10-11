@@ -29,6 +29,7 @@ import { BedMoveReasonModal } from './BedMoveReasonModal';
 import type { BedSlot, BedOccupancyFull } from '@/types/maternity-ward';
 import type { ConnectionConfig } from '@/types/bms-browser';
 import type { MaternalScreenSummaryItem } from '@/types/api';
+import { MIN_TEXT_PX } from '@/config/design-tokens';
 
 export interface BedMovePayload {
   an: string;
@@ -290,7 +291,7 @@ export function WardLayoutViewFull({
                 <div
                   style={{
                     fontFamily: "'IBM Plex Mono', 'SF Mono', Consolas, monospace",
-                    fontSize: 11,
+                    fontSize: MIN_TEXT_PX,
                     letterSpacing: '0.22em',
                     textTransform: 'uppercase',
                     color: '#1565C0',
@@ -323,7 +324,7 @@ export function WardLayoutViewFull({
                 <div
                   style={{
                     fontFamily: "'IBM Plex Mono', 'SF Mono', Consolas, monospace",
-                    fontSize: 11,
+                    fontSize: MIN_TEXT_PX,
                     letterSpacing: '0.16em',
                     textTransform: 'uppercase',
                     color: '#64748B',

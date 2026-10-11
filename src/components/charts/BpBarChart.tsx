@@ -1,7 +1,7 @@
 // T077: BpBarChart — grouped SBP/DBP bars with hypertension reference lines
 'use client';
 
-import { COLOR } from '@/config/design-tokens';
+import { COLOR, MIN_TEXT_PX } from '@/config/design-tokens';
 import {
   ResponsiveContainer,
   BarChart,
@@ -45,7 +45,7 @@ export function BpBarChart({ vitals }: BpBarChartProps) {
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={bpData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="time" fontSize={11} />
+          <XAxis dataKey="time" fontSize={MIN_TEXT_PX} />
           <YAxis domain={[0, 200]} />
           <Tooltip
             formatter={(value, name) => {

@@ -18,7 +18,7 @@
 // component self-contained until the rule of three triggers extraction).
 'use client';
 
-import { COLOR } from '@/config/design-tokens';
+import { COLOR, MIN_TEXT_PX } from '@/config/design-tokens';
 import type { BedOccupancyFull } from '@/types/maternity-ward';
 import type { ConnectionConfig } from '@/types/bms-browser';
 import type { MaternalScreenSummaryItem } from '@/types/api';
@@ -291,7 +291,7 @@ const bedNoStyle: React.CSSProperties = {
 };
 
 const bedNoPreStyle: React.CSSProperties = {
-  fontSize: 9,
+  fontSize: MIN_TEXT_PX,
   letterSpacing: '0.24em',
   color: C.mute,
   textTransform: 'uppercase',
@@ -302,7 +302,7 @@ const bedNoPreStyle: React.CSSProperties = {
 
 const statusPillOutlineStyle: React.CSSProperties = {
   fontFamily: FONT_MONO,
-  fontSize: 10,
+  fontSize: MIN_TEXT_PX,
   letterSpacing: '0.18em',
   textTransform: 'uppercase',
   fontWeight: 700,
@@ -332,7 +332,7 @@ const emptyBodyStyle: React.CSSProperties = {
   justifyContent: 'center',
   gap: 10,
   fontFamily: FONT_MONO,
-  fontSize: 11,
+  fontSize: MIN_TEXT_PX,
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: C.mute,
@@ -353,7 +353,7 @@ function emptyBodyBigStyle(color: string): React.CSSProperties {
 
 const sectionLabelStyle: React.CSSProperties = {
   fontFamily: FONT_MONO,
-  fontSize: 8.5,
+  fontSize: MIN_TEXT_PX,
   letterSpacing: '0.22em',
   textTransform: 'uppercase',
   fontWeight: 800,
@@ -372,7 +372,7 @@ function sectionStyle(bg: string, accent: string): React.CSSProperties {
 
 const dataKeyStyle: React.CSSProperties = {
   fontFamily: FONT_MONO,
-  fontSize: 9,
+  fontSize: MIN_TEXT_PX,
   letterSpacing: '0.18em',
   textTransform: 'uppercase',
   fontWeight: 700,
@@ -388,7 +388,7 @@ const dataValueStyle: React.CSSProperties = {
 
 const compactKeyStyle: React.CSSProperties = {
   fontFamily: FONT_MONO,
-  fontSize: 8.5,
+  fontSize: MIN_TEXT_PX,
   letterSpacing: '0.16em',
   textTransform: 'uppercase',
   fontWeight: 800,
@@ -405,7 +405,7 @@ const compactKeyStyle: React.CSSProperties = {
 function screenPillStyle(color: string): React.CSSProperties {
   return {
     fontFamily: FONT_MONO,
-    fontSize: 9,
+    fontSize: MIN_TEXT_PX,
     fontWeight: 700,
     letterSpacing: '0.16em',
     padding: '2px 6px',
@@ -419,7 +419,7 @@ function screenPillStyle(color: string): React.CSSProperties {
 
 const compactValueStyle: React.CSSProperties = {
   fontFamily: FONT_SANS,
-  fontSize: 11,
+  fontSize: MIN_TEXT_PX,
   fontWeight: 700,
   lineHeight: 1.2,
   color: C.ink,
@@ -506,7 +506,7 @@ export function BedTileFull({
         <div
           style={{
             fontFamily: FONT_MONO,
-            fontSize: 10,
+            fontSize: MIN_TEXT_PX,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             padding: '5px 10px',
@@ -529,7 +529,7 @@ export function BedTileFull({
           gap: 10,
           padding: '6px 14px',
           fontFamily: FONT_MONO,
-          fontSize: 10.5,
+          fontSize: MIN_TEXT_PX,
           fontWeight: 600,
           letterSpacing: '0.04em',
           color: C.mute,
@@ -570,7 +570,7 @@ export function BedTileFull({
             <span
               style={{
                 fontFamily: FONT_MONO,
-                fontSize: 9,
+                fontSize: MIN_TEXT_PX,
                 fontWeight: 700,
                 letterSpacing: '0.16em',
                 padding: '2px 6px',
@@ -588,7 +588,7 @@ export function BedTileFull({
             <span
               style={{
                 fontFamily: FONT_MONO,
-                fontSize: 9,
+                fontSize: MIN_TEXT_PX,
                 fontWeight: 700,
                 letterSpacing: '0.16em',
                 padding: '2px 6px',
@@ -607,7 +607,7 @@ export function BedTileFull({
             <span
               style={{
                 fontFamily: FONT_MONO,
-                fontSize: 9,
+                fontSize: MIN_TEXT_PX,
                 fontWeight: 700,
                 letterSpacing: '0.16em',
                 padding: '2px 6px',
@@ -653,7 +653,7 @@ export function BedTileFull({
               {screenAgeLabel && (
                 <span
                   data-testid="bed-maternal-screen-age"
-                  style={{ fontSize: 8.5, color: C.mute }}
+                  style={{ fontSize: MIN_TEXT_PX, color: C.mute }}
                 >
                   {screenAgeLabel}
                 </span>
@@ -695,7 +695,7 @@ export function BedTileFull({
           <div
             style={{
               fontFamily: FONT_MONO,
-              fontSize: 10,
+              fontSize: MIN_TEXT_PX,
               fontWeight: 600,
               letterSpacing: '0.04em',
               color: C.mute,
@@ -733,7 +733,7 @@ export function BedTileFull({
           </div>
           <div style={{ minWidth: 0 }}>
             <div style={compactKeyStyle}>Body</div>
-            <div style={{ ...compactValueStyle, fontFamily: FONT_MONO, fontSize: 10.5 }}>
+            <div style={{ ...compactValueStyle, fontFamily: FONT_MONO, fontSize: MIN_TEXT_PX }}>
               {fmtBodyMetrics(occupant)}
             </div>
           </div>
@@ -901,17 +901,17 @@ export function BedTileFull({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px 8px' }}>
           <div>
             <div style={{ ...dataKeyStyle, color: C.cInterv }}>IV</div>
-            <div style={{ ...dataValueStyle, fontSize: 12 }}>{fmt(occupant.last_iv_fluids)}</div>
+            <div style={{ ...dataValueStyle, fontSize: MIN_TEXT_PX }}>{fmt(occupant.last_iv_fluids)}</div>
           </div>
           <div>
             <div style={{ ...dataKeyStyle, color: C.cInterv }}>Oxytocin</div>
-            <div style={{ ...dataValueStyle, fontSize: 12 }}>
+            <div style={{ ...dataValueStyle, fontSize: MIN_TEXT_PX }}>
               {occupant.last_oxytocin_uml !== null ? `${occupant.last_oxytocin_uml} mU/min` : '—'}
             </div>
           </div>
           <div>
             <div style={{ ...dataKeyStyle, color: C.cInterv }}>Drops</div>
-            <div style={{ ...dataValueStyle, fontSize: 12 }}>
+            <div style={{ ...dataValueStyle, fontSize: MIN_TEXT_PX }}>
               {fmt(occupant.last_oxytocin_drops, '/min')}
             </div>
           </div>
@@ -930,7 +930,7 @@ export function BedTileFull({
           color: footColor,
           borderTop: `1px solid ${isCrit ? 'rgba(220, 38, 38, 0.4)' : '#CBD5E1'}`,
           fontFamily: FONT_MONO,
-          fontSize: 10,
+          fontSize: MIN_TEXT_PX,
           letterSpacing: '0.06em',
           fontWeight: 700,
         }}

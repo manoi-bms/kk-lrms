@@ -8,7 +8,7 @@
 // imports this with `ssr: false` to satisfy Next.js SSR boundaries.
 'use client';
 
-import { COLOR } from '@/config/design-tokens';
+import { COLOR, MIN_TEXT_PX } from '@/config/design-tokens';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
@@ -627,7 +627,7 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
     <div
       style={{
         color: ink,
-        fontSize: 12,
+        fontSize: MIN_TEXT_PX,
         lineHeight: 1.35,
         minWidth: 220,
         maxWidth: 280,
@@ -638,7 +638,7 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
         <strong style={{ fontSize: 13 }}>{name}</strong>
       </div>
-      <div style={{ color: muted, fontSize: 10, marginTop: 1 }}>
+      <div style={{ color: muted, fontSize: MIN_TEXT_PX, marginTop: 1 }}>
         <span
           style={{
             border: `1px solid ${ruleColor}`,
@@ -673,10 +673,10 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
             flexShrink: 0,
           }}
         />
-        <span style={{ fontWeight: 600, fontSize: 11, letterSpacing: '0.04em' }}>
+        <span style={{ fontWeight: 600, fontSize: MIN_TEXT_PX, letterSpacing: '0.04em' }}>
           {statusLabel}
         </span>
-        <span style={{ color: muted, fontSize: 11 }}>· {statusDetail}</span>
+        <span style={{ color: muted, fontSize: MIN_TEXT_PX }}>· {statusDetail}</span>
       </div>
 
       {/* LABOR + ANC two-column grid */}
@@ -693,7 +693,7 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
         <div>
           <div
             style={{
-              fontSize: 9,
+              fontSize: MIN_TEXT_PX,
               color: muted,
               letterSpacing: '0.12em',
               fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
@@ -703,11 +703,11 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
           </div>
           <div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.1 }}>
             {labor.total}
-            <span style={{ fontSize: 10, color: muted, marginLeft: 3 }}>ราย</span>
+            <span style={{ fontSize: MIN_TEXT_PX, color: muted, marginLeft: 3 }}>ราย</span>
           </div>
           <div
             style={{
-              fontSize: 10,
+              fontSize: MIN_TEXT_PX,
               fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
               marginTop: 2,
             }}
@@ -722,7 +722,7 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
         <div>
           <div
             style={{
-              fontSize: 9,
+              fontSize: MIN_TEXT_PX,
               color: muted,
               letterSpacing: '0.12em',
               fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
@@ -732,12 +732,12 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
           </div>
           <div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.1 }}>
             {anc.total}
-            <span style={{ fontSize: 10, color: muted, marginLeft: 3 }}>ราย</span>
+            <span style={{ fontSize: MIN_TEXT_PX, color: muted, marginLeft: 3 }}>ราย</span>
           </div>
           {anc.hr3 > 0 ? (
             <div
               style={{
-                fontSize: 10,
+                fontSize: MIN_TEXT_PX,
                 fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
                 marginTop: 2,
                 color: COLOR.riskHigh,
@@ -747,7 +747,7 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
               HR3 {anc.hr3}
             </div>
           ) : (
-            <div style={{ fontSize: 10, color: muted, marginTop: 2 }}>—</div>
+            <div style={{ fontSize: MIN_TEXT_PX, color: muted, marginTop: 2 }}>—</div>
           )}
         </div>
       </div>
@@ -761,20 +761,20 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'baseline',
-          fontSize: 10,
+          fontSize: MIN_TEXT_PX,
           color: muted,
           fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
         }}
       >
         <span>SYNC · {lastSyncRel}</span>
-        {lastSyncAbs && <span style={{ fontSize: 9, opacity: 0.8 }}>{lastSyncAbs}</span>}
+        {lastSyncAbs && <span style={{ fontSize: MIN_TEXT_PX, opacity: 0.8 }}>{lastSyncAbs}</span>}
       </div>
 
       {/* Click hint */}
       <div
         style={{
           marginTop: 4,
-          fontSize: 9,
+          fontSize: MIN_TEXT_PX,
           color: muted,
           fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
           letterSpacing: '0.08em',
@@ -829,7 +829,7 @@ function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
     >
       <div
         style={{
-          fontSize: 9,
+          fontSize: MIN_TEXT_PX,
           letterSpacing: '0.14em',
           color: inkMuted,
           marginBottom: 4,
@@ -851,8 +851,8 @@ function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
                 flexShrink: 0,
               }}
             />
-            <span style={{ fontSize: 10, fontWeight: 600 }}>{it.label}</span>
-            <span style={{ fontSize: 10, color: inkMuted }}>·&nbsp;{it.sub}</span>
+            <span style={{ fontSize: MIN_TEXT_PX, fontWeight: 600 }}>{it.label}</span>
+            <span style={{ fontSize: MIN_TEXT_PX, color: inkMuted }}>·&nbsp;{it.sub}</span>
           </div>
         ))}
       </div>

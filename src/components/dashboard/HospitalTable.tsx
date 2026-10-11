@@ -3,7 +3,7 @@
 // for coordinator desk use; row-flash on SSE count change preserved.
 'use client';
 
-import { COLOR } from '@/config/design-tokens';
+import { COLOR, MIN_TEXT_PX } from '@/config/design-tokens';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DashboardHospital } from '@/types/api';
@@ -320,7 +320,7 @@ export function HospitalTable({
                 </div>
                 <div
                   className="text-left font-mono tabular-nums"
-                  style={{ color: ink, fontSize: isKiosk ? 13 : 11 }}
+                  style={{ color: ink, fontSize: isKiosk ? 13 : MIN_TEXT_PX }}
                   title={`Active labor: ${h.counts.total} ราย`}
                 >
                   <span
@@ -333,7 +333,7 @@ export function HospitalTable({
                 </div>
                 <div
                   className="flex items-baseline gap-1 font-mono tabular-nums"
-                  style={{ color: ink, fontSize: isKiosk ? 13 : 11 }}
+                  style={{ color: ink, fontSize: isKiosk ? 13 : MIN_TEXT_PX }}
                   title={`ANC registry: ${h.ancCounts.total} · HR3: ${h.ancCounts.hr3}`}
                 >
                   <span
@@ -359,7 +359,7 @@ export function HospitalTable({
                 <div
                   className="text-right font-mono tabular-nums"
                   style={{
-                    fontSize: isKiosk ? 11 : 10,
+                    fontSize: isKiosk ? 11 : MIN_TEXT_PX,
                     color: (() => {
                       if (!h.lastSyncAt) return inkMuted;
                       const ageH = (Date.now() - new Date(h.lastSyncAt).getTime()) / 3600000;
