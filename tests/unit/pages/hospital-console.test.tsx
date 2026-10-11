@@ -1,0 +1,119 @@
+// tests/unit/pages/hospital-console.test.tsx
+// Hospital console — characterization (written before the UI sub-project 4
+// re-chrome) + redesign assertions. KPIs must come from server aggregates
+// (pagination.total / counts / incoming count), rows must navigate, and a
+// failing feed must show its banner without hiding the other registry.
+import { describe, it, expect, vi } from 'vitest';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { Suspense } from 'react';
+import { SWRConfig } from 'swr';
+import HospitalConsolePage from '@/app/(provincial)/hospitals/[hcode]/page';
+
+const nav = vi.hoisted(() => ({ push: vi.fn() }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: nav.push, replace: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  useParams: () => ({ hcode: '10670' }),
+  usePathname: () => '/hospitals/10670',
+}));
+
+const H = 3600_000;
+const D = 24 * H;
+const ago = (ms: number) => new Date(Date.now() - ms).toISOString();
+const ahead = (ms: number) => new Date(Date.now() + ms).toISOString();
+
+function labor() {
+  return {
+    hospital: { name: 'รพ.ขอนแก่น', level: 'A_S', connectionStatus: 'ONLINE', lastSyncAt: ago(5 * 60_000) },
+    patients: [
+      {
+        id: 'p1', hn: 'HN1', an: 'AN1', name: 'นาง สายฝน อุ่นเรือน', age: 28, gravida: 2, ga_weeks: 39, anc_count: 8,
+        admit_date: ago(5 * H), labor_status: 'ACTIVE', cpd_score: 11, cpd_risk_level: 'HIGH',
+        latest_vitals: { maternal_hr: 90, fetal_hr: '150', sbp: 165, dbp: 100 }, latest_cervix_cm: 9, partograph_alert_count: 1,
+      },
+      {
+        id: 'p2', hn: 'HN2', an: 'AN2', name: 'นาง มะลิ ทองคำ', age: 31, gravida: 1, ga_weeks: 38, anc_count: 6,
+        admit_date: ago(2 * H), labor_status: 'ACTIVE', cpd_score: 3, cpd_risk_level: 'LOW',
+        latest_vitals: null, latest_cervix_cm: 4, partograph_alert_count: 1,
+      },
+    ],
+    pagination: { total: 42 },
+    partographAudit: null,
+  };
+}
+
+function anc() {
+  const base = { careStage: 'PREGNANCY', lmp: null, registeredAt: ago(100 * D), hospitalName: 'รพ.ขอนแก่น', hcode: '10670' };
+  return {
+    journeys: [
+      { ...base, id: 'j1', hn: 'HN11', name: 'นาง จันทร์ ดีใจ', age: 25, gravida: 1, para: 0, gaWeeks: 39, edc: ahead(3 * D), ancRiskLevel: 'HR3', ancVisitCount: 7, lastAncDate: ago(20 * D) },
+      { ...base, id: 'j2', hn: 'HN12', name: 'นาง ดาว สว่าง', age: 30, gravida: 2, para: 1, gaWeeks: 20, edc: ahead(140 * D), ancRiskLevel: 'LOW', ancVisitCount: 3, lastAncDate: ago(2 * D) },
+    ],
+    pagination: { total: 435, page: 1, perPage: 1000, totalPages: 1 },
+    counts: { low: 300, hr1: 60, hr2: 40, hr3: 35, total: 435 },
+  };
+}
+
+function incoming() {
+  return { hubHcode: '10670', minGaWeeks: 34, count: 7, byTrigger: { ga: 5, fw: 1, risk: 1 }, items: [] };
+}
+
+async function renderConsole(opts: { laborFails?: boolean } = {}) {
+  const fetcher = vi.fn(async (url: string) => {
+    if (url.includes('/patients?')) {
+      if (opts.laborFails) throw new Error('labor feed down');
+      return labor();
+    }
+    if (url.includes('/journeys?stage=PREGNANCY')) return anc();
+    if (url.includes('/incoming-pregnancies')) return incoming();
+    if (url.startsWith('/api/journeys/')) return { journey: null };
+    throw new Error(`unexpected fetch ${url}`);
+  });
+  await act(async () => {
+    render(
+      <SWRConfig value={{ fetcher, provider: () => new Map(), dedupingInterval: 0, shouldRetryOnError: false }}>
+        <Suspense fallback={null}>
+          <HospitalConsolePage params={Promise.resolve({ hcode: '10670' })} />
+        </Suspense>
+      </SWRConfig>,
+    );
+  });
+  return { fetcher };
+}
+
+describe('HospitalConsolePage — characterization', () => {
+  it('titles the page with the hospital name', async () => {
+    await renderConsole();
+    expect(await screen.findByRole('heading', { level: 1, name: 'รพ.ขอนแก่น' })).toBeInTheDocument();
+  });
+
+  it('ward census, registry size and refer-in come from server aggregates, not the 2 fetched rows', async () => {
+    await renderConsole();
+    await screen.findByRole('heading', { level: 1 });
+    expect(screen.getAllByText('42').length).toBeGreaterThan(0); // pagination.total, not 2
+    expect(screen.getAllByText('435').length).toBeGreaterThan(0); // pagination.total, not 2
+    expect(screen.getAllByText('35').length).toBeGreaterThan(0); // counts.hr3
+    expect(screen.getAllByText('7').length).toBeGreaterThan(0); // incoming count
+  });
+
+  it('a labour row opens the patient page', async () => {
+    nav.push.mockClear();
+    await renderConsole();
+    fireEvent.click((await screen.findAllByRole('button', { name: /นาง มะลิ/ }))[0]);
+    expect(nav.push).toHaveBeenCalledWith('/patients/10670-AN2');
+  });
+
+  it('the ANC tab lists pregnancies and a row opens the journey', async () => {
+    nav.push.mockClear();
+    await renderConsole();
+    fireEvent.click(await screen.findByRole('button', { name: /ANC REGISTRY|ทะเบียนฝากครรภ์/ }));
+    fireEvent.click((await screen.findAllByRole('button', { name: /นาง ดาว/ }))[0]);
+    expect(nav.push).toHaveBeenCalledWith('/pregnancies/j2');
+  });
+
+  it('a failing labour feed shows its banner and keeps the ANC registry', async () => {
+    await renderConsole({ laborFails: true });
+    expect(await screen.findByText(/โหลดข้อมูลห้องคลอดไม่สำเร็จ/)).toBeInTheDocument();
+    expect(screen.getAllByText('435').length).toBeGreaterThan(0);
+  });
+});
