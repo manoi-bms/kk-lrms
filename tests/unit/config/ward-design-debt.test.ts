@@ -25,7 +25,9 @@ const PATIENT_FILES: string[] = [
   'src/components/patient/ClinicalData.tsx',
   'src/components/patient/CpdFactorBreakdown.tsx',
   'src/components/patient/AlertSummaryPanel.tsx',
-]; // Task 7 adds the page and src/components/patient/detail/*
+  'src/app/(provincial)/patients/[an]/page.tsx',
+  ...readdirSync(path.join(root, 'src/components/patient/detail')).map((f) => `src/components/patient/detail/${f}`),
+];
 
 
 const BANNED: Array<[string, RegExp]> = [
