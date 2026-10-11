@@ -19,7 +19,7 @@
 import type { DatabaseAdapter } from '@/db/adapter';
 import { logger } from '@/lib/logger';
 import { encrypt, getEncryptionKey } from '@/lib/encryption';
-import { mophAlertsEnabled } from '@/config/moph-alert-config';
+import { mophAlertsEnabled, mophAlertLocalDate } from '@/config/moph-alert-config';
 import { isValidCid } from '@/services/moph-prompt';
 import {
   subscribersForEvent,
@@ -439,7 +439,7 @@ export async function materializeDeferredAlertEvents(
   hospitalId: string,
   opts: { maxEvents?: number; deadlineMs?: number; now?: () => number } = {},
 ): Promise<number> {
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+  const today = mophAlertLocalDate();
   const maxEvents = Math.max(1, Math.min(Math.trunc(opts.maxEvents ?? 25), 100));
   const deadlineMs = opts.deadlineMs ?? Number.POSITIVE_INFINITY;
   const now = opts.now ?? Date.now;

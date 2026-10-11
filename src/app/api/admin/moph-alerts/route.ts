@@ -9,7 +9,7 @@ import { getDatabase } from '@/db/connection';
 import { ensureInit } from '@/lib/ensure-init';
 import { requireAdmin } from '@/lib/admin-guard';
 import { drainMophAlerts } from '@/services/moph-alert-drain';
-import { mophAlertLimits } from '@/config/moph-alert-config';
+import { mophAlertLimits, mophAlertLocalDate } from '@/config/moph-alert-config';
 import { logger } from '@/lib/logger';
 
 interface AlertLogRow {
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
           return 'WHERE hospital_id = $1';
         })()
       : '';
-    queueParams.push(new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' }));
+    queueParams.push(mophAlertLocalDate());
     const localDateParam = `$${queueParams.length}`;
     const queueCounts = await db.query<{
       awaiting_recipients: number | string;

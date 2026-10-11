@@ -10,6 +10,7 @@ import { generateKey, encrypt } from '@/lib/encryption';
 import { drainMophAlerts } from '@/services/moph-alert-drain';
 import { enqueueHighRiskAlert } from '@/services/risk-alert';
 import { upsertNotificationPreference } from '@/services/notification-preference';
+import { mophAlertLocalDate } from '@/config/moph-alert-config';
 
 // Drain decrypts patient_name_enc (staff scope) — needs an encryption key.
 process.env.ENCRYPTION_KEY = process.env.ENCRYPTION_KEY ?? generateKey();
@@ -50,6 +51,8 @@ async function seedPendingRow(
     recipientScope: string;
     alertSource: string;
     patientName: string | null;
+    localDate: string;
+    attempts: number;
   }> = {},
 ): Promise<string> {
   const id = randomUUID();
@@ -65,7 +68,7 @@ async function seedPendingRow(
        (id, case_id, hospital_id, origin_hcode, hospital_name, recipient_cid, recipient_scope,
         alert_source, severity, rule_id, title, patient_name_enc, status, attempts,
         local_date, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'pending',0,$13,NOW(),NOW())`,
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'pending',$14,$13,NOW(),NOW())`,
     [
       id,
       overrides.severity === 'emergency' ? 'case-em' : 'case-high',
@@ -79,7 +82,9 @@ async function seedPendingRow(
       overrides.ruleId ?? 'hr3',
       'แจ้งเตือน',
       patientNameEnc,
-      '2026-07-26',
+      // Default to the current Bangkok day: prior-day pending rows are expired.
+      overrides.localDate ?? mophAlertLocalDate(),
+      overrides.attempts ?? 0,
     ],
   );
   return id;
@@ -382,6 +387,50 @@ describe('drainMophAlerts', () => {
     expect(rows[0].status).toBe('failed');
   });
 
+  it('dead-letters rows whose session re-derive keeps failing (2026-10-11: 5 rows looped 215× and starved 127 newer rows)', async () => {
+    const poisoned = await seedPendingRow(db, hospitalId, { attempts: 3 }); // max502Retries=4
+    const fresh = await seedPendingRow(db, hospitalId, { recipientCid: '1234567890123' });
+    mockResolveSession.mockRejectedValueOnce(
+      new Error('Failed to get session ID: Internal Server Error'),
+    );
+    const summary = await drainMophAlerts(db, hospitalId, {
+      maxAlerts: 5,
+      perSendTimeoutMs: 1000,
+      budgetMs: 5000,
+    });
+    expect(mockSend).not.toHaveBeenCalled();
+    expect(summary.failed).toBe(1);
+    expect(summary.retryable).toBe(1);
+    const rows = await db.query<{
+      id: string;
+      status: string;
+      attempts: number;
+      last_error: string | null;
+    }>(`SELECT id, status, attempts, last_error FROM moph_alert_log`);
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    expect(byId.get(poisoned)).toMatchObject({ status: 'failed', attempts: 4 });
+    expect(byId.get(poisoned)?.last_error).toContain('session re-derive failed');
+    expect(byId.get(fresh)).toMatchObject({ status: 'pending', attempts: 1 });
+  });
+
+  it('expires pending rows from a prior Bangkok date instead of delivering them late', async () => {
+    const stale = await seedPendingRow(db, hospitalId, { localDate: '2026-10-03' });
+    const today = await seedPendingRow(db, hospitalId, { recipientCid: '1234567890123' });
+    const summary = await drainMophAlerts(db, hospitalId, {
+      maxAlerts: 5,
+      perSendTimeoutMs: 1000,
+      budgetMs: 5000,
+    });
+    expect(summary).toMatchObject({ sent: 1, expired: 1 });
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    const rows = await db.query<{ id: string; status: string }>(
+      `SELECT id, status FROM moph_alert_log`,
+    );
+    const byId = new Map(rows.map((r) => [r.id, r.status]));
+    expect(byId.get(stale)).toBe('expired');
+    expect(byId.get(today)).toBe('sent');
+  });
+
   it('budget exhaustion releases un-sent claimed rows back to pending (codex gap-sweep P1)', async () => {
     // Seed 3 rows; budget=0 so the loop releases all claimed rows before any send.
     await seedPendingRow(db, hospitalId, { recipientCid: '3320500282121' });
@@ -416,6 +465,15 @@ describe('drainMophAlerts', () => {
                  't','sent',1,'2026-01-01', NOW() - interval '90 days', NOW() - interval '90 days')`,
         [id, hospitalId],
       );
+      const expiredId = randomUUID();
+      await db.query(
+        `INSERT INTO moph_alert_log
+           (id, case_id, hospital_id, origin_hcode, hospital_name, recipient_cid, recipient_scope,
+            alert_source, severity, rule_id, title, status, attempts, local_date, created_at, updated_at)
+         VALUES ($1,'old-expired',$2,'10682','รพ.ขอนแก่น','3320500282121','hospital_staff','anc_hr3','high','hr3',
+                 't','expired',0,'2026-01-01', NOW() - interval '90 days', NOW() - interval '90 days')`,
+        [expiredId, hospitalId],
+      );
       const eventId = randomUUID();
       await db.query(
         `INSERT INTO moph_alert_event_queue
@@ -437,6 +495,11 @@ describe('drainMophAlerts', () => {
         [id],
       );
       expect(rows[0].c).toBe(0); // purged
+      const expiredRows = await db.query<{ c: number }>(
+        `SELECT COUNT(*)::int as c FROM moph_alert_log WHERE id = $1`,
+        [expiredId],
+      );
+      expect(expiredRows[0].c).toBe(0); // expired is terminal → purged too
       const events = await db.query<{ c: number }>(
         `SELECT COUNT(*)::int as c FROM moph_alert_event_queue WHERE id = $1`,
         [eventId],
