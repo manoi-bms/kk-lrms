@@ -4,15 +4,10 @@
 
 import { Info, Monitor, RefreshCw } from 'lucide-react';
 import type { SseConnectionState } from '@/hooks/useSSE';
-import { SSE_STATUS_META, type SseStatusMeta } from '@/config/sse-status';
+import { SSE_STATUS_META } from '@/config/sse-status';
+import { StatusChip } from '@/components/shared/StatusChip';
 import { HOSXP_SYNC_STATUS_TH, hosxpSyncTone, type HosxpSyncStatus, type HosxpSyncTone } from '@/lib/hosxp-sync-status';
 import { cn } from '@/lib/utils';
-
-const SSE_CHIP: Record<SseStatusMeta['tone'], { box: string; dot: string }> = {
-  ok: { box: 'bg-ok-tint text-ok-text', dot: 'bg-ok' },
-  neutral: { box: 'bg-surface-muted text-ink-muted', dot: 'bg-ink-subtle' },
-  warn: { box: 'bg-warn-tint text-warn-text', dot: 'bg-warn' },
-};
 
 const HOSXP_CHIP: Record<HosxpSyncTone, { box: string; dot: string }> = {
   danger: { box: 'border-danger/40 bg-danger-tint text-danger-text', dot: 'bg-danger' },
@@ -40,14 +35,10 @@ export function DashboardHeaderActions({
   onKiosk,
 }: DashboardHeaderActionsProps) {
   const sse = SSE_STATUS_META[sseState];
-  const sseChip = SSE_CHIP[sse.tone];
   const hosxpChip = HOSXP_CHIP[hosxpSyncTone(hosxpStatus)];
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span role="status" className={cn('inline-flex items-center gap-2 rounded-full px-3 py-1 text-label', sseChip.box)}>
-        <span aria-hidden="true" className={cn('h-2.5 w-2.5 rounded-full', sseChip.dot)} />
-        {sse.labelTh}
-      </span>
+      <StatusChip tone={sse.tone} label={sse.labelTh} />
       <button
         type="button"
         onClick={onOpenHosxp}
