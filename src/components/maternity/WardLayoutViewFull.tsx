@@ -29,7 +29,8 @@ import { BedMoveReasonModal } from './BedMoveReasonModal';
 import type { BedSlot, BedOccupancyFull } from '@/types/maternity-ward';
 import type { ConnectionConfig } from '@/types/bms-browser';
 import type { MaternalScreenSummaryItem } from '@/types/api';
-import { MIN_TEXT_PX } from '@/config/design-tokens';
+import { formatRoomSummary } from '@/config/ward-display';
+import { groupBedsByRoom, summarizeBeds } from '@/services/ward-board';
 
 export interface BedMovePayload {
   an: string;
@@ -77,44 +78,6 @@ export interface WardLayoutViewFullProps {
    * resolves to `null` — GC-H4 degrade-to-no-chips, never an error tile.
    */
   maternalScreenSummaries?: Map<string, MaternalScreenSummaryItem> | null;
-}
-
-interface RoomGroup {
-  roomno: string;
-  room_name: string | null;
-  room_display_number: number | null;
-  beds: BedSlot[];
-}
-
-function groupByRoom(beds: BedSlot[]): RoomGroup[] {
-  const map = new Map<string, RoomGroup>();
-  for (const b of beds) {
-    let g = map.get(b.roomno);
-    if (!g) {
-      g = {
-        roomno: b.roomno,
-        room_name: b.room_name,
-        room_display_number: b.room_display_number,
-        beds: [],
-      };
-      map.set(b.roomno, g);
-    }
-    g.beds.push(b);
-  }
-  for (const g of map.values()) {
-    g.beds.sort((a, b) => {
-      const ao = a.bed_order ?? Number.MAX_SAFE_INTEGER;
-      const bo = b.bed_order ?? Number.MAX_SAFE_INTEGER;
-      if (ao !== bo) return ao - bo;
-      return a.bedno.localeCompare(b.bedno);
-    });
-  }
-  return [...map.values()].sort((a, b) => {
-    const ad = a.room_display_number ?? Number.MAX_SAFE_INTEGER;
-    const bd = b.room_display_number ?? Number.MAX_SAFE_INTEGER;
-    if (ad !== bd) return ad - bd;
-    return a.roomno.localeCompare(b.roomno);
-  });
 }
 
 // Drag-id encoding — bednos are unique per ward in HOSxP (PK on `bedno`).
@@ -168,7 +131,7 @@ function DraggableBedTile({
       style={style}
       data-testid={`bed-${bed.bedno}`}
       data-over={isOver ? 'true' : undefined}
-      className={isOver ? 'rounded-lg ring-2 ring-ok ring-offset-1' : undefined}
+      className={isOver ? 'rounded-2xl ring-2 ring-brand ring-offset-2' : undefined}
       {...(occupant ? draggable.listeners : {})}
       {...draggable.attributes}
     >
@@ -198,7 +161,7 @@ export function WardLayoutViewFull({
   marketplaceToken,
   maternalScreenSummaries,
 }: WardLayoutViewFullProps) {
-  const rooms = groupByRoom(beds);
+  const rooms = groupBedsByRoom(beds);
   const occupantByBedno = new Map(occupancy.map((o) => [o.bedno, o] as const));
   const bedByBedno = new Map(beds.map((b) => [b.bedno, b] as const));
 
@@ -267,80 +230,20 @@ export function WardLayoutViewFull({
         }
       `}</style>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+      <div className="flex flex-col gap-6">
         {rooms.map((room) => {
-          const occCount = room.beds.filter(
-            (b) => b.bed_lock !== 'Y' && occupantByBedno.has(b.bedno),
-          ).length;
-          const lockedCount = room.beds.filter((b) => b.bed_lock === 'Y').length;
-          const total = room.beds.length;
-          const free = Math.max(0, total - occCount - lockedCount);
+          const sum = summarizeBeds(room.beds, occupancy, now);
+          const roomTitle = room.room_name ?? `ห้อง ${room.roomno}`;
           return (
-            <section key={room.roomno}>
-              <header
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'auto 1fr auto',
-                  gap: 18,
-                  alignItems: 'baseline',
-                  paddingBottom: 12,
-                  marginBottom: 20,
-                  borderBottom: '1px solid #E2E8F0',
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: "'IBM Plex Mono', 'SF Mono', Consolas, monospace",
-                    fontSize: MIN_TEXT_PX,
-                    letterSpacing: '0.22em',
-                    textTransform: 'uppercase',
-                    color: '#1565C0',
-                    fontWeight: 800,
-                  }}
-                >
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      width: 8,
-                      height: 8,
-                      background: '#1565C0',
-                      marginRight: 12,
-                      verticalAlign: 1,
-                      borderRadius: 1,
-                    }}
-                  />
-                  {`Room ${room.roomno}`}
+            <section key={room.roomno} data-testid={`ward-room-${room.roomno}`} aria-label={roomTitle}>
+              <header className="mb-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-1 border-b border-border pb-2">
+                <div className="min-w-0">
+                  <h2 className="text-title text-brand">{roomTitle}</h2>
+                  <p className="text-caption text-ink-muted">รหัสห้อง {room.roomno}</p>
                 </div>
-                <div
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 700,
-                    letterSpacing: '-0.005em',
-                    color: '#0F172A',
-                  }}
-                >
-                  {room.room_name ?? `ห้อง ${room.roomno}`}
-                </div>
-                <div
-                  style={{
-                    fontFamily: "'IBM Plex Mono', 'SF Mono', Consolas, monospace",
-                    fontSize: MIN_TEXT_PX,
-                    letterSpacing: '0.16em',
-                    textTransform: 'uppercase',
-                    color: '#64748B',
-                    fontWeight: 700,
-                  }}
-                >
-                  {`${String(total).padStart(2, '0')} BEDS · ${String(occCount).padStart(2, '0')} OCC · ${String(free).padStart(2, '0')} FREE${lockedCount > 0 ? ` · ${String(lockedCount).padStart(2, '0')} LOCKED` : ''}`}
-                </div>
+                <p className="text-label tabular-nums text-ink-muted">{formatRoomSummary(sum)}</p>
               </header>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
-                  gap: 20,
-                }}
-              >
+              <div data-testid="ward-room-grid" className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
                 {room.beds.map((b) => {
                   const occupant = occupantByBedno.get(b.bedno) ?? null;
                   return (

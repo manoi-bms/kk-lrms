@@ -65,7 +65,7 @@ export function AlertSummaryPanel({ alerts, observations }: AlertSummaryPanelPro
             key={group.severity}
             data-testid={`alert-group-${group.severity.toLowerCase()}`}
           >
-            <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <div className="mb-1 flex items-center gap-2 text-body font-semibold text-ink">
               <span
                 className={cn(
                   'inline-block h-2.5 w-2.5 rounded-full',
@@ -81,14 +81,14 @@ export function AlertSummaryPanel({ alerts, observations }: AlertSummaryPanelPro
               {group.items.map((item, i) => (
                 <li
                   key={`${item.alert.section}-${item.alert.obsIndex}-${i}`}
-                  className="text-sm text-slate-700"
+                  className="text-body text-ink"
                 >
                   <span>• {item.alert.message}</span>{' '}
-                  <span className="text-xs text-slate-500">
+                  <span className="text-caption text-ink-muted">
                     ({SECTION_LABEL_TH[item.alert.section]}, {item.time})
                   </span>
                   {item.count > 1 && (
-                    <span className="ml-1 rounded bg-slate-200 px-1.5 py-0.5 font-mono text-caption font-semibold text-slate-700">
+                    <span className="ml-1 rounded bg-surface-muted px-1.5 py-0.5 text-caption font-semibold text-ink">
                       ×{item.count}
                     </span>
                   )}

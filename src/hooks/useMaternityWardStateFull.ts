@@ -35,13 +35,15 @@ export interface MaternityWardStateFull {
   error: Error | null;
   /** Live-data health for the masthead LIVE badge. */
   health: WardFeedHealth;
+  /** ISO time of the last successful occupancy fetch — the board's "ข้อมูล HOSxP ณ". */
+  lastUpdatedAt: string | null;
   mutateBeds: () => Promise<unknown>;
   mutateOccupancy: () => Promise<unknown>;
 }
 
-const WARD_REFRESH_INTERVAL = 60_000;
+export const WARD_LIST_REFRESH_MS = 60_000;
 const BEDS_REFRESH_INTERVAL = 60_000;
-const OCCUPANCY_REFRESH_INTERVAL = 20_000;
+export const WARD_OCCUPANCY_REFRESH_MS = 20_000;
 
 export function useMaternityWardStateFull(): MaternityWardStateFull {
   const { config } = useBmsSession();
@@ -49,7 +51,7 @@ export function useMaternityWardStateFull(): MaternityWardStateFull {
   const { data: wards, error: wardsErr } = useSWR(
     config ? ['maternity-wards', config.apiUrl] : null,
     () => listMaternityWards(config!),
-    { refreshInterval: WARD_REFRESH_INTERVAL },
+    { refreshInterval: WARD_LIST_REFRESH_MS },
   );
 
   // The user's explicit ward pick. Null until they choose one, in which case
@@ -57,6 +59,7 @@ export function useMaternityWardStateFull(): MaternityWardStateFull {
   // (ward roster changed server-side) we fall back to the first ward so the
   // board never queries a ward that no longer exists.
   const [pickedWard, setPickedWard] = useState<string | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
   const firstWard = wards?.[0]?.ward ?? null;
   const pickedIsValid = pickedWard !== null && (wards?.some((w) => w.ward === pickedWard) ?? false);
   const ward = pickedIsValid ? pickedWard : firstWard;
@@ -80,7 +83,10 @@ export function useMaternityWardStateFull(): MaternityWardStateFull {
   } = useSWR(
     config && ward ? ['ward-beds-occupancy-full', config.apiUrl, ward] : null,
     () => listWardBedsOccupancyFull(config!, ward!),
-    { refreshInterval: OCCUPANCY_REFRESH_INTERVAL },
+    {
+      refreshInterval: WARD_OCCUPANCY_REFRESH_MS,
+      onSuccess: () => setLastUpdatedAt(new Date().toISOString()),
+    },
   );
 
   const error = wardsErr ?? bedsErr ?? occupancyErr ?? null;
@@ -102,6 +108,7 @@ export function useMaternityWardStateFull(): MaternityWardStateFull {
     isLoading,
     error,
     health,
+    lastUpdatedAt,
     mutateBeds: () => mutateBeds(),
     mutateOccupancy: () => mutateOccupancy(),
   };

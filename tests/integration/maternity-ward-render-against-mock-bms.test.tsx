@@ -172,11 +172,9 @@ describe('Maternity ward page (against in-process mock BMS server)', () => {
     // Two rooms render (room_name from the bedno inventory)
     expect(screen.getByText('LR1')).toBeInTheDocument();
     expect(screen.getByText('LR2')).toBeInTheDocument();
-    // KPI masthead summarises the ward. "Total Beds" / "Occupied" are unique to
-    // the masthead; the "Available" KPI label is intentionally not asserted here
-    // because the empty BedTileFull tiles also carry an "Available" status pill.
-    expect(screen.getByText('Total Beds')).toBeInTheDocument();
-    expect(screen.getByText('Occupied')).toBeInTheDocument();
+    // KPI masthead summarises the ward. It is a labelled region, so the label
+    // is asserted inside it (the empty tiles also carry an "เตียงว่าง" pill).
+    expect(screen.getByRole('region', { name: 'สรุปเตียงในห้องคลอด' })).toHaveTextContent('เตียงทั้งหมด');
     // 3 empty beds (occupant lookup uses bedno; the only occupant is at bed 01)
     const empty = screen.getAllByText('ว่าง');
     expect(empty.length).toBe(3);

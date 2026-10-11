@@ -33,16 +33,16 @@ export interface TabDefinition {
 
 // Tab order is meaningful — DO NOT reorder. Tasks 30-39 fill them in.
 export const PATIENT_DRAWER_TABS: TabDefinition[] = [
-  { value: 'partograph', label: 'Partograph' },
-  { value: 'vitals', label: 'Vital Signs' },
-  { value: 'prelabour', label: 'Pre-labour' },
-  { value: 'stage', label: 'Stage' },
-  { value: 'medications', label: 'Medications' },
-  { value: 'stage-med', label: 'DR Med' },
-  { value: 'complications', label: 'Complications' },
-  { value: 'infant', label: 'Infant' },
-  { value: 'bed', label: 'Bed' },
-  { value: 'discharge', label: 'Discharge' },
+  { value: 'partograph', label: 'พาร์โทกราฟ' },
+  { value: 'vitals', label: 'สัญญาณชีพ' },
+  { value: 'prelabour', label: 'ก่อนคลอด' },
+  { value: 'stage', label: 'ระยะคลอด' },
+  { value: 'medications', label: 'ยา' },
+  { value: 'stage-med', label: 'ยาห้องคลอด' },
+  { value: 'complications', label: 'ภาวะแทรกซ้อน' },
+  { value: 'infant', label: 'ทารก' },
+  { value: 'bed', label: 'เตียง' },
+  { value: 'discharge', label: 'จำหน่าย' },
 ];
 
 function safeAge(birthday: string | null): number | null {
@@ -126,8 +126,8 @@ function InfoField({
 }) {
   return (
     <div className={cn('min-w-0', className)}>
-      <div className="text-caption font-semibold uppercase tracking-wide text-slate-500">{label}</div>
-      <div className="mt-0.5 whitespace-normal break-words text-caption font-semibold leading-tight text-slate-900">
+      <div className="text-caption font-semibold text-ink-muted">{label}</div>
+      <div className="mt-0.5 whitespace-normal break-words text-caption font-semibold leading-tight text-ink">
         {display(value)}
       </div>
     </div>
@@ -146,25 +146,21 @@ function VitalCell({
   return (
     <div
       className={cn(
-        'min-h-[42px] rounded border bg-white px-2 py-1.5',
-        tone === 'vital' && 'border-cyan-200',
-        tone === 'labour' && 'border-indigo-200',
+        'min-h-[42px] rounded border bg-surface-card px-2 py-1.5',
         tone === 'warning' && 'border-warn/40',
-        tone === 'default' && 'border-slate-200',
+        tone !== 'warning' && 'border-border',
       )}
     >
       <div
         className={cn(
-          'text-caption font-bold uppercase tracking-wide',
-          tone === 'vital' && 'text-cyan-700',
-          tone === 'labour' && 'text-indigo-700',
+          'text-caption font-bold',
           tone === 'warning' && 'text-warn-text',
-          tone === 'default' && 'text-slate-500',
+          tone !== 'warning' && 'text-ink-muted',
         )}
       >
         {label}
       </div>
-      <div className="mt-0.5 whitespace-nowrap font-mono text-caption font-bold leading-none tabular-nums text-slate-950">
+      <div className="mt-0.5 whitespace-nowrap text-caption font-bold leading-none tabular-nums text-ink">
         {display(value)}
       </div>
     </div>
@@ -223,49 +219,49 @@ function PatientHeader({ occupant }: { occupant: BedOccupancy }) {
       .join(' · ') || '—';
 
   return (
-    <div className="border-b border-slate-200 bg-white px-4 py-2.5">
+    <div className="border-b border-border bg-surface-card px-4 py-2.5">
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="min-w-0">
           <div className="grid gap-2 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1.35fr)] md:items-start">
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-caption font-semibold uppercase tracking-wide text-slate-500">
-                <span className="text-slate-900">AN {an}</span>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption font-semibold text-ink-muted">
+                <span className="text-ink">AN {an}</span>
                 <span>HN {hn}</span>
-                <span>Ward {ward}</span>
+                <span>วอร์ด {ward}</span>
               </div>
-              <div className="mt-0.5 whitespace-normal break-words text-lg font-semibold leading-tight text-slate-950">
+              <div className="mt-0.5 whitespace-normal break-words text-body-lg font-semibold leading-tight text-ink">
                 {name}
               </div>
-              <div className="mt-0.5 text-xs font-medium text-slate-700">{demographics}</div>
+              <div className="mt-0.5 text-caption font-medium text-ink">{demographics}</div>
             </div>
 
-            <div className="grid min-w-0 grid-cols-2 gap-x-4 gap-y-1.5 border-t border-slate-100 pt-2 md:border-l md:border-t-0 md:pl-3 md:pt-0">
-              <InfoField label="Admit" value={formatAdmit(occupant)} />
-              <InfoField label="Doctor" value={doctor} />
-              <InfoField label="Coverage" value={pttype_name} />
-              <InfoField label="Body" value={bodyMetrics} />
+            <div className="grid min-w-0 grid-cols-2 gap-x-4 gap-y-1.5 border-t border-border pt-2 md:border-l md:border-t-0 md:pl-3 md:pt-0">
+              <InfoField label="รับเข้า" value={formatAdmit(occupant)} />
+              <InfoField label="แพทย์" value={doctor} />
+              <InfoField label="สิทธิ" value={pttype_name} />
+              <InfoField label="ร่างกาย" value={bodyMetrics} />
             </div>
           </div>
 
-          <div className="mt-2 grid gap-1.5 border-t border-slate-100 pt-2 md:grid-cols-[minmax(0,1fr)_220px] md:items-center">
-            <InfoField label="อาการแรกรับ / Prediag" value={prediag} />
-            <InfoField label="Latest charted" value={latestObservation} />
+          <div className="mt-2 grid gap-1.5 border-t border-border pt-2 md:grid-cols-[minmax(0,1fr)_220px] md:items-center">
+            <InfoField label="อาการแรกรับ" value={prediag} />
+            <InfoField label="บันทึกล่าสุด" value={latestObservation} />
           </div>
         </div>
 
         <div className="grid grid-cols-[auto_auto] gap-2 lg:justify-end">
-          <div className="grid grid-cols-2 overflow-hidden rounded border border-slate-300 bg-slate-50 text-center">
-            <div className="border-r border-slate-300 px-2.5 py-1.5">
-              <div className="text-caption font-bold uppercase tracking-wide text-slate-500">Bed</div>
-              <div className="font-mono text-base font-bold leading-none text-slate-950">
+          <div className="grid grid-cols-2 overflow-hidden rounded border border-border bg-surface-muted text-center">
+            <div className="border-r border-border px-2.5 py-1.5">
+              <div className="text-caption font-bold text-ink-muted">เตียง</div>
+              <div className="text-body font-bold leading-none text-ink">
                 {bedno}
               </div>
             </div>
             <div className="px-2.5 py-1.5">
-              <div className="text-caption font-bold uppercase tracking-wide text-slate-500">
-                Room
+              <div className="text-caption font-bold text-ink-muted">
+                ห้อง
               </div>
-              <div className="font-mono text-base font-bold leading-none text-slate-950">
+              <div className="text-body font-bold leading-none text-ink">
                 {formatRoom(occupant)}
               </div>
             </div>
@@ -273,60 +269,60 @@ function PatientHeader({ occupant }: { occupant: BedOccupancy }) {
 
           <div className="flex min-w-[118px] flex-col gap-1">
             {(allergy_count ?? 0) > 0 ? (
-              <span className="rounded border border-danger bg-danger px-2 py-1 text-center text-caption font-bold uppercase tracking-wide text-white">
-                Allergy {allergy_count}
+              <span className="rounded border border-danger bg-danger px-2 py-1 text-center text-caption font-bold text-white">
+                แพ้ยา {allergy_count} รายการ
               </span>
             ) : (
-              <span className="rounded border border-ok bg-ok-tint px-2 py-1 text-center text-caption font-bold uppercase tracking-wide text-ok-text">
-                NKDA
+              <span className="rounded border border-ok bg-ok-tint px-2 py-1 text-center text-caption font-bold text-ok-text">
+                ไม่มีประวัติแพ้ยา
               </span>
             )}
-            <span className="rounded border border-danger/40 bg-danger-tint px-2 py-1 text-center text-caption font-bold uppercase tracking-wide text-danger-text">
-              Blood {blood_grp || '—'}
+            <span className="rounded border border-border bg-surface-card px-2 py-1 text-center text-caption font-bold text-ink">
+              หมู่เลือด {blood_grp || '—'}
             </span>
           </div>
         </div>
       </div>
 
-      <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-2">
+      <div className="mt-2 rounded-md border border-border bg-surface-muted p-2">
         <div className="grid grid-cols-5 gap-1.5 lg:grid-cols-10">
           <VitalCell label="BP" value={bp} tone="vital" />
           <VitalCell
-            label="Temp"
+            label="T"
             value={last_temp != null ? `${formatNumber(last_temp, 1)} °C` : null}
             tone="vital"
           />
           <VitalCell
-            label="Pulse"
-            value={last_pulse != null ? `${Math.round(last_pulse)}/min` : null}
+            label="P"
+            value={last_pulse != null ? `${Math.round(last_pulse)}/นาที` : null}
             tone="vital"
           />
           <VitalCell
-            label="RR"
-            value={last_rr != null ? `${Math.round(last_rr)}/min` : null}
+            label="R"
+            value={last_rr != null ? `${Math.round(last_rr)}/นาที` : null}
             tone="vital"
           />
           <VitalCell
-            label="SpO2 RA"
+            label="SpO₂ RA"
             value={last_spo2 != null ? `${Math.round(last_spo2)}%` : null}
             tone="vital"
           />
           <VitalCell
-            label="O2"
+            label="O₂"
             value={last_spo2_o2 != null ? `${Math.round(last_spo2_o2)}%` : null}
             tone="vital"
           />
           <VitalCell
             label="Cx"
-            value={last_cervix_cm != null ? `${last_cervix_cm} cm` : null}
+            value={last_cervix_cm != null ? `${last_cervix_cm} ซม.` : null}
             tone="labour"
           />
           <VitalCell
-            label="Pain"
+            label="ปวด"
             value={last_pain != null ? `${last_pain}/10` : null}
             tone="warning"
           />
-          <VitalCell label="GA" value={ga != null ? `${ga} wk` : null} tone="labour" />
+          <VitalCell label="GA" value={ga != null ? `${ga} สัปดาห์` : null} tone="labour" />
           <VitalCell label="G" value={gravida != null ? gravida : null} tone="labour" />
         </div>
       </div>
@@ -375,7 +371,7 @@ export function PatientDrawer({ open, occupant, onClose }: PatientDrawerProps) {
         data-testid="patient-drawer-backdrop"
         aria-hidden="true"
         onClick={onClose}
-        className="flex-1 cursor-default bg-black/30"
+        className="flex-1 cursor-default bg-ink/40"
       />
       {/* Sheet panel — slides in from right; full width on mobile, 60vw desktop.
           min-h-0 + h-full pin the panel to the dialog's 100vh: without min-h-0,
@@ -386,8 +382,8 @@ export function PatientDrawer({ open, occupant, onClose }: PatientDrawerProps) {
           inside, and the bottom of the active tab falls below the dialog. */}
       <div
         className={cn(
-          'flex h-full max-h-screen min-h-0 w-full flex-col bg-white shadow-xl',
-          'sm:w-[60vw] sm:max-w-[1100px]',
+          'flex h-full max-h-screen min-h-0 w-full flex-col bg-surface-card shadow-xl',
+          'max-w-[1100px] md:w-[85vw] lg:w-[70vw] xl:w-[60vw]',
           'animate-in slide-in-from-right',
         )}
       >
@@ -397,25 +393,25 @@ export function PatientDrawer({ open, occupant, onClose }: PatientDrawerProps) {
               <PatientHeader occupant={occupant} />
             ) : (
               <div
-                className="flex flex-col gap-2 border-b border-slate-200 px-4 py-3"
+                className="flex flex-col gap-2 border-b border-border px-4 py-3"
                 aria-busy="true"
               >
                 {/* 3 skeleton rows mimic the AN/name/details lines while data
                     arrives. The visually-hidden text keeps the existing
                     "กำลังโหลด" / "Loading" assertion happy. */}
                 <div
-                  className="h-3 w-32 animate-pulse rounded bg-slate-200/70"
+                  className="h-3 w-32 animate-pulse rounded bg-surface-muted"
                   aria-hidden="true"
                 />
                 <div
-                  className="h-4 w-48 animate-pulse rounded bg-slate-200/70"
+                  className="h-4 w-48 animate-pulse rounded bg-surface-muted"
                   aria-hidden="true"
                 />
                 <div
-                  className="h-3 w-24 animate-pulse rounded bg-slate-200/70"
+                  className="h-3 w-24 animate-pulse rounded bg-surface-muted"
                   aria-hidden="true"
                 />
-                <span className="sr-only">กำลังโหลด… (Loading…)</span>
+                <span className="sr-only">กำลังโหลดข้อมูลผู้คลอด…</span>
               </div>
             )}
           </div>
@@ -425,8 +421,8 @@ export function PatientDrawer({ open, occupant, onClose }: PatientDrawerProps) {
             aria-label="ปิด"
             className={cn(
               'm-2 inline-flex h-8 w-8 items-center justify-center rounded-md',
-              'text-slate-500 hover:bg-slate-100 hover:text-slate-700',
-              'focus:outline-none focus:ring-2 focus:ring-ok',
+              'text-ink-muted hover:bg-surface-muted hover:text-ink',
+              'focus:outline-none focus:ring-2 focus:ring-brand',
             )}
           >
             <X className="h-4 w-4" aria-hidden />

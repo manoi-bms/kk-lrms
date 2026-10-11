@@ -67,6 +67,10 @@ const P = {
   },
 };
 
+/** Native width of the SVG form. Rendered at least this wide, its 13px text is
+ *  13px on screen (the patient page scrolls the card instead of shrinking it). */
+export const PARTOGRAPH_NATIVE_WIDTH = P.W;
+
 // Colors converted from Delphi BGR → web RGB.
 const C = {
   BG: '#FFFFFF',
