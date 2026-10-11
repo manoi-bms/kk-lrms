@@ -37,6 +37,7 @@ import {
   describeBmsSessionError,
   describeWardFeedError,
   describeWardFeedStale,
+  type WardFeed,
 } from '@/lib/actionable-errors';
 
 const REFRESH_SECONDS = WARD_OCCUPANCY_REFRESH_MS / 1000;
@@ -46,6 +47,20 @@ type WriteAlert = { title: string; remedy: string; tone: 'danger' | 'warn'; deta
 
 function PageFrame({ children }: { children: ReactNode }) {
   return <div className="flex flex-col gap-5 px-4 py-5 md:px-6">{children}</div>;
+}
+
+/** Ward data still in flight: a spinner and neutral skeletons, never bed tiles. */
+function BoardLoading() {
+  return (
+    <>
+      <LoadingState message="กำลังโหลดข้อมูลเตียงจาก HOSxP…" />
+      <div aria-hidden="true" className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="h-72 animate-pulse rounded-2xl bg-surface-muted" />
+        ))}
+      </div>
+    </>
+  );
 }
 
 export default function HospitalMaternityWardPage() {
@@ -78,8 +93,14 @@ export default function HospitalMaternityWardPage() {
     setSelectedWard,
     beds,
     occupancy,
+    bedsLoaded,
+    occupancyLoaded,
     isLoading,
     error,
+    wardsError,
+    bedsError,
+    occupancyError,
+    failingSince,
     health,
     lastUpdatedAt,
     mutateBeds,
@@ -140,7 +161,7 @@ export default function HospitalMaternityWardPage() {
   // Full-page error only when nothing is on screen yet. Once a ward resolved,
   // a failing refresh keeps the cached board under a stale banner (constitution VI).
   if (error && !ward) {
-    const e = describeWardFeedError(error);
+    const e = describeWardFeedError(wardsError ?? error, { feed: 'wards', since: failingSince });
     return (
       <PageFrame>
         <ErrorState message={e.message} remedy={e.remedy} detail={e.detail} onRetry={refresh} />
@@ -161,15 +182,21 @@ export default function HospitalMaternityWardPage() {
   if (isLoading || !ward) {
     return (
       <PageFrame>
-        <LoadingState message="กำลังโหลดข้อมูลเตียงจาก HOSxP…" />
-        <div aria-hidden="true" className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-72 animate-pulse rounded-2xl bg-surface-muted" />
-          ))}
-        </div>
+        <BoardLoading />
       </PageFrame>
     );
   }
+
+  // C1: the board renders only once BOTH the bed layout and the patient list
+  // of this ward have arrived. Until then "no data" is unknown, never "empty":
+  // a failed first load is a full ErrorState, an in-flight one a LoadingState.
+  const boardLoaded = bedsLoaded && occupancyLoaded;
+  const firstLoadFailure: { feed: WardFeed; error: Error } | null =
+    !bedsLoaded && bedsError
+      ? { feed: 'beds', error: bedsError }
+      : !occupancyLoaded && occupancyError
+        ? { feed: 'occupancy', error: occupancyError }
+        : null;
 
   const summary = summarizeBeds(beds, occupancy, now);
   const bednoSet = new Set(beds.map((b) => b.bedno));
@@ -220,7 +247,8 @@ export default function HospitalMaternityWardPage() {
 
   return (
     <div className="min-h-full bg-surface-page">
-      {error && (
+      {/* "แสดงข้อมูลเดิม" is only true once this ward's board has loaded. */}
+      {error && boardLoaded && lastUpdatedAt && (
         <ErrorState
           variant="banner"
           message={stale.message}
@@ -257,34 +285,45 @@ export default function HospitalMaternityWardPage() {
             onDismiss={() => setWriteAlert(null)}
           />
         )}
-        <WardKpis summary={summary} />
-        {beds.length === 0 ? (
-          <EmptyState
-            illustration="ward"
-            title="วอร์ดนี้ยังไม่มีเตียงใน HOSxP"
-            description="ยังไม่มีการตั้งค่าห้องและเตียง (roomno / bedno) ของวอร์ดนี้ใน HOSxP — แจ้งผู้ดูแล HOSxP ให้เพิ่มเตียง หรือเลือกวอร์ดอื่นจากเมนูวอร์ด"
+        {firstLoadFailure ? (
+          <ErrorState
+            {...describeWardFeedError(firstLoadFailure.error, { feed: firstLoadFailure.feed, since: failingSince })}
+            onRetry={refresh}
           />
+        ) : !boardLoaded ? (
+          <BoardLoading />
         ) : (
           <>
-            {summary.occupied === 0 && (
+            <WardKpis summary={summary} />
+            {beds.length === 0 ? (
               <EmptyState
                 illustration="ward"
-                title="ไม่มีผู้คลอดในห้องคลอดขณะนี้"
-                description={`เตียงว่าง ${summary.free} เตียง · ข้อมูล HOSxP อัปเดตทุก ${REFRESH_SECONDS} วินาที`}
+                title="วอร์ดนี้ยังไม่มีเตียงใน HOSxP"
+                description="ยังไม่มีการตั้งค่าห้องและเตียง (roomno / bedno) ของวอร์ดนี้ใน HOSxP — แจ้งผู้ดูแล HOSxP ให้เพิ่มเตียง หรือเลือกวอร์ดอื่นจากเมนูวอร์ด"
               />
+            ) : (
+              <>
+                {summary.occupied === 0 && (
+                  <EmptyState
+                    illustration="ward"
+                    title="ไม่มีผู้คลอดในห้องคลอดขณะนี้"
+                    description={`เตียงว่าง ${summary.free} เตียง · ข้อมูล HOSxP อัปเดตทุก ${REFRESH_SECONDS} วินาที`}
+                  />
+                )}
+                <WardLayoutViewFull
+                  beds={beds}
+                  occupancy={wardOccupancy}
+                  now={now}
+                  onBedClick={setSelectedAn}
+                  onBedMove={(p) => void handleBedMove(p)}
+                  onMoveRejected={handleMoveRejected}
+                  reasons={reasons}
+                  config={config}
+                  marketplaceToken={marketplaceToken}
+                  maternalScreenSummaries={maternalScreenSummaries}
+                />
+              </>
             )}
-            <WardLayoutViewFull
-              beds={beds}
-              occupancy={wardOccupancy}
-              now={now}
-              onBedClick={setSelectedAn}
-              onBedMove={(p) => void handleBedMove(p)}
-              onMoveRejected={handleMoveRejected}
-              reasons={reasons}
-              config={config}
-              marketplaceToken={marketplaceToken}
-              maternalScreenSummaries={maternalScreenSummaries}
-            />
           </>
         )}
       </PageFrame>

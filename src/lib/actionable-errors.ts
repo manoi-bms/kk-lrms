@@ -2,6 +2,8 @@
 // Turns raw failures into actionable Thai for ErrorState: what happened
 // (message), what to do (remedy) and the raw text for IT (detail). Pure.
 // Constitution V: every user-facing error says what went wrong AND what to do.
+import { formatBangkokStamp } from '@/lib/bangkok-time';
+
 export interface ActionableError {
   message: string;
   remedy: string;
@@ -69,12 +71,36 @@ export function describeBmsSessionError(raw: string): ActionableError {
   };
 }
 
-/** The first ward/bed load failed: nothing cached to show. */
-export function describeWardFeedError(err: unknown): ActionableError {
+/** The three HOSxP feeds behind the ward board. */
+export type WardFeed = 'wards' | 'beds' | 'occupancy';
+
+const WARD_FEED_LABEL_TH: Record<WardFeed, string> = {
+  wards: 'รายการวอร์ดห้องคลอด',
+  beds: 'ผังเตียง',
+  occupancy: 'รายชื่อผู้คลอดบนเตียง',
+};
+
+/** A failed bed or patient feed means "unknown", never "empty". */
+const NOT_EMPTY_WARNING = 'ระหว่างนี้อย่าถือว่าห้องคลอดว่าง — ตรวจรายชื่อผู้คลอดใน HOSxP โดยตรง';
+
+/**
+ * The first ward/bed load failed: nothing cached to show. Says what failed
+ * (`feed`), since when (`since`, ISO, when known) and what to do.
+ */
+export function describeWardFeedError(
+  err: unknown,
+  opts: { feed?: WardFeed; since?: string | null } = {},
+): ActionableError {
+  const { feed, since } = opts;
+  const sinceDate = since ? new Date(since) : null;
+  const parts = ['ไม่สามารถโหลดข้อมูลห้องคลอดจาก HOSxP'];
+  if (feed) parts.push(` — ${WARD_FEED_LABEL_TH[feed]}`);
+  if (sinceDate && Number.isFinite(sinceDate.getTime())) parts.push(` · ล้มเหลวตั้งแต่ ${formatBangkokStamp(sinceDate)}`);
+  const base =
+    'ตรวจสอบว่าเครื่อง HOSxP หรือ BMS ของโรงพยาบาลเปิดอยู่และเชื่อมต่ออินเทอร์เน็ตได้ แล้วกด ลองใหม่ หากยังไม่ได้ แจ้งผู้ดูแลระบบพร้อมข้อความด้านล่าง';
   return {
-    message: 'ไม่สามารถโหลดข้อมูลห้องคลอดจาก HOSxP',
-    remedy:
-      'ตรวจสอบว่าเครื่อง HOSxP หรือ BMS ของโรงพยาบาลเปิดอยู่และเชื่อมต่ออินเทอร์เน็ตได้ แล้วกด ลองใหม่ หากยังไม่ได้ แจ้งผู้ดูแลระบบพร้อมข้อความด้านล่าง',
+    message: parts.join(''),
+    remedy: feed === 'beds' || feed === 'occupancy' ? `${base} · ${NOT_EMPTY_WARNING}` : base,
     detail: errorText(err),
   };
 }

@@ -51,6 +51,26 @@ describe('ward feed errors', () => {
   });
 });
 
+describe('describeWardFeedError — what / since when / what to do (C1)', () => {
+  it('names the feed that failed and when the failure began', () => {
+    const e = describeWardFeedError(new Error('HTTP 500'), { feed: 'occupancy', since: '2026-10-11T03:42:00Z' });
+    expect(e.message).toBe(
+      'ไม่สามารถโหลดข้อมูลห้องคลอดจาก HOSxP — รายชื่อผู้คลอดบนเตียง · ล้มเหลวตั้งแต่ 11 ต.ค. 2569 10:42 น.',
+    );
+    expect(e.detail).toBe('HTTP 500');
+  });
+
+  it('bed/patient feeds warn the nurse not to read the failure as an empty ward', () => {
+    for (const feed of ['beds', 'occupancy'] as const) {
+      const e = describeWardFeedError(new Error('x'), { feed });
+      expect(e.remedy).toContain('ลองใหม่');
+      expect(e.remedy).toContain('อย่าถือว่าห้องคลอดว่าง');
+    }
+    expect(describeWardFeedError(new Error('x'), { feed: 'beds' }).message).toContain('ผังเตียง');
+    expect(describeWardFeedError(new Error('x'), { feed: 'wards' }).message).toContain('รายการวอร์ดห้องคลอด');
+  });
+});
+
 describe('describePatientLoadError', () => {
   const err = (status: number, message = 'x') => Object.assign(new Error(message), { status });
   it('400 → link format, with the composite example', () => {
