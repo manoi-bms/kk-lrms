@@ -1,6 +1,6 @@
 'use client';
 
-import { COLOR, MIN_TEXT_PX } from '@/config/design-tokens';
+import { COLOR } from '@/config/design-tokens';
 import { mapLegendTheme } from '@/config/map-palette';
 import { MAP_LEGEND, type StatusTone } from '@/config/hospital-status';
 
@@ -16,6 +16,35 @@ export function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
     neutral: theme.unknown,
   };
   const items = legend.items.map((it) => ({ ...it, color: dot[it.tone] }));
+  if (!isKiosk) {
+    // Light mode: a strip BELOW the map pane (normal flow) so it can never
+    // cover hospital markers — 2026-10-11 visual review.
+    return (
+      <div
+        className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border bg-surface-card px-3 py-2 text-caption text-ink"
+        aria-label={legend.ariaLabel}
+      >
+        <span className="text-ink-muted">{legend.heading}</span>
+        {items.map((it) => (
+          <span key={it.label} className="inline-flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className="inline-block shrink-0 rounded-full"
+              style={{
+                width: 8,
+                height: 8,
+                background: it.color,
+                border: `1.5px solid ${theme.pinBorder}`,
+                boxShadow: '0 0 0 0.5px rgba(0,0,0,0.15)',
+              }}
+            />
+            <span className="font-semibold">{it.label}</span>
+            <span className="text-ink-muted">·&nbsp;{it.sub}</span>
+          </span>
+        ))}
+      </div>
+    );
+  }
   return (
     <div
       className="absolute"
@@ -29,17 +58,15 @@ export function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
         borderRadius: 4,
         padding: '6px 8px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.18)',
-        fontFamily: isKiosk
-          ? 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace'
-          : undefined,
+        fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
         pointerEvents: 'none',
       }}
       aria-label={legend.ariaLabel}
     >
       <div
         style={{
-          fontSize: isKiosk ? 9 : MIN_TEXT_PX,
-          letterSpacing: isKiosk ? '0.14em' : undefined,
+          fontSize: 9,
+          letterSpacing: '0.14em',
           color: inkMuted,
           marginBottom: 4,
         }}
@@ -60,12 +87,8 @@ export function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
                 flexShrink: 0,
               }}
             />
-            <span style={{ fontSize: isKiosk ? 10 : MIN_TEXT_PX, fontWeight: 600 }}>
-              {it.label}
-            </span>
-            <span style={{ fontSize: isKiosk ? 10 : MIN_TEXT_PX, color: inkMuted }}>
-              ·&nbsp;{it.sub}
-            </span>
+            <span style={{ fontSize: 10, fontWeight: 600 }}>{it.label}</span>
+            <span style={{ fontSize: 10, color: inkMuted }}>·&nbsp;{it.sub}</span>
           </div>
         ))}
       </div>
