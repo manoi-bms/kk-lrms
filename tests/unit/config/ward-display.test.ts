@@ -1,6 +1,16 @@
 // tests/unit/config/ward-display.test.ts
 import { describe, it, expect } from 'vitest';
-import { BED_MOVE_ALERTS, LABOUR_STAGE_DISPLAY, WARD_FEED_STATUS, formatRoomSummary } from '@/config/ward-display';
+import {
+  BED_MOVE_ALERTS,
+  LABOUR_STAGE_DISPLAY,
+  UNPLACED_SECTION,
+  WARD_FEED_STATUS,
+  allergyStatus,
+  formatRoomSummary,
+  labourStageDisplay,
+  sharedBedNotice,
+  unplacedBedLabel,
+} from '@/config/ward-display';
 import { LABOUR_PHASE_LABEL_TH } from '@/config/obstetric-display';
 
 describe('ward-display', () => {
@@ -47,9 +57,67 @@ describe('ward-display — stage pill + room summary', () => {
   });
 
   it('room summary: unpadded counts, locked only when present', () => {
-    const base = { totalBeds: 5, occupied: 3, free: 2, lockedEmpty: 0, lockedOccupied: 0, prolongedLatent: 0, occupancyPct: 60 };
+    const base = {
+      totalBeds: 5,
+      occupied: 3,
+      patients: 3,
+      unplaced: 0,
+      sharedBeds: 0,
+      free: 2,
+      lockedEmpty: 0,
+      lockedOccupied: 0,
+      prolongedLatent: 0,
+      occupancyPct: 60,
+    };
     expect(formatRoomSummary(base)).toBe('5 เตียง · มีผู้คลอด 3 · ว่าง 2');
     expect(formatRoomSummary({ ...base, lockedEmpty: 2 })).toBe('5 เตียง · มีผู้คลอด 3 · ว่าง 2 · ปิดใช้งาน 2');
+  });
+
+  it('I2: room summary counts patients (not rows per tile) and calls out a shared bed', () => {
+    const base = {
+      totalBeds: 2,
+      occupied: 1,
+      patients: 2,
+      unplaced: 0,
+      sharedBeds: 1,
+      free: 1,
+      lockedEmpty: 0,
+      lockedOccupied: 0,
+      prolongedLatent: 0,
+      occupancyPct: 50,
+    };
+    expect(formatRoomSummary(base)).toBe('2 เตียง · มีผู้คลอด 2 · ว่าง 1 · เตียงซ้อน 1');
+  });
+
+  it('I2: unplaced section and shared-bed copy say what is wrong and what to do', () => {
+    expect(UNPLACED_SECTION.title).toBe('ยังไม่ได้จัดเตียง / ไม่ตรงผังเตียง');
+    expect(UNPLACED_SECTION.summary(2)).toBe(
+      'ผู้คลอด 2 รายรับไว้ในวอร์ดนี้แต่ไม่มีเตียงในผัง — จัดหรือแก้เตียงใน HOSxP แล้วกด รีเฟรช',
+    );
+    expect(unplacedBedLabel({ reason: 'noBed', bedno: '' })).toBe('ยังไม่ได้จัดเตียง');
+    expect(unplacedBedLabel({ reason: 'notInLayout', bedno: '99' })).toBe('เตียง 99 · ไม่อยู่ในผังวอร์ดนี้');
+    expect(sharedBedNotice('01', 2)).toBe('เตียงซ้อน: 2 รายบนเตียง 01 ใน HOSxP — ตรวจและแก้เตียงใน HOSxP');
+  });
+
+  it('minor 7: prolonged latent with no cervix record has its own label; everything else is LABOUR_STAGE_DISPLAY', () => {
+    expect(labourStageDisplay('prolongedLatent', null)).toMatchObject({
+      labelTh: 'ยังไม่มีบันทึกปากมดลูก ≥12 ชม.',
+      className: 'bg-danger text-white',
+    });
+    expect(labourStageDisplay('prolongedLatent', 3)).toBe(LABOUR_STAGE_DISPLAY.prolongedLatent);
+    expect(labourStageDisplay('latent', null)).toBe(LABOUR_STAGE_DISPLAY.latent);
+  });
+
+  it('minor 9: allergy status — unknown is not "none"', () => {
+    expect(allergyStatus(2)).toEqual({ kind: 'allergy', labelTh: 'แพ้ยา', titleTh: 'มีประวัติแพ้ยา 2 รายการ' });
+    expect(allergyStatus(0)).toEqual({ kind: 'none', labelTh: 'ไม่มีประวัติแพ้ยา', titleTh: 'ไม่มีประวัติแพ้ยาในระบบ' });
+    for (const missing of [null, undefined]) {
+      expect(allergyStatus(missing)).toEqual({
+        kind: 'unknown',
+        labelTh: 'ไม่ทราบประวัติแพ้ยา',
+        titleTh: 'HOSxP ไม่ส่งข้อมูลการแพ้ยา — ซักประวัติและตรวจใน HOSxP ก่อนให้ยา',
+      });
+    }
   });
 });
 

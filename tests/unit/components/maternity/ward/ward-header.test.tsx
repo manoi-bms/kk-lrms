@@ -44,6 +44,9 @@ describe('WardKpis', () => {
   const summary: BedSummary = {
     totalBeds: 9,
     occupied: 4,
+    patients: 4,
+    unplaced: 0,
+    sharedBeds: 0,
     free: 3,
     lockedEmpty: 2,
     lockedOccupied: 0,
@@ -72,6 +75,15 @@ describe('WardKpis', () => {
     render(<WardKpis summary={{ ...summary, prolongedLatent: 0, lockedOccupied: 1 }} />);
     expect(screen.getByTestId('ward-kpi-prolonged-latent').className).not.toContain('bg-danger');
     expect(screen.getByTestId('ward-kpi-locked')).toHaveTextContent('มีผู้คลอดบนเตียงล็อก 1');
+  });
+
+  it('I2: "มีผู้คลอด" counts every patient, unplaced included, and names unplaced/shared beds', () => {
+    render(<WardKpis summary={{ ...summary, patients: 6, unplaced: 1, sharedBeds: 1 }} />);
+    const tile = screen.getByTestId('ward-kpi-occupied');
+    expect(tile.querySelector('[data-kpi-value]')).toHaveTextContent(/^0?6$/);
+    expect(tile).toHaveTextContent('ใช้เตียง 44%');
+    expect(tile).toHaveTextContent('ยังไม่ได้จัดเตียง 1');
+    expect(tile).toHaveTextContent('เตียงซ้อน 1');
   });
 
   it('an empty ward shows no occupancy percentage', () => {

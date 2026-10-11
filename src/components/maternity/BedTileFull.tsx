@@ -15,7 +15,7 @@ import { maskName } from '@/lib/pii-mask';
 import { cn } from '@/lib/utils';
 import { PatientPhoto } from '@/components/shared/PatientPhoto';
 import { classifyLabourStage, LABOUR_STAGE_CM } from '@/services/ward-board';
-import { LABOUR_STAGE_DISPLAY } from '@/config/ward-display';
+import { allergyStatus, labourStageDisplay } from '@/config/ward-display';
 import {
   MATERNAL_SCREEN_TIER_LABEL_TH,
   MATERNAL_SCREEN_TIER_COLOR,
@@ -26,6 +26,11 @@ import {
 
 export interface BedTileFullProps {
   bedno: string;
+  /** Tile head text in place of "เตียง {bedno}" — used for patients without a
+   *  usable bed (I2), e.g. "ยังไม่ได้จัดเตียง". */
+  bedLabel?: string;
+  /** data-testid of the tile; defaults to `bed-{bedno}`. */
+  testId?: string;
   bedLock: 'Y' | 'N' | null;
   occupant: BedOccupancyFull | null;
   /** Live "now" (ms since epoch) — drives hours-since-admit + crit
@@ -155,11 +160,16 @@ function cervixFillPercent(cx: number | null): number {
 
 const TILE = 'flex min-w-0 flex-col overflow-hidden rounded-2xl border';
 const PILL = 'inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-caption font-semibold';
+const ALLERGY_PILL: Record<ReturnType<typeof allergyStatus>['kind'], string> = {
+  allergy: 'border-danger bg-danger text-white',
+  none: 'border-ok/40 text-ok-text',
+  unknown: 'border-warn/40 bg-warn-tint text-warn-text',
+};
 
-function TileHead({ bedno, pill, className }: { bedno: string; pill: ReactNode; className?: string }) {
+function TileHead({ label, pill, className }: { label: string; pill: ReactNode; className?: string }) {
   return (
     <div className={cn('flex items-center justify-between gap-2 border-b border-border px-4 py-2', className)}>
-      <span className="text-title tabular-nums text-ink">เตียง {bedno}</span>
+      <span className="text-title tabular-nums text-ink">{label}</span>
       {pill}
     </div>
   );
@@ -197,7 +207,7 @@ function VacantTile({ bedno, locked }: { bedno: string; locked: boolean }) {
       )}
     >
       <TileHead
-        bedno={bedno}
+        label={`เตียง ${bedno}`}
         className="bg-surface-muted"
         pill={<span className={cn(PILL, 'border-border text-ink-muted')}>{locked ? 'ปิดใช้งาน' : 'เตียงว่าง'}</span>}
       />
@@ -223,6 +233,8 @@ function ScreenPill({ testId, color, children }: { testId: string; color: string
 
 export function BedTileFull({
   bedno,
+  bedLabel,
+  testId,
   bedLock,
   occupant,
   now,
@@ -235,13 +247,13 @@ export function BedTileFull({
   if (!occupant) return <VacantTile bedno={bedno} locked={bedLock === 'Y'} />;
 
   const stage = classifyLabourStage(occupant, now);
-  const display = LABOUR_STAGE_DISPLAY[stage];
+  const cx = occupant.last_cervix_cm;
+  const display = labourStageDisplay(stage, cx);
   const alarm = stage === 'prolongedLatent';
   const name = thaiName(occupant);
   const age = calcAge(occupant.birthday, now);
-  const cx = occupant.last_cervix_cm;
   const cxTone = cervixTone(cx);
-  const allergies = occupant.allergy_count ?? 0;
+  const allergy = allergyStatus(occupant.allergy_count);
 
   // Cross-source maternal-screen pills (Task H4): zero DOM unless one axis is present (GC-H4).
   const screenTier = maternalScreenSummary?.localTier ?? null;
@@ -257,19 +269,33 @@ export function BedTileFull({
     .filter(Boolean)
     .join(' · ');
 
+  const headLabel = bedLabel ?? `เตียง ${bedno}`;
+  const open = () => onClick?.(occupant.an);
+
   return (
+    // A keyboard-operable button (Enter/Space). Keys stop here so the dnd-kit
+    // drag handle on the wrapper (Space/Enter = pick up) does not also fire.
     <article
-      data-testid={`bed-${bedno}`}
+      data-testid={testId ?? `bed-${bedno}`}
       data-stage={stage}
-      onClick={() => onClick?.(occupant.an)}
+      role="button"
+      tabIndex={0}
+      aria-label={`${headLabel} · ${name} — เปิดรายละเอียดผู้คลอด`}
+      onClick={open}
+      onKeyDown={(e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        e.stopPropagation();
+        open();
+      }}
       className={cn(
         TILE,
-        'cursor-pointer bg-surface-card shadow-soft transition-shadow hover:shadow-md',
+        'cursor-pointer bg-surface-card shadow-soft transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2',
         alarm ? 'border-2 border-danger' : 'border-border',
       )}
     >
       <TileHead
-        bedno={bedno}
+        label={headLabel}
         className={alarm ? 'bg-danger-tint' : 'bg-surface-muted'}
         pill={
           <span title={display.hint} className={cn('whitespace-nowrap rounded-full px-3 py-1 text-label', display.className)}>
@@ -286,15 +312,9 @@ export function BedTileFull({
           HN <b className="font-semibold text-ink">{occupant.hn}</b>
         </span>
         <span className="flex flex-wrap items-center gap-1">
-          {allergies > 0 ? (
-            <span title={`มีประวัติแพ้ยา ${allergies} รายการ`} className={cn(PILL, 'border-danger bg-danger text-white')}>
-              แพ้ยา
-            </span>
-          ) : (
-            <span title="ไม่มีประวัติแพ้ยาในระบบ" className={cn(PILL, 'border-ok/40 text-ok-text')}>
-              ไม่มีประวัติแพ้ยา
-            </span>
-          )}
+          <span title={allergy.titleTh} className={cn(PILL, ALLERGY_PILL[allergy.kind])}>
+            {allergy.labelTh}
+          </span>
           {occupant.blood_grp && (
             <span title={`หมู่เลือด ${occupant.blood_grp}`} className={cn(PILL, 'border-border text-ink')}>
               {occupant.blood_grp}

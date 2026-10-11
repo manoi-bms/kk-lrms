@@ -2,6 +2,8 @@
 // Thai obstetric wording shared by the ward board and the patient page. Words
 // only: each component keeps its own cut-offs. Three cut-off sets exist today,
 // and that is a clinical ruling, recorded under the spec's Out of scope.
+import type { StatusTone } from '@/config/status-tone';
+
 export const LABOUR_PHASE_LABEL_TH = {
   latent: 'ระยะแฝง',
   active: 'ระยะเร่ง',
@@ -19,6 +21,14 @@ export function classifyGaTerm(weeks: number | null): GaTerm | null {
   if (weeks > 41) return 'postTerm';
   return 'term';
 }
+
+/** Severity tone per GA band: term ok, preterm warn, < 34 or > 41 danger. */
+export const GA_TERM_TONE: Record<GaTerm, StatusTone> = {
+  veryPreterm: 'danger',
+  preterm: 'warn',
+  term: 'ok',
+  postTerm: 'danger',
+};
 
 export const GA_TERM_LABEL_TH: Record<GaTerm, string> = {
   veryPreterm: 'ก่อนกำหนดมาก',

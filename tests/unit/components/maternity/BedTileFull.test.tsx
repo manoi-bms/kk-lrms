@@ -260,3 +260,32 @@ describe('BedTileFull — maternal-screen pills (Task H4)', () => {
     expect(article.className).not.toContain('border-danger'); // red stays reserved for the stage alarm (GC-H3)
   });
 });
+
+describe('BedTileFull — fix wave minors', () => {
+  it('9: a missing allergy count reads "unknown", never "no allergy history"', () => {
+    render(<BedTileFull bedno="01" bedLock="N" occupant={{ ...occupant, allergy_count: null }} now={now} />);
+    expect(screen.getByText('ไม่ทราบประวัติแพ้ยา')).toBeInTheDocument();
+    expect(screen.queryByText('ไม่มีประวัติแพ้ยา')).toBeNull();
+  });
+
+  it('9: zero recorded allergies still reads "no allergy history"', () => {
+    render(<BedTileFull bedno="01" bedLock="N" occupant={{ ...occupant, allergy_count: 0 }} now={now} />);
+    expect(screen.getByText('ไม่มีประวัติแพ้ยา')).toBeInTheDocument();
+  });
+
+  it('7: ≥12 h with NO cervix record says so; the alarm and stage rule are unchanged', () => {
+    const o = { ...occupant, regdate: '2026-04-19', regtime: '01:00:00', last_cervix_cm: null };
+    render(<BedTileFull bedno="01" bedLock="N" occupant={o} now={now} />);
+    expect(screen.getByText('ยังไม่มีบันทึกปากมดลูก ≥12 ชม.')).toBeInTheDocument();
+    expect(screen.queryByText('ระยะแฝงนาน · ประเมินด่วน')).toBeNull();
+    const article = screen.getByTestId('bed-01');
+    expect(article.dataset.stage).toBe('prolongedLatent');
+    expect(article.className).toContain('border-danger');
+  });
+
+  it('7: ≥12 h with a recorded cervix < 4 cm keeps "ระยะแฝงนาน · ประเมินด่วน"', () => {
+    const o = { ...occupant, regdate: '2026-04-19', regtime: '01:00:00', last_cervix_cm: 3 };
+    render(<BedTileFull bedno="01" bedLock="N" occupant={o} now={now} />);
+    expect(screen.getByText('ระยะแฝงนาน · ประเมินด่วน')).toBeInTheDocument();
+  });
+});

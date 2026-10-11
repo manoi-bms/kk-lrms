@@ -6,6 +6,17 @@ import { KpiGrid } from '@/components/shared/KpiGrid';
 import { KpiTile } from '@/components/shared/KpiTile';
 import { PROLONGED_LATENT_RULE, type BedSummary } from '@/services/ward-board';
 
+/** "มีผู้คลอด" counts every patient on the ward (I2); the sub-line keeps bed
+ *  use separate and names patients without a usable bed. */
+function occupiedSub(s: BedSummary): string | undefined {
+  const parts = [
+    s.occupancyPct !== null ? `ใช้เตียง ${s.occupancyPct}%` : null,
+    s.unplaced > 0 ? `ยังไม่ได้จัดเตียง ${s.unplaced}` : null,
+    s.sharedBeds > 0 ? `เตียงซ้อน ${s.sharedBeds}` : null,
+  ].filter((p): p is string => p !== null);
+  return parts.length > 0 ? parts.join(' · ') : undefined;
+}
+
 export function WardKpis({ summary }: { summary: BedSummary }) {
   const { minHours, cervixBelowCm } = PROLONGED_LATENT_RULE;
   return (
@@ -15,8 +26,8 @@ export function WardKpis({ summary }: { summary: BedSummary }) {
         <KpiTile
           testId="ward-kpi-occupied"
           label="มีผู้คลอด"
-          count={summary.occupied}
-          sub={summary.occupancyPct !== null ? `ใช้เตียง ${summary.occupancyPct}%` : undefined}
+          count={summary.patients}
+          sub={occupiedSub(summary)}
         />
         <KpiTile testId="ward-kpi-free" label="เตียงว่าง" count={summary.free} />
         <KpiTile

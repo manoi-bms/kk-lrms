@@ -9,6 +9,7 @@ import {
   PROLONGED_LATENT_RULE,
   type BedSummary,
   type LabourStageKind,
+  type UnplacedReason,
 } from '@/services/ward-board';
 import { LABOUR_PHASE_LABEL_TH } from '@/config/obstetric-display';
 
@@ -64,7 +65,62 @@ export const LABOUR_STAGE_DISPLAY: Record<LabourStageKind, { labelTh: string; cl
   },
 };
 
+/** Same rule and alarm as prolongedLatent, but the cervix was never recorded:
+ *  the tile says what is missing rather than implying a slow labour. */
+const PROLONGED_LATENT_NO_CERVIX = {
+  ...LABOUR_STAGE_DISPLAY.prolongedLatent,
+  labelTh: `ยังไม่มีบันทึกปากมดลูก ≥${minHours} ชม.`,
+  hint: `รับเข้า ≥${minHours} ชม. และยังไม่มีบันทึกปากมดลูก — ตรวจและบันทึกในพาร์โทกราฟ`,
+};
+
+/** Stage pill for a tile. The stage rule is classifyLabourStage; only the
+ *  wording changes when a prolonged-latent patient has no cervix record. */
+export function labourStageDisplay(
+  stage: LabourStageKind,
+  cervixCm: number | null,
+): (typeof LABOUR_STAGE_DISPLAY)[LabourStageKind] {
+  return stage === 'prolongedLatent' && cervixCm === null ? PROLONGED_LATENT_NO_CERVIX : LABOUR_STAGE_DISPLAY[stage];
+}
+
+/** Allergy pill. A missing count is "unknown" — never "no allergy history". */
+export function allergyStatus(count: number | null | undefined): {
+  kind: 'allergy' | 'none' | 'unknown';
+  labelTh: string;
+  titleTh: string;
+} {
+  if (count === null || count === undefined) {
+    return {
+      kind: 'unknown',
+      labelTh: 'ไม่ทราบประวัติแพ้ยา',
+      titleTh: 'HOSxP ไม่ส่งข้อมูลการแพ้ยา — ซักประวัติและตรวจใน HOSxP ก่อนให้ยา',
+    };
+  }
+  if (count > 0) return { kind: 'allergy', labelTh: 'แพ้ยา', titleTh: `มีประวัติแพ้ยา ${count} รายการ` };
+  return { kind: 'none', labelTh: 'ไม่มีประวัติแพ้ยา', titleTh: 'ไม่มีประวัติแพ้ยาในระบบ' };
+}
+
+/** Room header line. "มีผู้คลอด" is patients (a shared bed holds two), so the
+ *  room lines plus the unplaced section add up to the ward KPI. */
 export function formatRoomSummary(s: BedSummary): string {
-  const base = `${s.totalBeds} เตียง · มีผู้คลอด ${s.occupied} · ว่าง ${s.free}`;
-  return s.lockedEmpty > 0 ? `${base} · ปิดใช้งาน ${s.lockedEmpty}` : base;
+  const parts = [`${s.totalBeds} เตียง`, `มีผู้คลอด ${s.patients}`, `ว่าง ${s.free}`];
+  if (s.lockedEmpty > 0) parts.push(`ปิดใช้งาน ${s.lockedEmpty}`);
+  if (s.sharedBeds > 0) parts.push(`เตียงซ้อน ${s.sharedBeds}`);
+  return parts.join(' · ');
+}
+
+/** I2: admitted patients with a blank bed or a bed outside this ward's layout. */
+export const UNPLACED_SECTION = {
+  title: 'ยังไม่ได้จัดเตียง / ไม่ตรงผังเตียง',
+  summary: (n: number) =>
+    `ผู้คลอด ${n} รายรับไว้ในวอร์ดนี้แต่ไม่มีเตียงในผัง — จัดหรือแก้เตียงใน HOSxP แล้วกด รีเฟรช`,
+} as const;
+
+/** Tile head for an unplaced patient (replaces "เตียง {bedno}"). */
+export function unplacedBedLabel(u: { reason: UnplacedReason; bedno: string | null }): string {
+  return u.reason === 'noBed' ? 'ยังไม่ได้จัดเตียง' : `เตียง ${u.bedno} · ไม่อยู่ในผังวอร์ดนี้`;
+}
+
+/** Conflict notice above a bed HOSxP has given to more than one admission. */
+export function sharedBedNotice(bedno: string, count: number): string {
+  return `เตียงซ้อน: ${count} รายบนเตียง ${bedno} ใน HOSxP — ตรวจและแก้เตียงใน HOSxP`;
 }

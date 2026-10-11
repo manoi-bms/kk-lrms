@@ -15,6 +15,8 @@ const CORS = {
 
 export interface MockBmsOptions {
   sql: Array<[string, unknown[]]>;
+  /** SQL substrings answered with this HTTP status instead of rows (checked before `sql`). */
+  failSql?: Array<[string, number]>;
   omitBmsUrl?: boolean;
   log: string[];
 }
@@ -43,6 +45,16 @@ export async function mockBms(page: Page, opts: MockBmsOptions): Promise<void> {
     const path = new URL(req.url()).pathname;
     if (path === '/api/sql') {
       const sql = String((req.postDataJSON() as { sql?: string } | null)?.sql ?? '');
+      const failure = opts.failSql?.find(([m]) => sql.includes(m));
+      if (failure) {
+        opts.log.push(`mock-bms: sql "${failure[0]}" → HTTP ${failure[1]} (injected failure)`);
+        return route.fulfill({
+          status: failure[1],
+          headers: CORS,
+          contentType: 'application/json',
+          body: JSON.stringify({ MessageCode: failure[1], Message: 'injected failure (e2e)' }),
+        });
+      }
       const hit = opts.sql.find(([m]) => sql.includes(m));
       opts.log.push(`mock-bms: sql ${hit ? `"${hit[0]}" → ${hit[1].length} rows` : `unmatched: ${sql.slice(0, 60)}`}`);
       return route.fulfill({

@@ -102,3 +102,16 @@ describe('PatientDrawer', () => {
     expect(screen.getByText(/Loading|กำลังโหลด/)).toBeInTheDocument();
   });
 });
+
+describe('PatientDrawer — allergy status (fix wave minor 9)', () => {
+  it('a missing allergy count reads "unknown", never "no allergy history"', () => {
+    render(<PatientDrawer open occupant={{ ...occupant, allergy_count: null }} onClose={() => {}} />);
+    expect(screen.getByText('ไม่ทราบประวัติแพ้ยา')).toBeInTheDocument();
+    expect(screen.queryByText('ไม่มีประวัติแพ้ยา')).toBeNull();
+  });
+
+  it('zero recorded allergies still reads "no allergy history"', () => {
+    render(<PatientDrawer open occupant={{ ...occupant, allergy_count: 0 }} onClose={() => {}} />);
+    expect(screen.getByText('ไม่มีประวัติแพ้ยา')).toBeInTheDocument();
+  });
+});

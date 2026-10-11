@@ -242,6 +242,36 @@ test.describe('UI foundation', () => {
     expect(log.filter((l) => l.includes('PAGEERROR'))).toEqual([]);
   });
 
+  test('ward board: occupancy HTTP 500 from the first fetch → error state, never "empty" @ward', async ({ page }, testInfo) => {
+    test.skip(!SESSION, 'requires E2E_BMS_SESSION_ID');
+    const log = attachDebugLogging(page);
+    const s = wardScenario(Date.now());
+    await mockBms(page, {
+      log,
+      sql: wardSql(s),
+      failSql: [['latest_lp.cervical_dilation_cm AS last_cervix_cm', 500]],
+    });
+    await login(page, log);
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.goto('/hospital-maternity-ward?bms-session-id=e2e-occ500');
+    const alert = page.getByRole('alert').filter({ hasText: 'ไม่สามารถโหลดข้อมูลห้องคลอดจาก HOSxP' });
+    await expect(alert).toContainText('รายชื่อผู้คลอดบนเตียง', { timeout: 20_000 });
+    await expect(alert).toContainText('ล้มเหลวตั้งแต่');
+    await expect(alert).toContainText('อย่าถือว่าห้องคลอดว่าง');
+    await expect(alert.getByRole('button', { name: /ลองใหม่/ })).toBeVisible();
+    log.push(`occupancy 500: ${(await alert.textContent())?.slice(0, 200)}`);
+    // Nothing on screen may claim the ward is empty or a bed is free.
+    for (const copy of ['ไม่มีผู้คลอดในห้องคลอดขณะนี้', 'พร้อมรับผู้คลอด', 'วอร์ดนี้ยังไม่มีเตียงใน HOSxP', 'แสดงข้อมูลเดิม']) {
+      await expect(page.getByText(copy)).toHaveCount(0);
+    }
+    await expect(page.locator('article[data-testid^="bed-"]')).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'สรุปเตียงในห้องคลอด' })).toHaveCount(0);
+    log.push('occupancy 500: no empty-ward copy, no bed tiles, no KPI row');
+    await page.screenshot({ path: `${WARD_OUT}/${TAG}-ward-occupancy-500-1024.png`, fullPage: true });
+    await flushDebugLog(log, testInfo);
+    expect(log.filter((l) => l.includes('PAGEERROR'))).toEqual([]);
+  });
+
   test('patient detail: no overflow, no zoom, Thai tabs, partograph at native width @ward', async ({ page }, testInfo) => {
     test.skip(!SESSION, 'requires E2E_BMS_SESSION_ID');
     const log = attachDebugLogging(page);
