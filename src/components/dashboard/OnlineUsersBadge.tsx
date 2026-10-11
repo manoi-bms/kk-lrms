@@ -58,18 +58,19 @@ export function OnlineUsersBadge() {
       onBlur={() => setOpen(false)}
     >
       <span
-        className="inline-flex cursor-default items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono text-caption tracking-[0.06em] tabular-nums"
+        className="inline-flex cursor-default items-center gap-1 rounded-sm border px-1.5 py-0.5 text-caption tabular-nums"
         style={{
           borderColor: 'var(--rule-strong)',
           color: 'var(--ink-navy)',
           background: 'var(--accent-navy-soft)',
         }}
         tabIndex={0}
-        aria-label={`${total} online users`}
+        aria-label={`ออนไลน์ ${total} คน`}
       >
         <UsersRound className="h-3 w-3" />
+        <span className="text-[var(--ink-navy-muted)]">ออนไลน์</span>
         <span className="font-semibold">{total}</span>
-        <span className="text-[var(--ink-navy-muted)]">USERS</span>
+        <span className="text-[var(--ink-navy-muted)]">คน</span>
       </span>
 
       {open && total > 0 && (
@@ -95,12 +96,12 @@ export function OnlineUsersBadge() {
             style={{
               fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
               fontSize: MIN_TEXT_PX,
-              letterSpacing: '0.14em',
+              
               color: 'rgba(230,236,245,0.7)',
             }}
           >
-            <span>ONLINE USERS · {total}</span>
-            <span>updated 15s</span>
+            <span>ผู้ใช้ออนไลน์ · {total} คน</span>
+            <span>อัปเดตทุก 15 วินาที</span>
           </div>
           <ul className="space-y-1">
             {visible.map((u) => (
@@ -166,7 +167,7 @@ export function OnlineUsersBadge() {
                 fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
               }}
             >
-              +{overflow} more — see /admin · Online Users
+              และอีก {overflow} คน — ดูที่หน้าผู้ดูแลระบบ > ผู้ใช้ออนไลน์
             </div>
           )}
         </div>

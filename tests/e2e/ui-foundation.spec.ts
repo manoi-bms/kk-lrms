@@ -135,7 +135,7 @@ test.describe('UI foundation', () => {
           wrappedValues: values.filter((el) => lines(el) > 1).map((el) => el.textContent?.trim()),
           overflowingValues: values.filter((el) => el.scrollWidth > el.clientWidth + 1).map((el) => el.textContent?.trim()),
           tallLabels: labels.filter((el) => lines(el) > 2).map((el) => el.textContent?.trim()),
-          presenceBadges: document.querySelectorAll('[aria-label$="online users"]').length,
+          presenceBadges: document.querySelectorAll('[aria-label^="ออนไลน์"]').length,
           twoColumns: getComputedStyle(document.querySelector('[data-testid="province-overview"]')!).position === 'sticky',
         };
       });
