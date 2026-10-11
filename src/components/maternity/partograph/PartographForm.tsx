@@ -12,6 +12,7 @@ import type {
   CdssSeverity,
   PartographObservationDto,
 } from '@/types/api';
+import { selectTimeLabels } from './time-labels';
 import { countBySeverity } from '@/services/partogram';
 import { MIN_TEXT_PX } from '@/config/design-tokens';
 
@@ -711,8 +712,8 @@ function HoursStrip({ x, y, w, h }: { x: number; y: number; w: number; h: number
 
 // Hour cells are HOUR_W (30px) wide but 13px "HH:mm" is ~36px, so on-the-hour
 // observations get the short "HH" form (readable at a glance) and only
-// off-hour ones keep minutes. A label that would still collide with the
-// previous one is dropped (its time is on the observation table).
+// off-hour ones keep minutes. Collisions are resolved by selectTimeLabels:
+// the newest label is always kept, on-the-hour beats off-hour.
 function layoutTimeLabels(
   obs: PartographObservationDto[], firstMs: number, chartLeft: number, chartRight: number,
 ): { id: string | number; px: number; text: string }[] {
@@ -724,16 +725,7 @@ function layoutTimeLabels(
     const full = formatHHmm(o.observeDatetime);
     items.push({ id: o.id, px, text: full.endsWith(':00') ? full.slice(0, 2) : full });
   }
-  items.sort((a, b) => a.px - b.px);
-  const out: typeof items = [];
-  let lastEnd = -Infinity;
-  for (const it of items) {
-    const half = (it.text.length * 7.5) / 2;
-    if (it.px - half < lastEnd) continue;
-    out.push(it);
-    lastEnd = it.px + half;
-  }
-  return out;
+  return selectTimeLabels(items);
 }
 
 // ─── Strip: Time row ───────────────────────────────────────────────────────
