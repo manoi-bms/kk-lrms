@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 import type { NavItem } from '@/config/nav';
+import { BrandMark } from '@/components/shared/BrandMark';
 import { cn } from '@/lib/utils';
 
 export interface SidebarProps {
@@ -46,7 +47,7 @@ export function Sidebar({ items, isActive, collapsed, onToggle, homeHref, onNavi
       )}
     >
       <Link href={homeHref} className="mb-4 flex items-center gap-2.5 px-2" aria-label="KK-LRMS หน้าแรก">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white font-bold text-brand">K</span>
+        <BrandMark tone="onBrand" size="sm" />
         <span className={cn('text-body-lg font-bold', collapsed && 'sr-only')}>KK-LRMS</span>
       </Link>
       <nav aria-label="เมนูหลัก" className="flex flex-1 flex-col gap-1">

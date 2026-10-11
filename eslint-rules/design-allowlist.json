@@ -1,15 +1,11 @@
 {
-  "maxEntries": 14,
+  "maxEntries": 10,
   "files": {
     "src/app/(hospital)/hospital-maternity-ward/page.tsx": "neutral cool-grey/slate hex (#F4F7FB, #1E293B, #E2E8F0) have no token yet; migrate when sub-projects 2-5 add neutral tokens (hospital pages)",
     "src/app/(provincial)/pregnancies/[journeyId]/page.tsx": "pastel #f4f6fb gradient stop in the journey banner has no surface token; migrate with sub-projects 2-5 (provincial pages)",
-    "src/app/about/page.tsx": "decorative amber/rose stat tiles are categorical colours, not risk semantics (ruling R19); migrate with sub-projects 2-5 (public pages)",
-    "src/components/admin/HospitalEditDialog.tsx": "pastel red-border hex #fecaca for status outlines has no tint-border token; migrate with sub-projects 2-5 (admin pages)",
-    "src/components/admin/HospitalsTab.tsx": "pastel status-border hex (#fecaca, #86efac) and neutral #f8fafc fallback have no tokens; migrate with sub-projects 2-5 (admin pages)",
     "src/components/dashboard/KioskHeader.tsx": "kiosk keeps its own larger type scale and dark palette (spec §1); not migrated",
     "src/components/dashboard/MaternalScreenCell.tsx": "kiosk branch text-[11px] is kiosk-only; kiosk keeps its own scale (spec §1)",
     "src/components/dashboard/OnlineUsersBadge.tsx": "dark navy badge palette (#0b1b2e/#e6ecf5) is a one-off with no token; migrate with sub-projects 2-5 (dashboard)",
-    "src/components/dashboard/SimulationControl.tsx": "admin-only simulation panel uses a one-off warm off-white #fffdfa with no token; migrate with sub-projects 2-5 (dashboard)",
     "src/components/maternity/BedTileFull.tsx": "neutral slate greys (#F4F7FB, #CBD5E1, #F8FAFC, #FAFBFC) and critical rgba border have no tokens; migrate when sub-projects 2-5 add neutral tokens (maternity ward)",
     "src/components/maternity/WardLayoutViewFull.tsx": "ward-board slate greys and categorical blue #1565C0 have no tokens; migrate with sub-projects 2-5 (maternity ward)",
     "src/components/patient/CurrentVitalsPanel.tsx": "neutral grey #6b7693 used in colour-mix tint has no token; migrate with sub-projects 2-5 (patient page)",

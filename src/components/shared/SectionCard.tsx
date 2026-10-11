@@ -10,6 +10,7 @@ const TONE: Record<SectionTone, string> = {
 };
 
 export interface SectionCardProps {
+  id?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
@@ -18,9 +19,9 @@ export interface SectionCardProps {
   children: ReactNode;
 }
 
-export function SectionCard({ title, description, actions, tone = 'default', className, children }: SectionCardProps) {
+export function SectionCard({ id, title, description, actions, tone = 'default', className, children }: SectionCardProps) {
   return (
-    <section aria-label={title} className={cn('rounded-2xl p-5 shadow-soft', TONE[tone], className)}>
+    <section id={id} aria-label={title} className={cn('rounded-2xl p-5 shadow-soft', id && 'scroll-mt-6', TONE[tone], className)}>
       <header className="mb-3 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-title text-brand">{title}</h2>

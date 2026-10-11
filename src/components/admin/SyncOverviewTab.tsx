@@ -8,16 +8,28 @@
 // full step trail.
 'use client';
 
-import { COLOR } from '@/config/design-tokens';
 import useSWR from 'swr';
 import { useMemo, useState } from 'react';
-import { Activity, AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 import {
   HospitalEditDialog,
   type AdminHospital,
 } from '@/components/admin/HospitalEditDialog';
-
-type RunOutcome = 'running' | 'success' | 'partial' | 'failed';
+import { Button } from '@/components/ui/button';
+import { SectionCard } from '@/components/shared/SectionCard';
+import { DataTable } from '@/components/shared/DataTable';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { ErrorState } from '@/components/shared/ErrorState';
+import { StatusPill } from '@/components/admin/admin-ui';
+import {
+  SYNC_OUTCOME_META,
+  SYNC_OVERVIEW_POLL_MS,
+  formatSyncDuration,
+  syncTriggerLabel,
+  type SyncOverviewOutcome,
+  type SyncRunOutcome,
+} from '@/config/sync-run-status';
+import { cn, formatRelativeTime } from '@/lib/utils';
 
 interface SyncStep {
   name: string;
@@ -36,7 +48,7 @@ interface SyncRun {
   startedAt: string;
   finishedAt: string | null;
   durationMs: number | null;
-  outcome: RunOutcome;
+  outcome: SyncRunOutcome;
   finalMessage: string | null;
   errorMessage: string | null;
   steps: SyncStep[];
@@ -68,45 +80,11 @@ interface OverviewResponse {
 
 type FilterKey = 'all' | 'failing' | 'never' | 'ok';
 
-function effectiveOutcome(entry: OverviewEntry): RunOutcome | 'never' {
+function effectiveOutcome(entry: OverviewEntry): SyncOverviewOutcome {
   if (!entry.hasBmsConfig) return 'never';
   if (entry.authenticity.isFailure) return 'failed';
   if (!entry.latestRun) return 'never';
   return entry.latestRun.outcome;
-}
-
-function outcomeStyle(outcome: RunOutcome | 'never'): {
-  bg: string;
-  ink: string;
-  label: string;
-} {
-  switch (outcome) {
-    case 'success':
-      return { bg: COLOR.riskLowTint, ink: COLOR.riskLowText, label: 'SUCCESS' };
-    case 'partial':
-      return { bg: COLOR.riskMediumTint, ink: COLOR.riskMediumText, label: 'PARTIAL' };
-    case 'failed':
-      return { bg: COLOR.riskHighTint, ink: COLOR.riskHighText, label: 'FAILED' };
-    case 'running':
-      return { bg: '#dbeafe', ink: '#1e3a8a', label: 'RUNNING' };
-    case 'never':
-      return { bg: '#f1f5f9', ink: '#475569', label: 'NEVER' };
-  }
-}
-
-function formatRelative(iso: string | null): string {
-  if (!iso) return '—';
-  const ms = Date.now() - new Date(iso).getTime();
-  if (ms < 60_000) return `${Math.max(1, Math.floor(ms / 1000))}s ago`;
-  if (ms < 3_600_000) return `${Math.floor(ms / 60_000)}m ago`;
-  if (ms < 86_400_000) return `${Math.floor(ms / 3_600_000)}h ago`;
-  return `${Math.floor(ms / 86_400_000)}d ago`;
-}
-
-function formatDuration(ms: number | null): string {
-  if (ms == null) return '—';
-  if (ms < 1000) return `${ms}ms`;
-  return `${(ms / 1000).toFixed(1)}s`;
 }
 
 // Reuse the per-hospital edit dialog so clicking a row jumps to the same
@@ -133,7 +111,7 @@ function entryToHospital(entry: OverviewEntry): AdminHospital {
 export function SyncOverviewTab() {
   const { data, isLoading, error, mutate } = useSWR<OverviewResponse>(
     '/api/admin/sync-overview',
-    { refreshInterval: 15_000 },
+    { refreshInterval: SYNC_OVERVIEW_POLL_MS },
   );
   const [filter, setFilter] = useState<FilterKey>('all');
   const [openHcode, setOpenHcode] = useState<string | null>(null);
@@ -166,201 +144,102 @@ export function SyncOverviewTab() {
 
   return (
     <section className="space-y-4">
-      {/* Filter chips + refresh */}
-      <div
-        className="flex flex-wrap items-center gap-2 border bg-white px-3 py-2"
-        style={{ borderColor: 'var(--rule-strong)' }}
+      <SectionCard
+        title="สถานะการซิงค์รายโรงพยาบาล"
+        description={`ผลการซิงค์รอบล่าสุดของทุกโรงพยาบาล · กดแถวเพื่อเปิดบันทึกการซิงค์`}
+        actions={
+          <>
+            <span className="text-caption text-ink-muted">รีเฟรชอัตโนมัติทุก {SYNC_OVERVIEW_POLL_MS / 1000} วินาที</span>
+            <Button variant="outline" size="sm" onClick={() => mutate()} className="h-9 gap-1 text-label text-brand">
+              <RefreshCw aria-hidden="true" className="h-3.5 w-3.5" /> รีเฟรช
+            </Button>
+          </>
+        }
       >
-        <span className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
-          FILTER
-        </span>
-        {(
-          [
+        <div role="group" aria-label="กรองตามผลการซิงค์" className="mb-3 flex flex-wrap gap-2">
+          {([
             { k: 'all' as const, label: 'ทั้งหมด', n: counts.all },
             { k: 'failing' as const, label: 'มีปัญหา', n: counts.failing },
-            { k: 'never' as const, label: 'ยังไม่ sync', n: counts.never },
+            { k: 'never' as const, label: 'ยังไม่ซิงค์', n: counts.never },
             { k: 'ok' as const, label: 'ปกติ', n: counts.ok },
-          ]
-        ).map((f) => {
-          const active = filter === f.k;
-          return (
+          ]).map((f) => (
             <button
               key={f.k}
               type="button"
+              aria-pressed={filter === f.k}
               onClick={() => setFilter(f.k)}
-              className="inline-flex items-center gap-1 border px-2 py-0.5 font-mono text-caption"
-              style={{
-                borderColor: active ? 'var(--accent-navy)' : 'var(--rule-strong)',
-                background: active ? 'var(--accent-navy-soft)' : 'white',
-                color: active ? 'var(--accent-navy)' : 'var(--ink-navy-dim)',
-                fontWeight: active ? 600 : 400,
-              }}
+              className={cn(
+                'inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-label',
+                filter === f.k ? 'border-brand bg-brand-soft font-semibold text-brand' : 'border-border bg-surface-card text-ink-muted hover:bg-surface-muted',
+              )}
             >
               {f.label} <span className="tabular-nums">{f.n}</span>
             </button>
-          );
-        })}
-        <span className="ml-auto inline-flex items-center gap-2 font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]">
-          AUTO-REFRESH 15s
-          <button
-            type="button"
-            onClick={() => mutate()}
-            className="inline-flex items-center gap-1 border px-1.5 py-0.5 text-[var(--accent-navy)]"
-            style={{ borderColor: 'var(--accent-navy)' }}
-          >
-            <RefreshCw className="h-3 w-3" /> REFRESH
-          </button>
-        </span>
-      </div>
-
-      {error && (
-        <div
-          className="border bg-white px-3 py-2 text-caption text-danger-text"
-          style={{ borderColor: COLOR.riskHighTint, background: COLOR.riskHighTint }}
-        >
-          โหลดสถานะ sync ไม่สำเร็จ
+          ))}
         </div>
-      )}
-
-      {isLoading && !data && (
-        <div
-          className="border bg-white px-4 py-6 text-center font-mono text-caption text-[var(--ink-navy-muted)]"
-          style={{ borderColor: 'var(--rule-strong)' }}
-        >
-          กำลังโหลด…
-        </div>
-      )}
-
-      {data && visible.length === 0 && (
-        <div
-          className="border bg-white px-4 py-6 text-center font-mono text-caption text-[var(--ink-navy-muted)]"
-          style={{ borderColor: 'var(--rule-strong)' }}
-        >
-          ไม่มีโรงพยาบาลในตัวกรองนี้
-        </div>
-      )}
-
-      {data && visible.length > 0 && (
-        <div
-          className="overflow-hidden border bg-white"
-          style={{ borderColor: 'var(--rule-strong)' }}
-        >
-          <div
-            className="grid items-center gap-3 border-b px-3 py-2 font-mono text-caption uppercase tracking-[0.1em] text-[var(--ink-navy-muted)]"
-            style={{
-              gridTemplateColumns: '70px 1fr 90px 100px 90px 1.4fr',
-              borderColor: 'var(--rule-strong)',
-            }}
-            aria-hidden="true"
-          >
-            <div>OUTCOME</div>
-            <div>HOSPITAL</div>
-            <div>TRIGGER</div>
-            <div>STARTED</div>
-            <div>DURATION</div>
-            <div>SUMMARY · ERROR</div>
-          </div>
-          <div className="divide-y" style={{ borderColor: 'var(--rule-hair)' }}>
-            {visible.map((h) => {
-              const outcome = effectiveOutcome(h);
-              const tone = outcomeStyle(outcome);
-              const run = h.latestRun;
-              const errorOrSummary =
-                h.authenticity.isFailure
-                  ? `${h.authenticity.status}${
-                      h.authenticity.reason ? ` — ${h.authenticity.reason}` : ''
-                    }`
-                  : run?.errorMessage ??
-                    run?.finalMessage ??
-                    (run?.steps[run.steps.length - 1]?.message ?? '—');
-              return (
-                <button
-                  key={h.hcode}
-                  type="button"
-                  onClick={() => setOpenHcode(h.hcode)}
-                  className="grid w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-[var(--surface-cool)]"
-                  style={{
-                    gridTemplateColumns: '70px 1fr 90px 100px 90px 1.4fr',
-                  }}
-                >
+        {error && (
+          <ErrorState
+            variant="banner"
+            className="mb-3 rounded-xl border"
+            message="โหลดสถานะการซิงค์ไม่สำเร็จ"
+            remedy="ระบบจะลองใหม่อัตโนมัติ หรือกด ลองใหม่ หากยังไม่ได้ ตรวจสอบ Redis ของเซิร์ฟเวอร์"
+            onRetry={() => void mutate()}
+          />
+        )}
+        <DataTable
+          caption="สถานะการซิงค์รายโรงพยาบาล"
+          loading={isLoading && !data}
+          rows={visible}
+          rowKey={(h) => h.hcode}
+          onRowClick={(h) => setOpenHcode(h.hcode)}
+          rowLabel={(h) => `เปิดบันทึกการซิงค์ของ ${h.name}`}
+          empty={<EmptyState illustration="generic" title="ไม่มีโรงพยาบาลในตัวกรองนี้" description="เลือกตัวกรองอื่น หรือกด ทั้งหมด" className="shadow-none" />}
+          columns={[
+            { key: 'outcome', header: 'ผล', cell: (h) => { const m = SYNC_OUTCOME_META[effectiveOutcome(h)]; return <StatusPill tone={m.tone}>{m.labelTh}</StatusPill>; } },
+            {
+              key: 'hospital',
+              header: 'โรงพยาบาล',
+              cell: (h) => (
+                <div>
+                  <div className="text-body font-medium text-ink">{h.name}</div>
+                  <div className="font-mono text-caption text-ink-muted">{h.hcode} · {h.level}</div>
+                </div>
+              ),
+            },
+            { key: 'trigger', header: 'เริ่มโดย', cell: (h) => <span className="text-label text-ink-muted">{syncTriggerLabel(h.latestRun?.trigger)}</span> },
+            {
+              key: 'started',
+              header: 'เริ่มเมื่อ',
+              cell: (h) => (
+                <span className="text-label text-ink-muted" title={h.latestRun?.startedAt ? new Date(h.latestRun.startedAt).toLocaleString('th-TH') : ''}>
+                  {formatRelativeTime(h.latestRun?.startedAt ?? null)}
+                </span>
+              ),
+            },
+            { key: 'duration', header: 'ใช้เวลา', numeric: true, cell: (h) => formatSyncDuration(h.latestRun?.durationMs ?? null) },
+            {
+              key: 'summary',
+              header: 'สรุป · ข้อผิดพลาด',
+              cell: (h) => {
+                const run = h.latestRun;
+                const outcome = effectiveOutcome(h);
+                const text = h.authenticity.isFailure
+                  ? `${h.authenticity.status}${h.authenticity.reason ? ` — ${h.authenticity.reason}` : ''}`
+                  : run?.errorMessage ?? run?.finalMessage ?? (run?.steps[run.steps.length - 1]?.message ?? '—');
+                return (
                   <span
-                    className="text-center font-mono text-caption font-bold uppercase tracking-[0.1em]"
-                    style={{
-                      background: tone.bg,
-                      color: tone.ink,
-                      padding: '2px 4px',
-                    }}
+                    title={text}
+                    className={cn('line-clamp-2 text-label', outcome === 'failed' ? 'text-danger-text' : outcome === 'partial' ? 'text-warn-text' : 'text-ink-muted')}
                   >
-                    {tone.label}
+                    {outcome === 'failed' && <AlertTriangle aria-hidden="true" className="mr-1 inline h-3.5 w-3.5" />}
+                    {text}
                   </span>
-                  <span className="min-w-0">
-                    <span
-                      className="text-caption font-medium"
-                      style={{ color: 'var(--ink-navy)' }}
-                    >
-                      {h.name}
-                    </span>
-                    <span
-                      className="ml-1.5 font-mono text-caption tabular-nums text-[var(--ink-navy-muted)]"
-                    >
-                      {h.hcode}
-                    </span>
-                    <span
-                      className="ml-1 border px-1 font-mono text-caption"
-                      style={{
-                        color: 'var(--ink-navy-muted)',
-                        borderColor: 'var(--rule-hair)',
-                      }}
-                    >
-                      {h.level}
-                    </span>
-                  </span>
-                  <span
-                    className="font-mono text-caption uppercase tracking-[0.06em] text-[var(--ink-navy-muted)]"
-                  >
-                    {run?.trigger ?? '—'}
-                  </span>
-                  <span
-                    className="font-mono text-caption tabular-nums text-[var(--ink-navy-dim)]"
-                    title={
-                      run?.startedAt
-                        ? new Date(run.startedAt).toLocaleString('th-TH')
-                        : ''
-                    }
-                  >
-                    {formatRelative(run?.startedAt ?? null)}
-                  </span>
-                  <span
-                    className="font-mono text-caption tabular-nums text-[var(--ink-navy-dim)]"
-                  >
-                    {formatDuration(run?.durationMs ?? null)}
-                  </span>
-                  <span
-                    className="min-w-0 truncate text-caption"
-                    style={{
-                      color:
-                        outcome === 'failed'
-                          ? COLOR.riskHighText
-                          : outcome === 'partial'
-                            ? COLOR.riskMediumText
-                            : 'var(--ink-navy-dim)',
-                    }}
-                    title={errorOrSummary}
-                  >
-                    {outcome === 'failed' && (
-                      <AlertTriangle
-                        className="mr-1 inline h-3 w-3"
-                        style={{ color: COLOR.riskHighText }}
-                      />
-                    )}
-                    {errorOrSummary}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                );
+              },
+            },
+          ]}
+        />
+      </SectionCard>
 
       {/* Reuse the standard hospital edit dialog so the click → drill-down
           path lands operators on the same Sync Log tab they already know.
@@ -377,5 +256,3 @@ export function SyncOverviewTab() {
     </section>
   );
 }
-
-export const _SyncOverviewTabIcon = Activity;

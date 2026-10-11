@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
-import { ILLUSTRATION_SRC } from '@/config/illustrations';
+import { HERO_ILLUSTRATION_SRC, ILLUSTRATION_SRC } from '@/config/illustrations';
 
 const root = path.resolve(__dirname, '../../..');
 const manifest = JSON.parse(readFileSync(path.join(root, 'scripts/illustrations/manifest.json'), 'utf8')) as {
@@ -12,7 +12,7 @@ const manifest = JSON.parse(readFileSync(path.join(root, 'scripts/illustrations/
 };
 
 describe('illustration set', () => {
-  it.each(Object.values(ILLUSTRATION_SRC))('%s exists, ≤150 KB, and is in the manifest', (src) => {
+  it.each([...Object.values(ILLUSTRATION_SRC), ...Object.values(HERO_ILLUSTRATION_SRC)])('%s exists, ≤150 KB, and is in the manifest', (src) => {
     const file = path.join(root, 'public', src);
     expect(existsSync(file)).toBe(true);
     expect(statSync(file).size).toBeLessThanOrEqual(150 * 1024);

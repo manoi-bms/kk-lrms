@@ -15,3 +15,11 @@ export const ILLUSTRATION_SRC: Record<IllustrationName, string> = {
 export function illustrationsEnabled(): boolean {
   return process.env.NEXT_PUBLIC_ILLUSTRATIONS_ENABLED !== 'false';
 }
+
+/** Full-bleed decorative art (login hero, about header) — same kill switch,
+ *  always rendered with alt="" inside an aria-hidden wrapper. about-header is
+ *  abstract and must never be presented as Khon Kaen geography. */
+export const HERO_ILLUSTRATION_SRC = {
+  loginHero: '/illustrations/login-hero.webp',
+  aboutHeader: '/illustrations/about-header.webp',
+} as const;
