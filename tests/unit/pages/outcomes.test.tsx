@@ -24,6 +24,8 @@ function makeFixture(): OutcomesResponse {
     lbwCount: 6,
     lbwRate: 12.5,
     lowApgarCount: 2,
+    // Deliberately not 2/totalBirths: the tile must show the server's rate.
+    lowApgarRate: 9.9,
     avgBirthWeightG: 3050,
     multiples: 3,
     resuscitated: 4,
@@ -80,7 +82,7 @@ describe('OutcomesPage — KPI tiles', () => {
 
     expect(within(screen.getByTestId('kpi-apgar')).getByText('2')).toBeInTheDocument();
     // Same sub-line shape as the LBW tile so card heights match.
-    expect(within(screen.getByTestId('kpi-apgar')).getByText(/4\.2% ของทารกทั้งหมด/)).toBeInTheDocument();
+    expect(within(screen.getByTestId('kpi-apgar')).getByText(/9\.9% ของทารกทั้งหมด/)).toBeInTheDocument();
     expect(within(screen.getByTestId('kpi-multiples')).getByText('3')).toBeInTheDocument();
     expect(within(screen.getByTestId('kpi-resus')).getByText('4')).toBeInTheDocument();
     expect(within(screen.getByTestId('kpi-avg-weight')).getByText('3,050')).toBeInTheDocument();

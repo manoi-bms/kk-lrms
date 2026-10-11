@@ -139,6 +139,7 @@ const EMPTY: OutcomesResponse = {
   lbwCount: 0,
   lbwRate: 0,
   lowApgarCount: 0,
+  lowApgarRate: 0,
   avgBirthWeightG: 0,
   multiples: 0,
   resuscitated: 0,
@@ -247,7 +248,7 @@ export default function OutcomesPage() {
             label={`Apgar 5 นาที < ${NEWBORN_THRESHOLDS.apgarLowAt5min}`}
             count={k.lowApgarCount}
             tone={k.lowApgarCount > 0 ? 'warn' : 'default'}
-            sub={`${(k.totalBirths > 0 ? (k.lowApgarCount / k.totalBirths) * 100 : 0).toFixed(1)}% ของทารกทั้งหมด`}
+            sub={`${k.lowApgarRate.toFixed(1)}% ของทารกทั้งหมด`}
             hint={{
               title: `Apgar ที่ 5 นาที ต่ำกว่า ${NEWBORN_THRESHOLDS.apgarLowAt5min}`,
               body: 'ใช้คะแนน Apgar นาทีที่ 5 (ตัวทำนายผลลัพธ์มาตรฐาน ไม่ใช่นาทีที่ 1) — ทารกกลุ่มนี้ควรได้รับการติดตามภาวะแทรกซ้อน',
