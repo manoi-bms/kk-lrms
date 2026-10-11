@@ -4,6 +4,9 @@ import { COLOR } from '@/config/design-tokens';
 import { mapLegendTheme } from '@/config/map-palette';
 import { MAP_LEGEND, type StatusTone } from '@/config/hospital-status';
 
+// Kiosk keeps its dense war-room scale (frozen); light mode uses the 13px floor via classes.
+const KIOSK_FONT = { heading: 9, item: 10 } as const;
+
 export function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
   const isKiosk = mode === 'kiosk';
   const theme = mapLegendTheme(mode);
@@ -65,7 +68,7 @@ export function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
     >
       <div
         style={{
-          fontSize: 9,
+          fontSize: KIOSK_FONT.heading,
           letterSpacing: '0.14em',
           color: inkMuted,
           marginBottom: 4,
@@ -87,8 +90,8 @@ export function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
                 flexShrink: 0,
               }}
             />
-            <span style={{ fontSize: 10, fontWeight: 600 }}>{it.label}</span>
-            <span style={{ fontSize: 10, color: inkMuted }}>·&nbsp;{it.sub}</span>
+            <span style={{ fontSize: KIOSK_FONT.item, fontWeight: 600 }}>{it.label}</span>
+            <span style={{ fontSize: KIOSK_FONT.item, color: inkMuted }}>·&nbsp;{it.sub}</span>
           </div>
         ))}
       </div>

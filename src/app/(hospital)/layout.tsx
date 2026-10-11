@@ -8,12 +8,13 @@ import { BmsSessionProvider } from '@/contexts/BmsSessionContext';
 import { CallProvider } from '@/components/calls/CallProvider';
 import { AppShell } from '@/components/layout/AppShell';
 import { BreadcrumbProvider } from '@/components/layout/BreadcrumbContext';
-import { connection } from 'next/server';
 import { ClinicalChatGate, chatReserveClass } from '@/components/chat/ClinicalChatGate';
 
-export default async function HospitalLayout({ children }: { children: React.ReactNode }) {
-  // Read the chat flag per request, never frozen at build time.
-  await connection();
+// Per-request render: the chat flag (CLINICAL_CHAT_ENABLED) must never be frozen
+// at build time.
+export const dynamic = 'force-dynamic';
+
+export default function HospitalLayout({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <BmsSessionProvider>

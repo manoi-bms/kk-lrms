@@ -6,7 +6,7 @@ import { KioskHeader } from '@/components/dashboard/KioskHeader';
 
 describe('KioskHeader Thai date', () => {
   it('is not letter-spaced', async () => {
-    const { container } = render(<KioskHeader />);
+    const { container } = render(<KioskHeader updatedAt={null} onExit={() => undefined} />);
     // The date is set in a microtask after mount.
     await screen.findByText(/พ\.ศ\.|25\d\d/);
     const dateEl = Array.from(container.querySelectorAll('div')).find((d) =>
