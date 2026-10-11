@@ -18,6 +18,12 @@ export const MIGRATED: string[] = [
   'src/components/about/WebhookApiSection.tsx',
   'src/app/(hospital)/profile/page.tsx',
   'src/components/profile/NotificationPreferenceCard.tsx',
+  'src/app/(provincial)/admin/page.tsx',
+  'src/components/admin/HospitalsTab.tsx',
+  'src/components/admin/ActiveProvinceTab.tsx',
+  'src/components/admin/BulkAddHospitalsDialog.tsx',
+  'src/components/admin/AdminMapPane.tsx',
+  'src/components/admin/admin-ui.tsx',
 ];
 
 type Rule = [name: string, offends: (line: string) => boolean];

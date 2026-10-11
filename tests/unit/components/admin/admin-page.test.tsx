@@ -32,3 +32,24 @@ describe('AdminPage — characterization (must not change)', () => {
     expect(await screen.findByTestId('hospitals-tab')).toHaveAttribute('data-auto-edit', '10670');
   });
 });
+
+describe('AdminPage — direction-C layout', () => {
+  const TAB_LABELS = ['จังหวัดหลัก', 'โรงพยาบาล', 'การเชื่อมต่อ BMS', 'คีย์ Webhook', 'สถานะการซิงค์', 'ผู้ใช้ออนไลน์', 'จำลองข้อมูล', 'แจ้งเตือน MOPH (LINE)'];
+  it('is a titled page with a Thai tablist', () => {
+    render(<AdminPage />);
+    expect(screen.getByRole('heading', { level: 1, name: 'ตั้งค่าระบบ' })).toBeInTheDocument();
+    const list = screen.getByRole('tablist', { name: 'หมวดการตั้งค่า' });
+    expect(within(list).getAllByRole('tab').map((t) => t.textContent?.trim())).toEqual(TAB_LABELS);
+  });
+  it('selecting a tab shows only its panel', async () => {
+    render(<AdminPage />);
+    await userEvent.click(screen.getByRole('tab', { name: 'สถานะการซิงค์' }));
+    expect(screen.getByTestId('sync-tab')).toBeInTheDocument();
+    expect(screen.queryByTestId('province-tab')).toBeNull();
+  });
+  it('labels the map region and drops zoom / fixed-width columns', () => {
+    const { container } = render(<AdminPage />);
+    expect(screen.getByRole('region', { name: 'แผนที่โรงพยาบาล' })).toBeInTheDocument();
+    expect(container.innerHTML).not.toMatch(/zoom|minmax\(520px/);
+  });
+});

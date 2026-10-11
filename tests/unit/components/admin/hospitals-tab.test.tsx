@@ -54,3 +54,33 @@ describe('HospitalsTab — characterization (must not change)', () => {
     await waitFor(() => expect(fetchSpy).toHaveBeenCalledWith('/api/admin/hospitals/10671/clear-purge', { method: 'POST' }));
   });
 });
+
+describe('HospitalsTab — direction-C', () => {
+  it('is a real table with Thai headers (B1)', async () => {
+    renderWithSwr(<HospitalsTab />, BASE);
+    const table = await screen.findByRole('table', { name: 'โรงพยาบาลในระบบ' });
+    const headers = within(table).getAllByRole('columnheader').map((h) => h.textContent?.trim());
+    expect(headers).toEqual(['โรงพยาบาล', 'ประเภทบริการ', 'จังหวัด', 'สถานะ', 'ข้อมูลในระบบ', 'จัดการ']);
+  });
+  it('the card says how many hospitals and how many are active', async () => {
+    renderWithSwr(<HospitalsTab />, { ...BASE, '/api/admin/hospitals': { hospitals: [adminHospital(), adminHospital({ hcode: '10672', name: 'รพ.พล', isActive: false })] } });
+    expect(await screen.findByText('2 แห่ง · ใช้งาน 1 · ปิดใช้งาน 1')).toBeInTheDocument();
+  });
+  it('a failed delete is reported in the page with a remedy, not with alert() (B5)', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    stubMutations(() => ({ ok: false, status: 409, body: { error: 'hospital has data' } }));
+    renderWithSwr(<HospitalsTab />, BASE);
+    await userEvent.click((await screen.findAllByRole('button', { name: /^ลบ/ }))[0]);
+    const banner = await screen.findByRole('alert');
+    expect(banner).toHaveTextContent('ลบ รพ.ขอนแก่น (10670) ไม่สำเร็จ: hospital has data');
+    expect(banner).toHaveTextContent('วิธีแก้:');
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+  it('a load failure is actionable and retryable', async () => {
+    renderWithSwr(<HospitalsTab />, { ...BASE, '/api/admin/hospitals': new Error('column x does not exist') });
+    expect(await screen.findByText('โหลดรายการโรงพยาบาลไม่สำเร็จ')).toBeInTheDocument();
+    expect(screen.getByText('column x does not exist')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /ลองใหม่/ })).toBeInTheDocument();
+  });
+});
