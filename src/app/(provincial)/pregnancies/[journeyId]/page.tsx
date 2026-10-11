@@ -12,7 +12,7 @@ import useSWR from 'swr';
 import { useSSE } from '@/hooks/useSSE';
 import { useSetBreadcrumbs } from '@/components/layout/BreadcrumbContext';
 import { LoadingState } from '@/components/shared/LoadingState';
-import { SectionLabel } from '@/components/dashboard/shared';
+import { SectionCard } from '@/components/shared/SectionCard';
 import { cn, formatRelativeTime } from '@/lib/utils';
 import { maskName } from '@/lib/pii-mask';
 import { ANC_RISK_COLOR, ANC_RISK_LABEL_TH } from '@/config/anc-risk-display';
@@ -69,7 +69,7 @@ import {
 } from 'lucide-react';
 
 // Poll cadence for the detail feed. Single source for both the SWR
-// refreshInterval and the footer "REFRESHING EVERY …s" caption so they can
+// refreshInterval and the footer "รีเฟรชอัตโนมัติทุก … วินาที" caption so they can
 // never drift apart. Live SSE updates arrive between polls (see useSSE below).
 const REFRESH_INTERVAL_MS = 60_000;
 
@@ -636,7 +636,7 @@ function MetricTile({
       className="relative flex flex-col gap-1 px-4 py-3"
       style={{ background: bgTint, borderTop: `3px solid ${c}` }}
     >
-      <div className="flex items-center gap-1.5 font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
+      <div className="flex items-center gap-1.5 text-label text-ink-muted">
         {icon && (
           <span
             className="inline-flex h-5 w-5 items-center justify-center rounded-sm"
@@ -1167,13 +1167,7 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
   const nextSchedule = derived?.next;
 
   return (
-    <div
-      style={{
-        color: 'var(--ink-navy)',
-        background: 'var(--surface-cool)',
-        zoom: 1.15,
-      }}
-    >
+    <div className="@container min-h-full bg-surface-page text-ink">
       {/* ─── Control strip ─── */}
       <div
         className="flex items-center justify-between gap-3 bg-white px-5 py-2"
@@ -1181,9 +1175,9 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
       >
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center gap-1 font-mono text-caption tracking-[0.1em] text-[var(--ink-navy-muted)] hover:text-[var(--accent-navy)]"
+          className="inline-flex items-center gap-1 text-label text-ink-muted hover:text-brand"
         >
-          <ArrowLeft className="h-3.5 w-3.5" /> BACK
+          <ArrowLeft className="h-3.5 w-3.5" /> ย้อนกลับ
         </button>
         <KpiTip
           title="ความสดของข้อมูล"
@@ -1213,7 +1207,7 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
           {ancAssessment?.incomplete && (
             <IncompleteAssessmentMarker missingCount={ancAssessment.missingRequired.length} />
           )}
-          <Pill label={stageLabel.toUpperCase()} color={stageColor} />
+          <Pill label={stageLabel} color={stageColor} />
         </div>
       </div>
 
@@ -1222,12 +1216,10 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
         className="px-5 py-3"
         style={{
           borderBottom: '1px solid var(--rule-strong)',
-          background: 'linear-gradient(90deg, var(--accent-navy-soft) 0%, #f4f6fb 70%, white 100%)',
+          background: 'linear-gradient(90deg, var(--brand-soft) 0%, var(--surface-page) 70%, var(--surface-card) 100%)',
         }}
       >
-        <div className="font-mono text-caption uppercase tracking-[0.18em] text-[var(--accent-navy)]">
-          PROVINCIAL REGISTRY · JOURNEY DETAIL
-        </div>
+        <div className="text-label text-brand">ข้อมูลการตั้งครรภ์รายบุคคล</div>
         <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <h1
             className="text-page font-bold leading-tight"
@@ -1295,7 +1287,7 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
             {journey.bloodGroup && (
               <span className="inline-flex items-center gap-1">
                 <Droplets className="h-3 w-3 text-[var(--ink-navy-muted)]" />
-                BLOOD{' '}
+                หมู่เลือด{' '}
                 <span className="font-semibold text-[var(--ink-navy)]">
                   {journey.bloodGroup}
                   {journey.rhFactor === 'NEG' ? (
@@ -1385,30 +1377,24 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
         })()}
 
       {/* ─── Pregnancy summary strip (6 tiles) ─── */}
-      <div
-        className="grid bg-white"
-        style={{
-          gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
-          borderBottom: '1px solid var(--rule-strong)',
-        }}
-      >
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] border-b border-border bg-surface-card">
         <KpiTip
           title="อายุครรภ์ (GA)"
           body="อายุครรภ์เป็นสัปดาห์จาก HOSxP (หรือคำนวณย้อนจาก EDC เมื่อไม่มีค่า) — ครบกำหนดที่ 37 สัปดาห์, เกิน 41 สัปดาห์แสดงสีแดง (post-term)"
           trigger={<div className="cursor-default" />}
         >
           <MetricTile
-            label="GA"
+            label="อายุครรภ์ (GA)"
             value={journey.gaWeeks != null ? `${journey.gaWeeks}w` : '—'}
             sub={
               journey.gaWeeks != null
                 ? journey.gaWeeks >= 37
-                  ? 'Term'
+                  ? 'ครบกำหนด'
                   : journey.gaWeeks >= 28
-                    ? 'Third tri'
+                    ? 'ไตรมาส 3'
                     : journey.gaWeeks >= 14
-                      ? 'Second tri'
-                      : 'First tri'
+                      ? 'ไตรมาส 2'
+                      : 'ไตรมาส 1'
                 : undefined
             }
             color={
@@ -1426,7 +1412,7 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
           trigger={<div className="cursor-default" />}
         >
           <MetricTile
-            label="EDC"
+            label="กำหนดคลอด (EDC)"
             value={formatThaiShort(journey.edc)}
             sub={
               derived?.daysToEdc != null
@@ -1449,7 +1435,7 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
           trigger={<div className="cursor-default" />}
         >
           <MetricTile
-            label="LMP"
+            label="ประจำเดือนครั้งสุดท้าย (LMP)"
             value={formatThaiShort(journey.lmp)}
             sub="ประจำเดือนครั้งสุดท้าย"
             color="var(--ink-navy-muted)"
@@ -1462,7 +1448,7 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
           trigger={<div className="cursor-default" />}
         >
           <MetricTile
-            label="ANC VISITS"
+            label="ฝากครรภ์ (ครั้ง)"
             value={journey.ancVisitCount}
             sub={
               derived?.daysSinceLastAnc != null
@@ -1483,13 +1469,13 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
           trigger={<div className="cursor-default" />}
         >
           <MetricTile
-            label="1ST CONTACT"
+            label="ฝากครรภ์ครั้งแรก"
             value={derived?.firstVisitGa != null ? `${derived.firstVisitGa}w` : '—'}
             sub={
               derived?.lateFirstContact
-                ? 'LATE — RTCOG < 10w'
+                ? 'ช้ากว่าเกณฑ์ RTCOG (< 10 สัปดาห์)'
                 : derived?.firstVisitGa != null
-                  ? 'RTCOG on-time'
+                  ? 'ตรงเกณฑ์ RTCOG'
                   : undefined
             }
             color={
@@ -1508,7 +1494,7 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
           trigger={<div className="cursor-default" />}
         >
           <MetricTile
-            label="NEXT DUE"
+            label="นัดถัดไป"
             value={
               nextSchedule?.status === 'NEXT'
                 ? `${nextSchedule.ga}w`
@@ -1550,20 +1536,11 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
       </div>
 
       {/* ═══ 2-col main ═══ */}
-      <div
-        className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px]"
-        style={{ alignItems: 'start' }}
-      >
+      <div className="grid grid-cols-1 items-start gap-5 p-4 md:p-5 @min-[1160px]:grid-cols-[minmax(0,1fr)_400px]">
         {/* ─── LEFT: timeline + trends + labs ─── */}
-        <div className="min-w-0 border-r border-[var(--rule-strong)] bg-white p-5 space-y-6">
+        <div className="flex min-w-0 flex-col gap-5">
           {/* 01 — Vital trends (new) */}
-          <section>
-            <SectionLabel
-              idx={1}
-              right={<span>{derived?.visitsChrono.length ?? 0} VISITS · L→R OLDEST→NEWEST</span>}
-            >
-              Vital trends
-            </SectionLabel>
+          <SectionCard title="แนวโน้มสัญญาณชีพ" description={`${derived?.visitsChrono.length ?? 0} ครั้ง · เรียงจากเก่าไปใหม่ (ซ้าย → ขวา)`}>
             <div className="mt-2 border bg-white" style={{ borderColor: 'var(--rule-strong)' }}>
               {(derived?.visitsChrono.length ?? 0) === 0 ? (
                 <div className="px-4 py-8 text-center font-mono text-caption text-[var(--ink-navy-muted)]">
@@ -1640,20 +1617,10 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
                 </>
               )}
             </div>
-          </section>
+          </SectionCard>
 
           {/* 02 — ANC timeline */}
-          <section>
-            <SectionLabel
-              idx={2}
-              right={
-                <span>
-                  {ancVisits.length} VISIT{ancVisits.length === 1 ? '' : 'S'}
-                </span>
-              }
-            >
-              ANC visit timeline
-            </SectionLabel>
+          <SectionCard title="ประวัติการฝากครรภ์" description={`${ancVisits.length} ครั้ง`}>
             <div
               className="mt-2 border bg-white overflow-x-auto"
               style={{ borderColor: 'var(--rule-strong)' }}
@@ -1885,14 +1852,10 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
                 </>
               )}
             </div>
-          </section>
+          </SectionCard>
 
           {/* 03 — Labs + screening + PMH (RTCOG OB 66-029 booking panel) */}
-          <section>
-            <SectionLabel
-              idx={3}
-              right={
-                (derived?.labFlags.length ?? 0) > 0 ? (
+          <SectionCard title="ผลตรวจทางห้องปฏิบัติการ คัดกรอง และโรคประจำตัว" actions={(derived?.labFlags.length ?? 0) > 0 ? (
                   <span className="flex flex-wrap items-center gap-1">
                     {derived!.labFlags.map((f) => (
                       <span
@@ -1905,12 +1868,8 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
                     ))}
                   </span>
                 ) : (
-                  <span>ALL CLEAR</span>
-                )
-              }
-            >
-              Labs · screening · PMH
-            </SectionLabel>
+                  <span className="text-label text-ok-text">ไม่พบค่าผิดปกติ</span>
+                )}>
 
             {/* Iron contraindication banner — RTCOG: no iron in Hb H / β-thal */}
             {derived?.ironContra && (
@@ -2219,21 +2178,10 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
                 </div>
               );
             })()}
-          </section>
+          </SectionCard>
 
           {/* 04 — Immunization (RTCOG: Tdap every pregnancy 27-36w) */}
-          <section>
-            <SectionLabel
-              idx={4}
-              right={
-                <span>
-                  {derived?.immunization.tdap.length ?? 0} TDAP ·{' '}
-                  {derived?.immunization.influenza.length ?? 0} FLU
-                </span>
-              }
-            >
-              Immunization
-            </SectionLabel>
+          <SectionCard title="วัคซีน" description={`Tdap ${derived?.immunization.tdap.length ?? 0} ครั้ง · ไข้หวัดใหญ่ ${derived?.immunization.influenza.length ?? 0} ครั้ง`}>
             <div
               className="mt-2 grid grid-cols-4 gap-0 border bg-white"
               style={{ borderColor: 'var(--rule-strong)' }}
@@ -2267,13 +2215,10 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
                 }
               />
             </div>
-          </section>
+          </SectionCard>
 
           {/* 05 — Ultrasound timeline (T1 dating, T2 anatomy, T3 wellbeing) */}
-          <section>
-            <SectionLabel idx={5} right={<span>T1 DATING · T2 ANATOMY · T3 WELLBEING</span>}>
-              Ultrasound &amp; fetal wellbeing
-            </SectionLabel>
+          <SectionCard title="อัลตราซาวด์และสุขภาพทารกในครรภ์" description="ไตรมาส 1 กำหนดอายุครรภ์ · ไตรมาส 2 ตรวจโครงสร้าง · ไตรมาส 3 ประเมินสุขภาพทารก">
             <div
               className="mt-2 grid grid-cols-1 gap-0 border bg-white md:grid-cols-3"
               style={{ borderColor: 'var(--rule-strong)' }}
@@ -2403,21 +2348,11 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
                 })()}
               </div>
             </div>
-          </section>
+          </SectionCard>
 
           {/* 04 — Newborn outcomes (only if present) */}
           {newborns.length > 0 && (
-            <section>
-              <SectionLabel
-                idx={4}
-                right={
-                  <span>
-                    {newborns.length} INFANT{newborns.length === 1 ? '' : 'S'}
-                  </span>
-                }
-              >
-                Newborn outcomes
-              </SectionLabel>
+            <SectionCard title="ผลลัพธ์ทารกแรกเกิด" description={`${newborns.length} คน`}>
               <div className="mt-2 grid gap-3 sm:grid-cols-2">
                 {newborns.map((nb) => {
                   const lbw =
@@ -2486,21 +2421,13 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
                   );
                 })}
               </div>
-            </section>
+            </SectionCard>
           )}
         </div>
 
         {/* ─── RIGHT: sticky clinical summary rail ─── */}
-        <aside className="hidden lg:block bg-white" style={{ alignSelf: 'stretch' }}>
-          <div
-            className="flex flex-col space-y-0"
-            style={{
-              position: 'sticky',
-              top: 0,
-              maxHeight: 'calc((100vh - 60px) / 1.15)',
-              overflowY: 'auto',
-            }}
-          >
+        <aside data-testid="journey-rail" className="min-w-0 overflow-hidden rounded-2xl bg-surface-card shadow-soft @min-[1160px]:sticky @min-[1160px]:top-[calc(var(--app-header-h,0px)_+_16px)]">
+          <div className="flex flex-col @min-[1160px]:max-h-[calc(100dvh_-_var(--app-header-h,0px)_-_32px)] @min-[1160px]:overflow-y-auto">
             {/* Risk assessment — always shown; extra emphasis when HR2+ */}
             <div
               className="px-4 py-3"
@@ -2910,9 +2837,9 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
             </div>
 
             {/* Tiny id footer */}
-            <div className="px-4 py-2 font-mono text-caption tracking-[0.08em] text-[var(--ink-navy-muted)]">
-              JOURNEY ID{' '}
-              <span className="font-semibold text-[var(--ink-navy)]">{journey.id.slice(0, 8)}</span>
+            <div className="px-4 py-2 text-caption text-ink-muted">
+              รหัสการตั้งครรภ์{' '}
+              <span className="font-semibold tabular-nums text-ink">{journey.id.slice(0, 8)}</span>
             </div>
           </div>
         </aside>
@@ -2957,15 +2884,11 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
       </div>
 
       {/* ─── Footer ─── */}
-      <div
-        className="flex justify-between bg-white px-5 py-2 font-mono text-caption tracking-[0.1em] text-[var(--ink-navy-muted)]"
-        style={{ borderTop: '1px solid var(--rule-strong)' }}
-      >
+      <div className="flex flex-wrap justify-between gap-2 border-t border-border bg-surface-card px-5 py-2 text-caption text-ink-muted">
         <span>
-          JOURNEY ID{' '}
-          <span className="font-semibold text-[var(--ink-navy)]">{journey.id.slice(0, 8)}</span>
+          รหัสการตั้งครรภ์ <span className="font-semibold tabular-nums text-ink">{journey.id.slice(0, 8)}</span>
         </span>
-        <span>REFRESHING EVERY {REFRESH_INTERVAL_MS / 1000}s</span>
+        <span>รีเฟรชอัตโนมัติทุก {REFRESH_INTERVAL_MS / 1000} วินาที</span>
       </div>
     </div>
   );
