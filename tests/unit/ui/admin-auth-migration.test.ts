@@ -7,7 +7,12 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 
-export const MIGRATED: string[] = [];
+export const MIGRATED: string[] = [
+  'src/app/(auth)/login/page.tsx',
+  'src/components/auth/LoginHero.tsx',
+  'src/components/auth/AccessDeniedNotice.tsx',
+  'src/components/auth/HosxpVersionDialog.tsx',
+];
 
 type Rule = [name: string, offends: (line: string) => boolean];
 const RULES: Rule[] = [

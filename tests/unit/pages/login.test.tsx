@@ -116,3 +116,44 @@ describe('Login — auth flow characterization (must not change)', () => {
     expect(screen.getByText('ท่านไม่ได้อนุญาตให้ระบบเข้าถึงข้อมูล ProviderID กรุณาลองใหม่แล้วกด "อนุญาต"')).toBeInTheDocument();
   });
 });
+
+describe('Login — direction-C layout', () => {
+  it('has one h1 naming the system', () => {
+    render(<LoginPage />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('ระบบติดตามการคลอดจังหวัดขอนแก่น');
+  });
+  it('offers BMS (HOSxP) as primary and ProviderID as the read-only alternative', () => {
+    const { container } = render(<LoginPage />);
+    expect(container.querySelector('button[type="submit"]')).toHaveTextContent('เข้าสู่ระบบด้วย BMS (HOSxP)');
+    expect(screen.getByRole('button', { name: 'เข้าสู่ระบบด้วย ProviderID' })).toBeInTheDocument();
+    expect(screen.getByText('สิทธิ์อ่านอย่างเดียว — ดูข้อมูลได้ แก้ไขไม่ได้')).toBeInTheDocument();
+  });
+  it('keeps the session field E2E and HOSxP rely on, with Thai help', () => {
+    render(<LoginPage />);
+    const input = screen.getByLabelText('BMS Session ID');
+    expect(input).toHaveAttribute('id', 'sessionId');
+    expect(input).toHaveAccessibleDescription('เปิด KK-LRMS จากเมนูใน HOSxP ระบบจะกรอกให้อัตโนมัติ');
+  });
+  it('states the PDPA protection and links to /about', () => {
+    render(<LoginPage />);
+    expect(screen.getByText('ข้อมูลผู้ป่วยได้รับการเข้ารหัสตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล (PDPA)')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'เกี่ยวกับระบบ KK-LRMS' })).toHaveAttribute('href', '/about');
+  });
+  it('the hero illustration is decorative', () => {
+    const { container } = render(<LoginPage />);
+    const img = container.querySelector('img[src*="login-hero"]');
+    expect(img).not.toBeNull();
+    expect(img).toHaveAttribute('alt', '');
+    expect(img!.closest('[aria-hidden="true"]')).not.toBeNull();
+  });
+  it('shows that HOSxP auto-login is in progress', async () => {
+    nav.params = new URLSearchParams('bms-session-id=abc');
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})));
+    render(<LoginPage />);
+    expect(await screen.findByRole('status')).toHaveTextContent('กำลังเข้าสู่ระบบจาก HOSxP…');
+  });
+  it('uses no dark slate palette', () => {
+    const { container } = render(<LoginPage />);
+    expect(container.innerHTML).not.toMatch(/slate-\d/);
+  });
+});
