@@ -4,6 +4,8 @@ import {
   LABOUR_STAGE_CM,
   PROLONGED_LATENT_RULE,
   classifyLabourStage,
+  dedupeOccupantsByAn,
+  findOccupantByAn,
   groupBedsByRoom,
   hoursSinceAdmit,
   placeOccupants,
@@ -14,7 +16,14 @@ import { HOUR, localParts, makeBed, makeOccupant, wardScenario } from '../../hel
 const NOW = new Date('2026-04-19T14:00:00').getTime();
 const occAt = (hoursAgo: number, cx: number | null, bedno = '01') => {
   const p = localParts(NOW, hoursAgo * HOUR);
-  return makeOccupant({ an: `AN-${bedno}`, bedno, roomno: 'LR1', regdate: p.date, regtime: p.time, last_cervix_cm: cx });
+  return makeOccupant({
+    an: `AN-${bedno}`,
+    bedno,
+    roomno: 'LR1',
+    regdate: p.date,
+    regtime: p.time,
+    last_cervix_cm: cx,
+  });
 };
 
 describe('ward-board rules keep their historical values', () => {
@@ -94,12 +103,24 @@ describe('summarizeBeds', () => {
     const beds = [makeBed('01', 'LR1', 1)];
     const occ = [occAt(1, 5, '01'), { ...occAt(2, 6, '01'), an: 'AN-01-B' }];
     const sum = summarizeBeds(beds, occ, NOW);
-    expect(sum).toMatchObject({ totalBeds: 1, occupied: 1, patients: 2, sharedBeds: 1, unplaced: 0, free: 0, occupancyPct: 100 });
+    expect(sum).toMatchObject({
+      totalBeds: 1,
+      occupied: 1,
+      patients: 2,
+      sharedBeds: 1,
+      unplaced: 0,
+      free: 0,
+      occupancyPct: 100,
+    });
     expect(sum.occupied).toBeLessThanOrEqual(sum.totalBeds);
   });
 
   it('B1: a patient on a bed HOSxP has since locked is occupied, never locked or free', () => {
-    const beds = [makeBed('01', 'LR1', 1, { bed_lock: 'Y' }), makeBed('02', 'LR1', 2, { bed_lock: 'Y' }), makeBed('03', 'LR1', 3)];
+    const beds = [
+      makeBed('01', 'LR1', 1, { bed_lock: 'Y' }),
+      makeBed('02', 'LR1', 2, { bed_lock: 'Y' }),
+      makeBed('03', 'LR1', 3),
+    ];
     const occ = [occAt(2, 5, '01')];
     expect(summarizeBeds(beds, occ, NOW)).toEqual({
       totalBeds: 3,
@@ -187,5 +208,21 @@ describe('placeOccupants duplicates and bed-number whitespace', () => {
     const p = placeOccupants(padded, [occAt(1, 5, '06')]);
     expect(p.byBed.get(' 06')).toHaveLength(1);
     expect(p.unplaced).toHaveLength(0);
+  });
+});
+
+describe('findOccupantByAn', () => {
+  it('returns the same row the board shows for a duplicated AN (the one with more labour data)', () => {
+    const sparse = makeOccupant({ an: 'AN-9', bedno: '01', roomno: 'LR1', last_cervix_cm: null, last_fhr: null });
+    const rich = makeOccupant({ an: 'AN-9', bedno: '01', roomno: 'LR1', last_cervix_cm: 5, last_fhr: 140 });
+    expect(findOccupantByAn([sparse, rich], 'AN-9')).toBe(rich);
+    expect(dedupeOccupantsByAn([sparse, rich])).toEqual([rich]);
+  });
+
+  it('matches through surrounding whitespace and returns null for unknown or empty AN', () => {
+    const o = makeOccupant({ an: ' AN-7 ', bedno: '02', roomno: 'LR1' });
+    expect(findOccupantByAn([o], 'AN-7')).toBe(o);
+    expect(findOccupantByAn([o], 'AN-8')).toBeNull();
+    expect(findOccupantByAn([o], null)).toBeNull();
   });
 });

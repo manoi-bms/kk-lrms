@@ -54,7 +54,12 @@ export function groupBedsByRoom(beds: BedSlot[]): RoomGroup[] {
   for (const b of beds) {
     let g = map.get(b.roomno);
     if (!g) {
-      g = { roomno: b.roomno, room_name: b.room_name, room_display_number: b.room_display_number, beds: [] };
+      g = {
+        roomno: b.roomno,
+        room_name: b.room_name,
+        room_display_number: b.room_display_number,
+        beds: [],
+      };
       map.set(b.roomno, g);
     }
     g.beds.push(b);
@@ -95,7 +100,9 @@ function hasBedno(o: BedOccupancyFull): boolean {
 }
 
 function recordedLabourFields(o: BedOccupancyFull): number {
-  return Object.entries(o).filter(([k, v]) => k.startsWith('last_') && v !== null && v !== undefined).length;
+  return Object.entries(o).filter(
+    ([k, v]) => k.startsWith('last_') && v !== null && v !== undefined,
+  ).length;
 }
 
 /** One row per AN. The occupancy SQL LEFT-JOINs ipt_labour/ipt_pregnancy and
@@ -120,6 +127,21 @@ export function dedupeOccupantsByAn(occupancy: BedOccupancyFull[]): BedOccupancy
     }
   }
   return out;
+}
+
+/** The row the board shows for an AN (after dedupe), so the detail panel
+ *  never shows a sparser duplicate than the tile the nurse clicked. */
+export function findOccupantByAn(
+  occupancy: BedOccupancyFull[],
+  an: string | null | undefined,
+): BedOccupancyFull | null {
+  const wanted = typeof an === 'string' ? an.trim() : '';
+  if (wanted === '') return null;
+  return (
+    dedupeOccupantsByAn(occupancy).find(
+      (o) => typeof o.an === 'string' && o.an.trim() === wanted,
+    ) ?? null
+  );
 }
 
 /** Puts every occupant somewhere: on its bed, or in `unplaced` with the reason.
@@ -178,7 +200,11 @@ export interface BedSummary {
  * free; free = total − occupied − lockedEmpty (never below 0).
  * For a room, pass only that room's placed occupants (placeOccupants().byBed).
  */
-export function summarizeBeds(beds: BedSlot[], occupancy: BedOccupancyFull[], now: number): BedSummary {
+export function summarizeBeds(
+  beds: BedSlot[],
+  occupancy: BedOccupancyFull[],
+  now: number,
+): BedSummary {
   const patientsList = dedupeOccupantsByAn(occupancy);
   const { byBed, unplaced } = placeOccupants(beds, patientsList);
   const locked = beds.filter((b) => b.bed_lock === 'Y');
@@ -194,7 +220,8 @@ export function summarizeBeds(beds: BedSlot[], occupancy: BedOccupancyFull[], no
     free: Math.max(0, totalBeds - occupied - lockedEmpty),
     lockedEmpty,
     lockedOccupied: locked.length - lockedEmpty,
-    prolongedLatent: patientsList.filter((o) => classifyLabourStage(o, now) === 'prolongedLatent').length,
+    prolongedLatent: patientsList.filter((o) => classifyLabourStage(o, now) === 'prolongedLatent')
+      .length,
     occupancyPct: totalBeds > 0 ? Math.round((occupied / totalBeds) * 100) : null,
   };
 }

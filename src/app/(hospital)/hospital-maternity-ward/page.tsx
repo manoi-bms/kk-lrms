@@ -31,7 +31,7 @@ import { ErrorState } from '@/components/shared/ErrorState';
 import { LoadingState } from '@/components/shared/LoadingState';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { getBedMoveReasons, movePatientBed } from '@/services/maternity-ward';
-import { summarizeBeds } from '@/services/ward-board';
+import { findOccupantByAn, summarizeBeds } from '@/services/ward-board';
 import { BED_MOVE_ALERTS } from '@/config/ward-display';
 import {
   describeBmsSessionError,
@@ -206,7 +206,7 @@ export default function HospitalMaternityWardPage() {
   // the KPI row, and every patient — on a bed or not — opens in the drawer.
   const summary = summarizeBeds(beds, occupancy, now);
   const wardName = wards.find((w) => w.ward === ward)?.name ?? `วอร์ด ${ward}`;
-  const selectedOccupant = selectedAn ? (occupancy.find((o) => o.an === selectedAn) ?? null) : null;
+  const selectedOccupant = findOccupantByAn(occupancy, selectedAn);
   const stale = describeWardFeedStale(REFRESH_SECONDS);
 
   const handleBedMove = async (payload: BedMovePayload) => {
