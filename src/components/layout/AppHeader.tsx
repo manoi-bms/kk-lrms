@@ -2,10 +2,11 @@
 import Link from 'next/link';
 import { Bell, LogOut, Menu } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { useBreadcrumbs, type Breadcrumb } from '@/components/layout/BreadcrumbContext';
 import { OnlineUsersBadge } from '@/components/dashboard/OnlineUsersBadge';
 import { CallDirectoryButton } from '@/components/calls/CallDirectoryButton';
+import { useCssHeightVar } from '@/hooks/useCssHeightVar';
 
 export interface AppHeaderProps {
   userName: string;
@@ -27,11 +28,14 @@ export function AppHeader({
   fallbackLabel,
 }: AppHeaderProps) {
   const { breadcrumbs } = useBreadcrumbs();
+  const headerRef = useRef<HTMLElement>(null);
+  // Sticky page content (the dashboard overview panel) offsets by this.
+  useCssHeightVar(headerRef, '--app-header-h');
   const crumbs: Breadcrumb[] =
     breadcrumbs.length > 0 ? breadcrumbs : fallbackLabel ? [{ label: fallbackLabel }] : [];
   const initials = userName.trim().slice(0, 2);
   return (
-    <header className="sticky top-0 z-30 bg-surface-page">
+    <header ref={headerRef} className="sticky top-0 z-30 bg-surface-page">
       <div className="flex items-center gap-3 border-b border-border px-5 py-2.5">
         <button
           type="button"
