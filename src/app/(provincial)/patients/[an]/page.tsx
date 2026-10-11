@@ -53,8 +53,8 @@ const TABS: Array<{ k: WorkspaceTab; label: string; icon: typeof HeartPulse }> =
   { k: 'contractions', label: 'การหดรัดตัว', icon: Waves },
 ];
 
-function badgeClass(tone: StatusTone | 'brand'): string {
-  return tone === 'brand' ? 'border-brand/40 text-brand' : cn(STATUS_TONE[tone].border, STATUS_TONE[tone].text);
+function badgeClass(tone: StatusTone): string {
+  return cn(STATUS_TONE[tone].border, STATUS_TONE[tone].text);
 }
 
 export default function PatientDetailPage({ params }: { params: Promise<{ an: string }> }) {

@@ -19,6 +19,13 @@ import { ComplicationsTab } from '@/components/maternity/tabs/ComplicationsTab';
 import { InfantTab } from '@/components/maternity/tabs/InfantTab';
 import { BedTab } from '@/components/maternity/tabs/BedTab';
 import { DischargeTab } from '@/components/maternity/tabs/DischargeTab';
+import { allergyStatus } from '@/config/ward-display';
+
+const ALLERGY_BADGE: Record<ReturnType<typeof allergyStatus>['kind'], string> = {
+  allergy: 'border-danger bg-danger text-white',
+  none: 'border-ok bg-ok-tint text-ok-text',
+  unknown: 'border-warn bg-warn-tint text-warn-text',
+};
 
 export interface PatientDrawerProps {
   open: boolean;
@@ -198,6 +205,7 @@ function PatientHeader({ occupant }: { occupant: BedOccupancy }) {
     last_pain,
   } = occupant;
   const latestObservation = formatLatestObservation(occupant);
+  const allergy = allergyStatus(allergy_count);
   const bp = formatBp(last_bp_sys, last_bp_dia);
   const displayWeight = formatNumber(last_weight ?? admit_bw_kg, 1);
   const displayHeight = formatNumber(last_height ?? patient_height);
@@ -254,7 +262,7 @@ function PatientHeader({ occupant }: { occupant: BedOccupancy }) {
             <div className="border-r border-border px-2.5 py-1.5">
               <div className="text-caption font-bold text-ink-muted">เตียง</div>
               <div className="text-body font-bold leading-none text-ink">
-                {bedno}
+                {bedno?.trim() || '—'}
               </div>
             </div>
             <div className="px-2.5 py-1.5">
@@ -268,15 +276,12 @@ function PatientHeader({ occupant }: { occupant: BedOccupancy }) {
           </div>
 
           <div className="flex min-w-[118px] flex-col gap-1">
-            {(allergy_count ?? 0) > 0 ? (
-              <span className="rounded border border-danger bg-danger px-2 py-1 text-center text-caption font-bold text-white">
-                แพ้ยา {allergy_count} รายการ
-              </span>
-            ) : (
-              <span className="rounded border border-ok bg-ok-tint px-2 py-1 text-center text-caption font-bold text-ok-text">
-                ไม่มีประวัติแพ้ยา
-              </span>
-            )}
+            <span
+              title={allergy.titleTh}
+              className={cn('rounded border px-2 py-1 text-center text-caption font-bold', ALLERGY_BADGE[allergy.kind])}
+            >
+              {allergy.kind === 'allergy' ? `แพ้ยา ${allergy_count} รายการ` : allergy.labelTh}
+            </span>
             <span className="rounded border border-border bg-surface-card px-2 py-1 text-center text-caption font-bold text-ink">
               หมู่เลือด {blood_grp || '—'}
             </span>

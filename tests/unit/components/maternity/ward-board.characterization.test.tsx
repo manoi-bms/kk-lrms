@@ -15,6 +15,8 @@ import { HOUR, localParts, makeOccupant, wardScenario } from '../../../helpers/w
 const COPY = {
   stage: {
     prolongedLatent: 'ระยะแฝงนาน · ประเมินด่วน',
+    // Fix wave minor 7: same rule and alarm, but the label names the missing record.
+    prolongedLatentNoCervix: 'ยังไม่มีบันทึกปากมดลูก ≥12 ชม.',
     transition: 'ระยะที่ 1 · ระยะเปลี่ยนผ่าน',
     active: 'ระยะที่ 1 · ระยะเร่ง',
     latent: 'ระยะที่ 1 · ระยะแฝง',
@@ -110,7 +112,7 @@ describe('BedTileFull — stage classification (characterization)', () => {
   };
 
   it.each([
-    ['12 h, Cx unknown', 12, null, 'prolongedLatent'],
+    ['12 h, Cx unknown', 12, null, 'prolongedLatentNoCervix'],
     ['12 h, Cx 3.9', 12, 3.9, 'prolongedLatent'],
     ['11 h 59 min, Cx unknown', 12 - 1 / 60, null, 'latent'],
     ['12 h, Cx 4', 12, 4, 'active'],

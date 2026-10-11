@@ -47,5 +47,18 @@ describe('sub-project 3 owned files use tokens only', () => {
     const src = stripComments(readFileSync(path.join(root, file), 'utf8'));
     expect(BANNED.filter(([, re]) => re.test(src)).map(([name]) => name)).toEqual([]);
   });
+
+  // Fix wave minor 6: 'brand' is a StatusTone; no file re-adds it or special-cases its classes.
+  it.each([...WARD_FILES, ...PATIENT_FILES])('%s has no StatusTone | \'brand\' workaround', (file) => {
+    const src = stripComments(readFileSync(path.join(root, file), 'utf8'));
+    expect(src).not.toMatch(/StatusTone\s*\|\s*'brand'/);
+    expect(src).not.toMatch(/tone\s*===\s*'brand'\s*\?/);
+  });
+
+  // Fix wave minor 5: the GA band tone comes from classifyGaTerm, not restated cut-offs.
+  it('QuickStatsBar does not restate the GA 34/37/41 cut-offs', () => {
+    const src = stripComments(readFileSync(path.join(root, 'src/components/patient/QuickStatsBar.tsx'), 'utf8'));
+    expect(src).not.toMatch(/gaWeeks\s*[<>]=?\s*(34|37|41)/);
+  });
 });
 

@@ -22,7 +22,7 @@ import type { CdssAlertDto, PartographObservationDto, PartogramResponse, VitalSi
 
 /** Tab badge: the most severe CDSS level present (unchanged mapping:
  *  critical → danger, alert → warn, warn → brand). */
-export function cdssTabBadge(alerts: CdssAlertDto[]): { label: string; tone: StatusTone | 'brand' } | null {
+export function cdssTabBadge(alerts: CdssAlertDto[]): { label: string; tone: StatusTone } | null {
   const critical = countBySeverity(alerts, 'CRITICAL');
   if (critical > 0) return { label: `วิกฤต ${critical}`, tone: 'danger' };
   const alert = countBySeverity(alerts, 'ALERT');

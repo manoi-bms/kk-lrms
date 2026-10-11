@@ -8,7 +8,7 @@ import { Baby, Calendar, Clock, Activity, Timer, HeartPulse } from 'lucide-react
 import type { ReactNode } from 'react';
 import { KpiGrid } from '@/components/shared/KpiGrid';
 import { STATUS_TONE, type StatusTone } from '@/config/status-tone';
-import { GA_TERM_LABEL_TH, LABOUR_PHASE_LABEL_TH, classifyGaTerm } from '@/config/obstetric-display';
+import { GA_TERM_LABEL_TH, GA_TERM_TONE, LABOUR_PHASE_LABEL_TH, classifyGaTerm } from '@/config/obstetric-display';
 import { cn } from '@/lib/utils';
 
 interface QuickStatsBarProps {
@@ -64,8 +64,6 @@ function formatLaborDuration(admitDate: string): string {
   return `${minutes}น`;
 }
 
-type Tone = StatusTone | 'brand';
-
 function getVitalRelativeInfo(latestVitalAt: string | null): {
   text: string;
   tone: StatusTone;
@@ -92,7 +90,7 @@ function getVitalRelativeInfo(latestVitalAt: string | null): {
 
 type Severity = 'normal' | 'borderline' | 'abnormal';
 
-function getDilation(cm: number | null): { tone: Tone; phase: string } {
+function getDilation(cm: number | null): { tone: StatusTone; phase: string } {
   if (cm === null) return { tone: 'neutral', phase: 'รอประเมิน' };
   if (cm < 4) return { tone: 'brand', phase: LABOUR_PHASE_LABEL_TH.latent };
   if (cm <= 7) return { tone: 'brand', phase: LABOUR_PHASE_LABEL_TH.active };
@@ -104,17 +102,17 @@ interface StatItemProps {
   labelTh: string;
   value: ReactNode;
   unit?: string;
-  tone: Tone;
+  tone: StatusTone;
   sub?: string;
 }
 
 function StatItem({ icon, labelTh, value, unit, tone, sub }: StatItemProps) {
-  const valueClass = tone === 'brand' ? 'text-brand' : STATUS_TONE[tone].text;
+  const valueClass = STATUS_TONE[tone].text;
   return (
     <div
       className={cn(
         'relative flex min-w-0 flex-col gap-1 rounded-2xl border border-border border-l-4 bg-surface-card px-4 py-3',
-        tone === 'brand' ? 'border-l-brand' : STATUS_TONE[tone].accent,
+        STATUS_TONE[tone].accent,
       )}
     >
       <div className="flex items-center gap-1.5 text-label text-ink-muted">
@@ -152,10 +150,9 @@ export function QuickStatsBar({
   const vitalInfo = useMemo(() => getVitalRelativeInfo(latestVitalAt), [latestVitalAt]);
   const dilation = useMemo(() => getDilation(currentDilationCm), [currentDilationCm]);
 
-  // GA band: term (37-41) ok, preterm (<37) warn, <34 or >41 danger.
+  // GA band and its tone both come from classifyGaTerm (one set of cut-offs).
   const gaTerm = classifyGaTerm(gaWeeks);
-  const gaTone: StatusTone =
-    gaWeeks == null ? 'neutral' : gaWeeks < 34 || gaWeeks > 41 ? 'danger' : gaWeeks < 37 ? 'warn' : 'ok';
+  const gaTone: StatusTone = gaTerm ? GA_TERM_TONE[gaTerm] : 'neutral';
 
   return (
     <KpiGrid min="md">

@@ -102,6 +102,28 @@ describe('Thai labels replace English captions', () => {
     expect(screen.getByText('สัญญาณชีพล่าสุด')).toBeInTheDocument();
   });
 
+  it.each([
+    [33, 'border-l-danger'],
+    [36, 'border-l-warn'],
+    [39, 'border-l-ok'],
+    [42, 'border-l-danger'],
+    [null, 'border-l-ink-subtle'],
+  ] as const)('QuickStatsBar GA %s → %s (tone from classifyGaTerm)', (ga, accent) => {
+    render(
+      <QuickStatsBar
+        age={28}
+        gravida={2}
+        gaWeeks={ga}
+        ancCount={6}
+        admitDate={new Date().toISOString()}
+        laborStatus="ACTIVE"
+        currentDilationCm={null}
+        latestVitalAt={null}
+      />,
+    );
+    expect(screen.getByText('อายุครรภ์').parentElement!.className).toContain(accent);
+  });
+
   it('ClinicalData: Thai severity badges, no English captions', () => {
     render(<ClinicalData gravida={1} gaWeeks={33} ancCount={2} heightCm={140} weightDiffKg={25} fundalHeightCm={38} usWeightG={3800} hematocritPct={28} />);
     expect(screen.getAllByText('ผิดปกติ').length).toBeGreaterThan(0);

@@ -65,6 +65,40 @@ export const LABOUR_STAGE_DISPLAY: Record<LabourStageKind, { labelTh: string; cl
   },
 };
 
+/** Same rule and alarm as prolongedLatent, but the cervix was never recorded:
+ *  the tile says what is missing rather than implying a slow labour. */
+const PROLONGED_LATENT_NO_CERVIX = {
+  ...LABOUR_STAGE_DISPLAY.prolongedLatent,
+  labelTh: `ยังไม่มีบันทึกปากมดลูก ≥${minHours} ชม.`,
+  hint: `รับเข้า ≥${minHours} ชม. และยังไม่มีบันทึกปากมดลูก — ตรวจและบันทึกในพาร์โทกราฟ`,
+};
+
+/** Stage pill for a tile. The stage rule is classifyLabourStage; only the
+ *  wording changes when a prolonged-latent patient has no cervix record. */
+export function labourStageDisplay(
+  stage: LabourStageKind,
+  cervixCm: number | null,
+): (typeof LABOUR_STAGE_DISPLAY)[LabourStageKind] {
+  return stage === 'prolongedLatent' && cervixCm === null ? PROLONGED_LATENT_NO_CERVIX : LABOUR_STAGE_DISPLAY[stage];
+}
+
+/** Allergy pill. A missing count is "unknown" — never "no allergy history". */
+export function allergyStatus(count: number | null | undefined): {
+  kind: 'allergy' | 'none' | 'unknown';
+  labelTh: string;
+  titleTh: string;
+} {
+  if (count === null || count === undefined) {
+    return {
+      kind: 'unknown',
+      labelTh: 'ไม่ทราบประวัติแพ้ยา',
+      titleTh: 'HOSxP ไม่ส่งข้อมูลการแพ้ยา — ซักประวัติและตรวจใน HOSxP ก่อนให้ยา',
+    };
+  }
+  if (count > 0) return { kind: 'allergy', labelTh: 'แพ้ยา', titleTh: `มีประวัติแพ้ยา ${count} รายการ` };
+  return { kind: 'none', labelTh: 'ไม่มีประวัติแพ้ยา', titleTh: 'ไม่มีประวัติแพ้ยาในระบบ' };
+}
+
 /** Room header line. "มีผู้คลอด" is patients (a shared bed holds two), so the
  *  room lines plus the unplaced section add up to the ward KPI. */
 export function formatRoomSummary(s: BedSummary): string {

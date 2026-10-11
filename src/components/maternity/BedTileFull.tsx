@@ -15,7 +15,7 @@ import { maskName } from '@/lib/pii-mask';
 import { cn } from '@/lib/utils';
 import { PatientPhoto } from '@/components/shared/PatientPhoto';
 import { classifyLabourStage, LABOUR_STAGE_CM } from '@/services/ward-board';
-import { LABOUR_STAGE_DISPLAY } from '@/config/ward-display';
+import { allergyStatus, labourStageDisplay } from '@/config/ward-display';
 import {
   MATERNAL_SCREEN_TIER_LABEL_TH,
   MATERNAL_SCREEN_TIER_COLOR,
@@ -160,6 +160,11 @@ function cervixFillPercent(cx: number | null): number {
 
 const TILE = 'flex min-w-0 flex-col overflow-hidden rounded-2xl border';
 const PILL = 'inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-caption font-semibold';
+const ALLERGY_PILL: Record<ReturnType<typeof allergyStatus>['kind'], string> = {
+  allergy: 'border-danger bg-danger text-white',
+  none: 'border-ok/40 text-ok-text',
+  unknown: 'border-warn/40 bg-warn-tint text-warn-text',
+};
 
 function TileHead({ label, pill, className }: { label: string; pill: ReactNode; className?: string }) {
   return (
@@ -242,13 +247,13 @@ export function BedTileFull({
   if (!occupant) return <VacantTile bedno={bedno} locked={bedLock === 'Y'} />;
 
   const stage = classifyLabourStage(occupant, now);
-  const display = LABOUR_STAGE_DISPLAY[stage];
+  const cx = occupant.last_cervix_cm;
+  const display = labourStageDisplay(stage, cx);
   const alarm = stage === 'prolongedLatent';
   const name = thaiName(occupant);
   const age = calcAge(occupant.birthday, now);
-  const cx = occupant.last_cervix_cm;
   const cxTone = cervixTone(cx);
-  const allergies = occupant.allergy_count ?? 0;
+  const allergy = allergyStatus(occupant.allergy_count);
 
   // Cross-source maternal-screen pills (Task H4): zero DOM unless one axis is present (GC-H4).
   const screenTier = maternalScreenSummary?.localTier ?? null;
@@ -307,15 +312,9 @@ export function BedTileFull({
           HN <b className="font-semibold text-ink">{occupant.hn}</b>
         </span>
         <span className="flex flex-wrap items-center gap-1">
-          {allergies > 0 ? (
-            <span title={`มีประวัติแพ้ยา ${allergies} รายการ`} className={cn(PILL, 'border-danger bg-danger text-white')}>
-              แพ้ยา
-            </span>
-          ) : (
-            <span title="ไม่มีประวัติแพ้ยาในระบบ" className={cn(PILL, 'border-ok/40 text-ok-text')}>
-              ไม่มีประวัติแพ้ยา
-            </span>
-          )}
+          <span title={allergy.titleTh} className={cn(PILL, ALLERGY_PILL[allergy.kind])}>
+            {allergy.labelTh}
+          </span>
           {occupant.blood_grp && (
             <span title={`หมู่เลือด ${occupant.blood_grp}`} className={cn(PILL, 'border-border text-ink')}>
               {occupant.blood_grp}

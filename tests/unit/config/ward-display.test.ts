@@ -5,7 +5,9 @@ import {
   LABOUR_STAGE_DISPLAY,
   UNPLACED_SECTION,
   WARD_FEED_STATUS,
+  allergyStatus,
   formatRoomSummary,
+  labourStageDisplay,
   sharedBedNotice,
   unplacedBedLabel,
 } from '@/config/ward-display';
@@ -95,6 +97,27 @@ describe('ward-display — stage pill + room summary', () => {
     expect(unplacedBedLabel({ reason: 'noBed', bedno: '' })).toBe('ยังไม่ได้จัดเตียง');
     expect(unplacedBedLabel({ reason: 'notInLayout', bedno: '99' })).toBe('เตียง 99 · ไม่อยู่ในผังวอร์ดนี้');
     expect(sharedBedNotice('01', 2)).toBe('เตียงซ้อน: 2 รายบนเตียง 01 ใน HOSxP — ตรวจและแก้เตียงใน HOSxP');
+  });
+
+  it('minor 7: prolonged latent with no cervix record has its own label; everything else is LABOUR_STAGE_DISPLAY', () => {
+    expect(labourStageDisplay('prolongedLatent', null)).toMatchObject({
+      labelTh: 'ยังไม่มีบันทึกปากมดลูก ≥12 ชม.',
+      className: 'bg-danger text-white',
+    });
+    expect(labourStageDisplay('prolongedLatent', 3)).toBe(LABOUR_STAGE_DISPLAY.prolongedLatent);
+    expect(labourStageDisplay('latent', null)).toBe(LABOUR_STAGE_DISPLAY.latent);
+  });
+
+  it('minor 9: allergy status — unknown is not "none"', () => {
+    expect(allergyStatus(2)).toEqual({ kind: 'allergy', labelTh: 'แพ้ยา', titleTh: 'มีประวัติแพ้ยา 2 รายการ' });
+    expect(allergyStatus(0)).toEqual({ kind: 'none', labelTh: 'ไม่มีประวัติแพ้ยา', titleTh: 'ไม่มีประวัติแพ้ยาในระบบ' });
+    for (const missing of [null, undefined]) {
+      expect(allergyStatus(missing)).toEqual({
+        kind: 'unknown',
+        labelTh: 'ไม่ทราบประวัติแพ้ยา',
+        titleTh: 'HOSxP ไม่ส่งข้อมูลการแพ้ยา — ซักประวัติและตรวจใน HOSxP ก่อนให้ยา',
+      });
+    }
   });
 });
 

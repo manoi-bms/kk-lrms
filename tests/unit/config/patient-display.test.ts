@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { CPD_FACTOR_MAX_SCORES, CPD_FACTOR_WEIGHTS, CPD_MAX_SCORE } from '@/config/risk-levels';
 import { ANC_SUMMARY_DISPLAY, classifyAncVisitCount } from '@/config/anc-ops';
-import { CARE_STAGE_LABEL_TH, GA_TERM_LABEL_TH, classifyGaTerm } from '@/config/obstetric-display';
+import { CARE_STAGE_LABEL_TH, GA_TERM_LABEL_TH, GA_TERM_TONE, classifyGaTerm } from '@/config/obstetric-display';
 
 describe('CPD maxima are derived from the scoring rule, not restated', () => {
   // Sample grid spanning every threshold in CPD_FACTOR_WEIGHTS.
@@ -37,6 +37,9 @@ describe('obstetric display', () => {
     [42, 'postTerm'],
   ] as const)('GA %s → %s (old cut-offs < 34, < 37, > 41)', (w, term) => {
     expect(classifyGaTerm(w)).toBe(term);
+  });
+  it('GA band tone (fix wave minor 5): one mapping, not a restated 34/37/41', () => {
+    expect(GA_TERM_TONE).toEqual({ veryPreterm: 'danger', preterm: 'warn', term: 'ok', postTerm: 'danger' });
   });
   it('Thai labels', () => {
     expect(GA_TERM_LABEL_TH).toEqual({
