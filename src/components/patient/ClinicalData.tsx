@@ -270,7 +270,7 @@ export function ClinicalData({
       <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-2 p-2">
         <Tile
           icon={<Activity className="h-3 w-3" />}
-          label={pregNo != null ? `ครรภ์ที่ ${pregNo}` : 'G_P_A_L'}
+          label={pregNo != null ? `ครรภ์ที่ ${pregNo}` : 'ครรภ์ G_P_A_L'}
           value={gpalText ?? dash}
         />
         <Tile
@@ -394,7 +394,7 @@ export function ClinicalData({
         />
         <Tile
           icon={<Droplets className="h-3 w-3" />}
-          label="Hematocrit"
+          label="ฮีมาโตคริต (Hct)"
           value={hematocritPct != null ? hematocritPct : dash}
           unit="%"
           severity={sevHct(hematocritPct)}

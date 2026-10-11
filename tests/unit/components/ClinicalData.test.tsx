@@ -52,16 +52,16 @@ describe('ClinicalData', () => {
   it('renders Thai labels for every tile', () => {
     render(<ClinicalData {...completeData} />);
     for (const label of [
-      // The OB-formula tile labels "G_P_A_L" unless a pregNo is supplied
+      // The OB-formula tile reads "ครรภ์ G_P_A_L" unless a pregNo is supplied
       // (completeData has none); with pregNo it would read "ครรภ์ที่ N".
-      'G_P_A_L',
+      'ครรภ์ G_P_A_L',
       'อายุครรภ์',
       'ฝากครรภ์',
       'ส่วนสูง',
       'ส่วนต่างน้ำหนัก',
       'ยอดมดลูก',
       'น้ำหนักเด็ก U/S',
-      'Hematocrit',
+      'ฮีมาโตคริต (Hct)',
     ]) {
       expect(screen.getByText(label)).toBeTruthy();
     }
