@@ -6,7 +6,7 @@ import { WebhookKeysTab } from '@/components/admin/WebhookKeysTab';
 import { MophAlertsTab } from '@/components/admin/MophAlertsTab';
 import { SyncOverviewTab } from '@/components/admin/SyncOverviewTab';
 import { OnlineUsersTab } from '@/components/admin/OnlineUsersTab';
-import { renderWithSwr, stubMutations } from '../../../helpers/admin-fixtures';
+import { adminHospital, renderWithSwr, stubMutations } from '../../../helpers/admin-fixtures';
 
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
@@ -106,7 +106,8 @@ const SYNC = {
 
 describe('SyncOverviewTab — characterization (must not change)', () => {
   it('a hospital row opens the edit dialog on its sync log', async () => {
-    const { fetcher } = renderWithSwr(<SyncOverviewTab />, SYNC);
+    // A4: the drill-down now opens the real registry record, so it is served too.
+    const { fetcher } = renderWithSwr(<SyncOverviewTab />, { ...SYNC, '/api/admin/hospitals': { hospitals: [adminHospital()] } });
     await userEvent.click(await screen.findByText('tunnel timeout'));
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
     await waitFor(() => expect(fetcher).toHaveBeenCalledWith('/api/admin/hospitals/10670/sync-progress?limit=20'));
