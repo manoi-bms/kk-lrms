@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { ConnectionStatus } from '@/types/domain';
+import { SSE_REFRESH_DEBOUNCE_MS } from '@/lib/debounce';
 import { useProvinceDashboard } from '@/hooks/useProvinceDashboard';
 import { makeContinuum, makeHospital, makeSummary } from '../../helpers/dashboard-fixtures';
 
@@ -101,5 +102,41 @@ describe('useProvinceDashboard', () => {
     expect(result.current.syncing).toBe(true);
     expect(result.current.onboardingError).toBe('boom');
     expect(result.current.hosxpSyncState).toEqual({ ran: false });
+  });
+
+  // Guards for the 2026-07-17 79 req/s incident.
+  it('debounce survives re-renders: bursts across a rerender coalesce', () => {
+    const { rerender } = renderHook(() => useProvinceDashboard());
+    h.sse.onPatientUpdate?.();
+    rerender();
+    h.sse.onPatientUpdate?.();
+    rerender();
+    h.sse.onPatientUpdate?.();
+    expect(h.hrMutate).toHaveBeenCalledTimes(1);
+    expect(h.mutate).toHaveBeenCalledTimes(1);
+  });
+
+  it('trailing edge fires once after SSE_REFRESH_DEBOUNCE_MS', () => {
+    renderHook(() => useProvinceDashboard());
+    h.sse.onPatientUpdate?.();
+    h.sse.onPatientUpdate?.();
+    h.sse.onPatientUpdate?.();
+    expect(h.hrMutate).toHaveBeenCalledTimes(1);
+    act(() => {
+      vi.advanceTimersByTime(SSE_REFRESH_DEBOUNCE_MS);
+    });
+    expect(h.hrMutate).toHaveBeenCalledTimes(2);
+    expect(h.mutate).toHaveBeenCalledTimes(2);
+  });
+
+  it('onSyncComplete shares the same debounced refresh as onPatientUpdate', () => {
+    renderHook(() => useProvinceDashboard());
+    h.sse.onSyncComplete?.(); // leading edge
+    h.sse.onPatientUpdate?.(); // coalesced with the sync event
+    expect(h.mutate).toHaveBeenCalledTimes(1);
+    act(() => {
+      vi.advanceTimersByTime(SSE_REFRESH_DEBOUNCE_MS);
+    });
+    expect(h.mutate).toHaveBeenCalledTimes(2);
   });
 });
