@@ -5,7 +5,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { ContentFrameSlot } from '@/components/layout/ContentFrameSlot';
 import { BreadcrumbProvider } from '@/components/layout/BreadcrumbContext';
 import { DbHealthBanner } from '@/components/layout/DbHealthBanner';
-import { ClinicalChatPanel } from '@/components/chat/ClinicalChatPanel';
+import { ClinicalChatGate, chatReserveClass } from '@/components/chat/ClinicalChatGate';
 
 // BmsSessionProvider is mounted here (in addition to the (hospital) layout)
 // so the provincial dashboard can participate in the BMS session flow —
@@ -13,6 +13,10 @@ import { ClinicalChatPanel } from '@/components/chat/ClinicalChatPanel';
 // HOSxP's webhook_setting row when a marketplace_token is in the URL. The
 // provider no-ops when no bms-session-id is present, so it's safe for users
 // who arrive at `/` without marketplace context.
+// Per-request render: the chat flag (CLINICAL_CHAT_ENABLED) must never be frozen
+// at build time.
+export const dynamic = 'force-dynamic';
+
 export default function ProvincialLayout({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
@@ -21,13 +25,13 @@ export default function ProvincialLayout({ children }: { children: React.ReactNo
           <BreadcrumbProvider>
             <DbHealthBanner />
             <AppShell variant="provincial">
-              <main className="flex-1">
+              <main className={`flex-1 ${chatReserveClass()}`.trim()}>
                 <ContentFrameSlot>{children}</ContentFrameSlot>
               </main>
             </AppShell>
             {/* Clinical chatbot — statistics mode (provincial dashboard
                 aggregates). Clinical drilldown pages can override per-page. */}
-            <ClinicalChatPanel mode="statistics" />
+            <ClinicalChatGate mode="statistics" />
           </BreadcrumbProvider>
         </CallProvider>
       </BmsSessionProvider>

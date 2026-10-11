@@ -341,7 +341,7 @@ function PregnanciesBoard() {
         title="ระดับความเสี่ยงทั้งจังหวัด"
         description="นับจากทะเบียนทั้งจังหวัด ไม่ขึ้นกับตัวกรอง — กดการ์ดเพื่อกรองรายชื่อ กดซ้ำเพื่อยกเลิก"
       >
-        <KpiGrid>
+        <KpiGrid count={1 + RISKS.length}>
           <KpiTile
             testId="kpi-anc-total"
             label="หญิงตั้งครรภ์ทั้งหมด"
@@ -377,7 +377,7 @@ function PregnanciesBoard() {
         title="กลุ่มที่ต้องติดตาม"
         description="นับทั้งจังหวัด — กดการ์ดเพื่อกรองรายชื่อ กดซ้ำเพื่อยกเลิก"
       >
-        <KpiGrid>
+        <KpiGrid count={COHORTS.length}>
           {COHORTS.map((c) => {
             const v = opsCounts ? c.value(opsCounts) : null;
             return (

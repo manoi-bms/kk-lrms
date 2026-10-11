@@ -116,8 +116,16 @@ function buildHospitalIcon(params: {
   syncBlockedReason: string | null;
   mode: 'light' | 'kiosk';
 }): DivIcon {
-  const { color, sizePx, isHigh, isSelected, connectionStatus, syncStatus, syncBlockedReason, mode } =
-    params;
+  const {
+    color,
+    sizePx,
+    isHigh,
+    isSelected,
+    connectionStatus,
+    syncStatus,
+    syncBlockedReason,
+    mode,
+  } = params;
   const isOffline = connectionStatus === 'OFFLINE';
   const classes = [
     'kk-pin',
@@ -201,10 +209,7 @@ function activeCountRadiusBoost(workload: number): number {
   return 5;
 }
 
-function riskColor(
-  live: DashboardHospital | undefined,
-  palette: MapPalette,
-): string {
+function riskColor(live: DashboardHospital | undefined, palette: MapPalette): string {
   if (!live) return palette.idle;
   // Acute labor risk owns red/amber outright.
   if (live.counts.high > 0) return palette.high;
@@ -416,76 +421,79 @@ export default function ProvinceMapLeaflet({
   }
 
   return (
-    <div
-      className="relative h-full w-full overflow-hidden"
-      style={{
-        background: mapBackground(mode),
-        // Contain Leaflet's internal pane z-indexes (200–700) so they
-        // can't render on top of modal dialogs or page chrome.
-        isolation: 'isolate',
-      }}
-    >
-      <MapContainer
-        key={activeProvince}
-        bounds={activeMap.bounds}
-        center={activeMap.center}
-        style={{ height: '100%', width: '100%', background: 'transparent' }}
-        scrollWheelZoom
-        zoomControl={false}
-        attributionControl
-        minZoom={7}
-        maxZoom={13}
+    <div className="flex h-full w-full flex-col">
+      <div
+        className="relative min-h-0 w-full flex-1 overflow-hidden"
+        style={{
+          background: mapBackground(mode),
+          // Contain Leaflet's internal pane z-indexes (200–700) so they
+          // can't render on top of modal dialogs or page chrome.
+          isolation: 'isolate',
+        }}
       >
-        <TileLayer
-          attribution={tileAttribution}
-          url={tileUrl}
-          opacity={mode === 'kiosk' ? 0.85 : 0.95}
-        />
+        <MapContainer
+          key={activeProvince}
+          bounds={activeMap.bounds}
+          center={activeMap.center}
+          style={{ height: '100%', width: '100%', background: 'transparent' }}
+          scrollWheelZoom
+          zoomControl={false}
+          attributionControl
+          minZoom={7}
+          maxZoom={13}
+        >
+          <TileLayer
+            attribution={tileAttribution}
+            url={tileUrl}
+            opacity={mode === 'kiosk' ? 0.85 : 0.95}
+          />
 
-        {/* Amphoe outlines (subtle, interior hairlines) */}
-        <GeoJSON
-          data={activeMap.districtsFC}
-          style={{
-            color: palette.amphoeStroke,
-            weight: w.amphoeWeight,
-            fillColor: palette.boundaryFill,
-            fillOpacity: 1,
-          }}
-        />
+          {/* Amphoe outlines (subtle, interior hairlines) */}
+          <GeoJSON
+            data={activeMap.districtsFC}
+            style={{
+              color: palette.amphoeStroke,
+              weight: w.amphoeWeight,
+              fillColor: palette.boundaryFill,
+              fillOpacity: 1,
+            }}
+          />
 
-        {/* Province-wide outline — drawn thicker, no fill, on top of tiles */}
-        <GeoJSON
-          data={activeMap.provinceFC}
-          style={{
-            color: palette.boundaryStroke,
-            weight: w.boundaryWeight,
-            fill: false,
-            dashArray: mode === 'kiosk' ? '4 3' : undefined,
-          }}
-          pane="overlayPane"
-          interactive={false}
-        />
+          {/* Province-wide outline — drawn thicker, no fill, on top of tiles */}
+          <GeoJSON
+            data={activeMap.provinceFC}
+            style={{
+              color: palette.boundaryStroke,
+              weight: w.boundaryWeight,
+              fill: false,
+              dashArray: mode === 'kiosk' ? '4 3' : undefined,
+            }}
+            pane="overlayPane"
+            interactive={false}
+          />
 
-        {/* Hospital markers — rendered as hospital-sign divIcons (risk-colored
+          {/* Hospital markers — rendered as hospital-sign divIcons (risk-colored
              square with a medical cross). Pulse halo on HIGH risk via CSS.
              Tooltip direction is picked dynamically per pin so the popup
              never gets clipped by the map div edge — see HospitalMarker. */}
-        {hospitalPins.map((pin) => (
-          <HospitalMarker
-            key={pin.hcode}
-            pin={pin}
-            onClick={handleMarkerClick}
-            kiosk={mode === 'kiosk'}
-          />
-        ))}
+          {hospitalPins.map((pin) => (
+            <HospitalMarker
+              key={pin.hcode}
+              pin={pin}
+              onClick={handleMarkerClick}
+              kiosk={mode === 'kiosk'}
+            />
+          ))}
 
-        <ZoomControl position="bottomright" />
-      </MapContainer>
+          <ZoomControl position="bottomright" />
+        </MapContainer>
 
-      {/* Status legend — top-left overlay, dense single column. Sits above
-          the Leaflet pane via z-index so it stays interactive even though
-          the map captures pointer events. Theme adapts to light vs kiosk. */}
-      <MapStatusLegend mode={mode} />
+        {/* Kiosk keeps its top-left overlay (frozen look); it sits above the
+          Leaflet pane via z-index. */}
+        {mode === 'kiosk' && <MapStatusLegend mode={mode} />}
+      </div>
+      {/* Light mode: legend below the map pane so it never covers markers. */}
+      {mode !== 'kiosk' && <MapStatusLegend mode={mode} />}
     </div>
   );
 }
@@ -657,7 +665,11 @@ function HospitalTooltip({ pin, kiosk }: { pin: PinEntry; kiosk: boolean }) {
           }}
         />
         <span
-          style={{ fontWeight: 600, fontSize: kiosk ? 11 : MIN_TEXT_PX, letterSpacing: kiosk ? '0.04em' : undefined }}
+          style={{
+            fontWeight: 600,
+            fontSize: kiosk ? 11 : MIN_TEXT_PX,
+            letterSpacing: kiosk ? '0.04em' : undefined,
+          }}
         >
           {statusLabel}
         </span>

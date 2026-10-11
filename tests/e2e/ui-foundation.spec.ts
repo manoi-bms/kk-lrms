@@ -43,6 +43,12 @@ async function login(page: Page, log: string[]) {
 }
 
 test.describe('UI foundation', () => {
+  test('illustrations are public: unauthenticated request returns 200 image/*', async ({ request }) => {
+    const res = await request.get('/illustrations/login-hero.webp', { maxRedirects: 0 });
+    expect(res.status()).toBe(200);
+    expect(res.headers()['content-type']).toMatch(/^image\//);
+  });
+
   test('login page renders in Sarabun with no page errors @snapshot', async ({ page }, testInfo) => {
     const log = attachDebugLogging(page);
     for (const w of WIDTHS) {
@@ -129,7 +135,7 @@ test.describe('UI foundation', () => {
           wrappedValues: values.filter((el) => lines(el) > 1).map((el) => el.textContent?.trim()),
           overflowingValues: values.filter((el) => el.scrollWidth > el.clientWidth + 1).map((el) => el.textContent?.trim()),
           tallLabels: labels.filter((el) => lines(el) > 2).map((el) => el.textContent?.trim()),
-          presenceBadges: document.querySelectorAll('[aria-label$="online users"]').length,
+          presenceBadges: document.querySelectorAll('[aria-label^="ออนไลน์"]').length,
           twoColumns: getComputedStyle(document.querySelector('[data-testid="province-overview"]')!).position === 'sticky',
         };
       });

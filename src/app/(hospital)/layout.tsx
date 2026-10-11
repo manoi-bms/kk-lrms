@@ -8,7 +8,11 @@ import { BmsSessionProvider } from '@/contexts/BmsSessionContext';
 import { CallProvider } from '@/components/calls/CallProvider';
 import { AppShell } from '@/components/layout/AppShell';
 import { BreadcrumbProvider } from '@/components/layout/BreadcrumbContext';
-import { ClinicalChatPanel } from '@/components/chat/ClinicalChatPanel';
+import { ClinicalChatGate, chatReserveClass } from '@/components/chat/ClinicalChatGate';
+
+// Per-request render: the chat flag (CLINICAL_CHAT_ENABLED) must never be frozen
+// at build time.
+export const dynamic = 'force-dynamic';
 
 export default function HospitalLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,10 +21,10 @@ export default function HospitalLayout({ children }: { children: React.ReactNode
         <CallProvider>
           <BreadcrumbProvider>
             <AppShell variant="hospital">
-              <main className="flex-1">{children}</main>
+              <main className={`flex-1 ${chatReserveClass()}`.trim()}>{children}</main>
             </AppShell>
             {/* Clinical chatbot — maternity-ward mode (per-patient clinical RAG). */}
-            <ClinicalChatPanel mode="clinical" />
+            <ClinicalChatGate mode="clinical" />
           </BreadcrumbProvider>
         </CallProvider>
       </BmsSessionProvider>

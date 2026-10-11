@@ -18,4 +18,15 @@ describe('MapStatusLegend', () => {
     expect(legend).toHaveTextContent('ONLINE');
     expect(legend).toHaveTextContent('ยังไม่ sync');
   });
+  it('light mode sits in normal flow below the map, never absolutely over the markers', () => {
+    render(<MapStatusLegend mode="light" />);
+    const legend = screen.getByLabelText('คำอธิบายสีจุดสถานะบนแผนที่');
+    expect(legend.style.position).not.toBe('absolute');
+    expect(legend.className).not.toMatch(/(^|\s)absolute(\s|$)/);
+    expect(legend.className).toMatch(/flex-wrap/);
+  });
+  it('kiosk keeps the overlay in the map corner', () => {
+    render(<MapStatusLegend mode="kiosk" />);
+    expect(screen.getByLabelText('Map dot color legend').className).toMatch(/(^|\s)absolute(\s|$)/);
+  });
 });
