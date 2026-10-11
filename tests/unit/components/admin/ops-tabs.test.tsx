@@ -121,3 +121,40 @@ describe('OnlineUsersTab — characterization (must not change)', () => {
     expect(await screen.findByText('7')).toBeInTheDocument();
   });
 });
+
+describe('operations tabs — direction-C', () => {
+  it('SyncOverviewTab: Thai filter chips, a named clickable table, Thai outcome and trigger', async () => {
+    renderWithSwr(<SyncOverviewTab />, SYNC);
+    const table = await screen.findByRole('table', { name: 'สถานะการซิงค์รายโรงพยาบาล' });
+    expect(within(table).getByRole('row', { name: 'เปิดบันทึกการซิงค์ของ รพ.ขอนแก่น' })).toBeInTheDocument();
+    expect(within(table).getByText('ล้มเหลว')).toBeInTheDocument();
+    expect(within(table).getByText('ตามรอบ')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /มีปัญหา 1/ })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByText('รีเฟรชอัตโนมัติทุก 15 วินาที')).toBeInTheDocument();
+  });
+  it('SyncOverviewTab: a load failure is actionable and retryable', async () => {
+    renderWithSwr(<SyncOverviewTab />, { '/api/admin/sync-overview': new Error('redis down') });
+    expect(await screen.findByRole('alert')).toHaveTextContent('โหลดสถานะการซิงค์ไม่สำเร็จ');
+    expect(screen.getByRole('button', { name: /ลองใหม่/ })).toBeInTheDocument();
+  });
+  it('OnlineUsersTab: KPI tile with the server total and an empty state', async () => {
+    renderWithSwr(<OnlineUsersTab />, {
+      '/api/admin/online-users': { users: [], total: 0, cache: { backend: 'redis', available: true }, updatedAt: '2026-10-11T03:00:00Z' },
+    });
+    expect(await screen.findByText('ผู้ใช้ออนไลน์ตอนนี้')).toBeInTheDocument();
+    expect(screen.getByText('ยังไม่มีผู้ใช้เปิดหน้าเว็บอยู่')).toBeInTheDocument();
+    expect(screen.getByText(/หายจากรายการเมื่อไม่มีสัญญาณ 120 วินาที/)).toBeInTheDocument();
+  });
+  it('WebhookKeysTab: KPI tiles and a Thai table', async () => {
+    renderWithSwr(<WebhookKeysTab />, KEYS);
+    expect(await screen.findByText('คีย์ทั้งหมด')).toBeInTheDocument();
+    const table = screen.getByRole('table', { name: 'API Key ทั้งหมด' });
+    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent?.trim())).toEqual([
+      'โรงพยาบาล', 'ชื่อคีย์', 'รหัสขึ้นต้น', 'สร้างเมื่อ', 'ใช้ล่าสุด', 'สถานะ', 'จัดการ',
+    ]);
+  });
+  it('MophAlertsTab: recipients in a named table', async () => {
+    renderWithSwr(<MophAlertsTab />, MOPH);
+    expect(await screen.findByRole('table', { name: 'ผู้รับการแจ้งเตือน' })).toBeInTheDocument();
+  });
+});
