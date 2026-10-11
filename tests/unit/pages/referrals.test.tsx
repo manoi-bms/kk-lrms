@@ -13,15 +13,12 @@ import { classifyReferralAge, REFERRAL_SLA } from '@/config/referral-sla';
 import ReferralsPage from '@/app/(provincial)/referrals/page';
 
 // Mock next/navigation for the app-router page.
+const nav = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    back: vi.fn(),
-    prefetch: vi.fn(),
-  }),
+  useRouter: () => ({ push: nav.push, replace: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
   useParams: () => ({}),
+  usePathname: () => '/referrals',
 }));
 
 const HOURS = 3600_000;
@@ -185,7 +182,7 @@ describe('ReferralsPage — KPI strips', () => {
 
   it('shows a last-updated stamp', async () => {
     renderPage();
-    expect(await screen.findByText(/อัปเดตล่าสุด/)).toBeInTheDocument();
+    expect(await screen.findByText(/ข้อมูลหน้านี้ ณ/)).toBeInTheDocument();
   });
 });
 
@@ -265,5 +262,41 @@ describe('ReferralsPage — empty state', () => {
 
     // Rendered in both the desktop table and the mobile card container.
     expect((await screen.findAllByText(/ไม่พบรายการส่งต่อ/)).length).toBeGreaterThan(0);
+  });
+});
+
+
+const toggleIn = (tile: HTMLElement) => within(tile).getByRole('button', { pressed: false });
+
+describe('ReferralsPage — list-page pattern (sub-project 4)', () => {
+  it('Thai header and sections; no English mono labels', async () => {
+    renderPage();
+    expect(await screen.findByRole('heading', { level: 1, name: 'การส่งต่อ' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'งานส่งต่อ' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'รายการส่งต่อ' })).toBeInTheDocument();
+    for (const en of ['PROVINCIAL REGISTRY', 'REFERRAL CORRIDORS', 'VOLUME · LAST 7 DAYS', 'Referral queue', 'URGENCY:', 'PERIOD:', 'STATUS:', 'SHOWING']) {
+      expect(screen.queryByText(new RegExp(en))).toBeNull();
+    }
+  });
+
+  it('the overdue tile quotes REFERRAL_SLA and toggles the overdue filter', async () => {
+    const { fetcher } = renderPage();
+    const overdue = await screen.findByTestId('kpi-overdue');
+    expect(overdue).toHaveTextContent(`ค้างเกิน ${REFERRAL_SLA.overdueAfterHours} ชม.`);
+    fireEvent.click(toggleIn(overdue));
+    await waitFor(() => expect(fetcher.mock.calls.some((c) => String(c[0]).includes('overdue=1'))).toBe(true));
+  });
+
+  it('status chips filter by status and carry DB-wide counts', async () => {
+    const { fetcher } = renderPage();
+    fireEvent.click(await screen.findByTestId('status-ARRIVED'));
+    await waitFor(() => expect(fetcher.mock.calls.some((c) => String(c[0]).includes('status=ARRIVED'))).toBe(true));
+  });
+
+  it('queue total and pager read pagination.total, not the 2 visible rows', async () => {
+    renderPage();
+    const queue = await screen.findByRole('region', { name: 'รายการส่งต่อ' });
+    expect(within(queue).getByText(/ทั้งหมด 125 รายการ/)).toBeInTheDocument();
+    expect(within(queue).getByRole('navigation', { name: 'เปลี่ยนหน้า' })).toHaveTextContent('แสดง 1–20 จาก 125 รายการ');
   });
 });

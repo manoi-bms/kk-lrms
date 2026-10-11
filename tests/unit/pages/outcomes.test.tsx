@@ -7,11 +7,14 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { SWRConfig } from 'swr';
 import type { OutcomesResponse } from '@/types/api';
 import OutcomesPage from '@/app/(provincial)/outcomes/page';
+import { NEWBORN_THRESHOLDS } from '@/config/newborn';
 
+const nav = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
+  useRouter: () => ({ push: nav.push, replace: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
   useParams: () => ({}),
+  usePathname: () => '/outcomes',
 }));
 
 function makeFixture(): OutcomesResponse {
@@ -109,7 +112,7 @@ describe('OutcomesPage — KPI tiles', () => {
 
   it('shows a last-updated stamp', async () => {
     renderPage();
-    expect(await screen.findByText(/อัปเดตล่าสุด/)).toBeInTheDocument();
+    expect(await screen.findByText(/ข้อมูลหน้านี้ ณ/)).toBeInTheDocument();
   });
 });
 
@@ -136,7 +139,9 @@ describe('OutcomesPage — recent births', () => {
     expect(screen.queryByText(/อุ่นเรือน/)).toBeNull();
     expect(within(row).getByText('LBW')).toBeInTheDocument();
     expect(within(row).getByText(/กู้ชีพ/)).toBeInTheDocument();
-    expect(row.getAttribute('href')).toBe('/pregnancies/j-1');
+    expect(within(row).getByRole('link')).toHaveAttribute('href', '/pregnancies/j-1');
+    fireEvent.click(row);
+    expect(nav.push).toHaveBeenCalledWith('/pregnancies/j-1');
     expect(row.getAttribute('data-low-apgar')).toBe('true');
   });
 
@@ -155,6 +160,30 @@ describe('OutcomesPage — recent births', () => {
       recent: [],
     });
 
-    expect(await screen.findByText(/ยังไม่มีข้อมูลทารกจากการซิงก์/)).toBeInTheDocument();
+    expect(await screen.findByText(/ยังไม่มีข้อมูลทารกจากการซิงค์/)).toBeInTheDocument();
+  });
+});
+
+describe('OutcomesPage — list-page pattern (sub-project 4)', () => {
+  it('Thai header, filters and sections; no English mono labels', async () => {
+    renderPage();
+    expect(await screen.findByRole('heading', { level: 1, name: 'ผลลัพธ์ทารก' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'ช่วงเวลา' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'การเกิดล่าสุด' })).toBeInTheDocument();
+    for (const en of ['PROVINCIAL REGISTRY', 'TOTAL BIRTHS', 'LOW BIRTH WEIGHT', 'Recent births', 'BIRTHS · LAST 6 MONTHS', 'BY HOSPITAL', 'PERIOD:', 'HOSPITAL:']) {
+      expect(screen.queryByText(new RegExp(en))).toBeNull();
+    }
+  });
+
+  it('LBW and Apgar labels quote NEWBORN_THRESHOLDS', async () => {
+    renderPage();
+    expect(await screen.findByTestId('kpi-lbw')).toHaveTextContent(NEWBORN_THRESHOLDS.lbwGrams.toLocaleString('en-US'));
+    expect(screen.getByTestId('kpi-apgar')).toHaveTextContent(`< ${NEWBORN_THRESHOLDS.apgarLowAt5min}`);
+  });
+
+  it('recent-births header states the subset against totalBirths', async () => {
+    renderPage();
+    const recent = await screen.findByRole('region', { name: 'การเกิดล่าสุด' });
+    expect(within(recent).getByText(/จาก 48 ราย/)).toBeInTheDocument();
   });
 });
