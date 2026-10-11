@@ -67,6 +67,13 @@ export interface HighRiskPatientListProps {
   embedded?: boolean;
 }
 
+/** Kiosk CPD colour: kiosk palette, but the tier boundaries are the shared
+ *  RISK_LEVELS rule (classifyRiskLevel) so a score reads the same on every screen. */
+function kioskCpdColor(score: number): string {
+  const level = classifyRiskLevel(score);
+  return level === RiskLevel.HIGH ? 'var(--kiosk-high)' : level === RiskLevel.MEDIUM ? 'var(--kiosk-med)' : 'var(--kiosk-low)';
+}
+
 function KioskRiskChip({ riskLevel, variant }: { riskLevel: string; variant: 'light' | 'kiosk' }) {
   const isKiosk = variant === 'kiosk';
   const color =
@@ -103,7 +110,7 @@ function KioskRiskChip({ riskLevel, variant }: { riskLevel: string; variant: 'li
 /** Light variant: the shared RiskChip, so colour and Thai naming match every
  *  other screen. Unknown values render as plain text rather than looking safe. */
 function LightRiskChip({ riskLevel }: { riskLevel: string }) {
-  const level = riskLevel in RISK_LEVELS ? (riskLevel as RiskLevel) : null;
+  const level = Object.hasOwn(RISK_LEVELS, riskLevel) ? (riskLevel as RiskLevel) : null;
   if (!level) return <span className="text-caption text-ink-muted">{riskLevel || '—'}</span>;
   return (
     <SharedRiskChip level={level} size="sm" data-risk={riskLevel}>
@@ -492,17 +499,11 @@ export function HighRiskPatientList({
                 <div
                   className="font-mono font-semibold tabular-nums"
                   style={{
-                    color: isKiosk
-                      ? p.cpdScore >= 6
-                        ? 'var(--kiosk-high)'
-                        : p.cpdScore >= 4
-                          ? 'var(--kiosk-med)'
-                          : 'var(--kiosk-low)'
-                      : RISK_LEVELS[classifyRiskLevel(p.cpdScore)].textColor,
+                    color: isKiosk ? kioskCpdColor(p.cpdScore) : RISK_LEVELS[classifyRiskLevel(p.cpdScore)].textColor,
                     fontSize: isKiosk ? 20 : 13,
                     textShadow:
-                      isKiosk && p.cpdScore >= 4
-                        ? `0 0 8px ${p.cpdScore >= 6 ? 'var(--kiosk-high)' : 'var(--kiosk-med)'}`
+                      isKiosk && classifyRiskLevel(p.cpdScore) !== RiskLevel.LOW
+                        ? `0 0 8px ${kioskCpdColor(p.cpdScore)}`
                         : 'none',
                   }}
                 >

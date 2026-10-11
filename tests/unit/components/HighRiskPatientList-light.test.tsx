@@ -56,4 +56,12 @@ describe('HighRiskPatientList — light (Thai) variant', () => {
     expect(screen.getByText('RISK')).toBeInTheDocument();
     expect(container.querySelector('[data-risk="HIGH"]')!.textContent).toBe('HIGH');
   });
+  it('M4: an unknown / prototype-key risk level renders as plain text, not a chip', () => {
+    const { container } = render(
+      <HighRiskPatientList patients={[makeHighRiskPatient({ riskLevel: 'toString' as never })]} />,
+    );
+    fireEvent.click(screen.getByText(/ทั้งหมดในห้องคลอด/));
+    expect(container.querySelector('[data-risk="toString"]')).toBeNull();
+    expect(screen.getByText('toString')).toBeInTheDocument();
+  });
 });

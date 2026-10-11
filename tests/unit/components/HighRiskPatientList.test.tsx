@@ -87,7 +87,7 @@ describe('HighRiskPatientList', () => {
     expect(screen.getByText('AN003')).toBeTruthy();
   });
 
-  it('switches to ALL ACTIVE tab and shows every patient', () => {
+  it('switches to the ทั้งหมดในห้องคลอด tab and shows every patient', () => {
     render(<HighRiskPatientList patients={samplePatients} />);
     fireEvent.click(screen.getByText(/ทั้งหมดในห้องคลอด/));
     expect(screen.getByText('AN001')).toBeTruthy();
@@ -166,7 +166,7 @@ describe('HighRiskPatientList', () => {
     expect(highChips.length).toBe(2);
   });
 
-  it('switches to ALL ACTIVE tab and shows MEDIUM risk chip', () => {
+  it('switches to the ทั้งหมดในห้องคลอด tab and shows MEDIUM risk chip', () => {
     const { container } = render(<HighRiskPatientList patients={samplePatients} />);
     fireEvent.click(screen.getByText(/ทั้งหมดในห้องคลอด/));
     const medChips = container.querySelectorAll('[data-risk="MEDIUM"]');
