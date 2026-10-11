@@ -67,3 +67,22 @@ export function contrastRatio(fg: string, bg: string): number {
   const [hi, lo] = [luminance(fg), luminance(bg)].sort((a, b) => b - a);
   return (hi + 0.05) / (lo + 0.05);
 }
+
+/** Sarabun type scale in px (the html root is 18px, so rem would mislead).
+ *  Thai stacks vowels/tone marks above and below the line — line-heights are
+ *  deliberately generous. */
+export const TYPE_SCALE = {
+  caption: { px: 13, lineHeight: 1.5, weight: 400 },
+  label: { px: 14, lineHeight: 1.5, weight: 500 },
+  body: { px: 15, lineHeight: 1.65, weight: 400 },
+  'body-lg': { px: 17, lineHeight: 1.6, weight: 500 },
+  title: { px: 22, lineHeight: 1.35, weight: 600 },
+  page: { px: 26, lineHeight: 1.3, weight: 700 },
+  'kpi-sm': { px: 26, lineHeight: 1.15, weight: 700 },
+  kpi: { px: 34, lineHeight: 1.15, weight: 700 },
+} as const;
+
+export type TypeToken = keyof typeof TYPE_SCALE;
+
+/** Smallest text allowed outside kiosk mode. */
+export const MIN_TEXT_PX = TYPE_SCALE.caption.px;
