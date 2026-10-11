@@ -1,6 +1,7 @@
 // T014: CPD risk level configuration per SPEC.md section 4.1.2-4.1.3
 
 import { RiskLevel } from '@/types/domain';
+import { COLOR } from '@/config/design-tokens';
 
 export interface RiskLevelConfig {
   level: RiskLevel;
@@ -8,6 +9,7 @@ export interface RiskLevelConfig {
   maxScore: number;
   color: string;
   bgColor: string;
+  textColor: string;
   labelTh: string;
   labelEn: string;
   action: string;
@@ -18,8 +20,9 @@ export const RISK_LEVELS: Record<RiskLevel, RiskLevelConfig> = {
     level: RiskLevel.LOW,
     minScore: 0,
     maxScore: 4.99,
-    color: '#22c55e',
-    bgColor: '#dcfce7',
+    color: COLOR.riskLow,
+    bgColor: COLOR.riskLowTint,
+    textColor: COLOR.riskLowText,
     labelTh: 'เสี่ยงต่ำ',
     labelEn: 'Low Risk',
     action: 'ติดตามปกติ',
@@ -28,8 +31,9 @@ export const RISK_LEVELS: Record<RiskLevel, RiskLevelConfig> = {
     level: RiskLevel.MEDIUM,
     minScore: 5,
     maxScore: 9.99,
-    color: '#eab308',
-    bgColor: '#fef9c3',
+    color: COLOR.riskMedium,
+    bgColor: COLOR.riskMediumTint,
+    textColor: COLOR.riskMediumText,
     labelTh: 'เสี่ยงปานกลาง',
     labelEn: 'Medium Risk',
     action: 'เฝ้าระวังใกล้ชิด, เตรียมพร้อมส่งต่อ',
@@ -38,8 +42,9 @@ export const RISK_LEVELS: Record<RiskLevel, RiskLevelConfig> = {
     level: RiskLevel.HIGH,
     minScore: 10,
     maxScore: Infinity,
-    color: '#ef4444',
-    bgColor: '#fee2e2',
+    color: COLOR.riskHigh,
+    bgColor: COLOR.riskHighTint,
+    textColor: COLOR.riskHighText,
     labelTh: 'เสี่ยงสูง',
     labelEn: 'High Risk',
     action: 'ควรประสานส่งต่อทันที!',

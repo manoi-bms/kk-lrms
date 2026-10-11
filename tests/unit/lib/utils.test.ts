@@ -13,6 +13,7 @@ import {
   formatRelativeTime,
 } from '@/lib/utils';
 import { RiskLevel, HospitalLevel } from '@/types/domain';
+import { COLOR } from '@/config/design-tokens';
 
 describe('utils', () => {
   describe('cn', () => {
@@ -129,30 +130,30 @@ describe('utils', () => {
   });
 
   describe('riskLevelToColor', () => {
-    it('returns green (#22c55e) for LOW', () => {
-      expect(riskLevelToColor(RiskLevel.LOW)).toBe('#22c55e');
+    it('returns the low-risk token for LOW', () => {
+      expect(riskLevelToColor(RiskLevel.LOW)).toBe(COLOR.riskLow);
     });
 
-    it('returns yellow (#eab308) for MEDIUM', () => {
-      expect(riskLevelToColor(RiskLevel.MEDIUM)).toBe('#eab308');
+    it('returns the medium-risk token for MEDIUM', () => {
+      expect(riskLevelToColor(RiskLevel.MEDIUM)).toBe(COLOR.riskMedium);
     });
 
-    it('returns red (#ef4444) for HIGH', () => {
-      expect(riskLevelToColor(RiskLevel.HIGH)).toBe('#ef4444');
+    it('returns the high-risk token for HIGH', () => {
+      expect(riskLevelToColor(RiskLevel.HIGH)).toBe(COLOR.riskHigh);
     });
   });
 
   describe('riskLevelToBgColor', () => {
-    it('returns light green (#dcfce7) for LOW', () => {
-      expect(riskLevelToBgColor(RiskLevel.LOW)).toBe('#dcfce7');
+    it('returns the low-risk tint for LOW', () => {
+      expect(riskLevelToBgColor(RiskLevel.LOW)).toBe(COLOR.riskLowTint);
     });
 
-    it('returns light yellow (#fef9c3) for MEDIUM', () => {
-      expect(riskLevelToBgColor(RiskLevel.MEDIUM)).toBe('#fef9c3');
+    it('returns the medium-risk tint for MEDIUM', () => {
+      expect(riskLevelToBgColor(RiskLevel.MEDIUM)).toBe(COLOR.riskMediumTint);
     });
 
-    it('returns light red (#fee2e2) for HIGH', () => {
-      expect(riskLevelToBgColor(RiskLevel.HIGH)).toBe('#fee2e2');
+    it('returns the high-risk tint for HIGH', () => {
+      expect(riskLevelToBgColor(RiskLevel.HIGH)).toBe(COLOR.riskHighTint);
     });
   });
 
