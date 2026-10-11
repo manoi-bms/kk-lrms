@@ -66,6 +66,7 @@ export function OnlineUsersBadge() {
         }}
         tabIndex={0}
         aria-label={`ออนไลน์ ${total} คน`}
+        data-testid="online-users-badge"
       >
         <UsersRound className="h-3 w-3" />
         <span className="text-[var(--ink-navy-muted)]">ออนไลน์</span>

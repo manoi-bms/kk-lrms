@@ -54,6 +54,13 @@ describe('WardKpis', () => {
     occupancyPct: 44,
   };
 
+  it('lays the five tiles out 3+2, never a lone tile on its own row', () => {
+    render(<WardKpis summary={summary} />);
+    const grid = screen.getByTestId('ward-kpi-total').closest('.grid') as HTMLElement;
+    expect(grid.className).toContain('grid-cols-3');
+    expect(grid.className).not.toContain('grid-cols-4');
+  });
+
   it('is a labelled region with five Thai tiles fed only by the summary', () => {
     render(<WardKpis summary={summary} />);
     const region = screen.getByRole('region', { name: 'สรุปเตียงในห้องคลอด' });

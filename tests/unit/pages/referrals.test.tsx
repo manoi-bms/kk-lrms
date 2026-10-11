@@ -172,6 +172,13 @@ describe('ReferralsPage — KPI strips', () => {
     expect(within(screen.getByTestId('kpi-overdue')).getByText('7')).toBeInTheDocument();
   });
 
+  it('lays the five ops tiles out 3+2, never a lone tile on its own row', async () => {
+    renderPage();
+    const grid = (await screen.findByTestId('kpi-today')).closest('.grid') as HTMLElement;
+    expect(grid.className).toContain('grid-cols-3');
+    expect(grid.className).not.toContain('grid-cols-4');
+  });
+
   it('renders the status breakdown from statusCounts (DB-wide, not page rows)', async () => {
     renderPage();
 

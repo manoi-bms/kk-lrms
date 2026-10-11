@@ -271,7 +271,7 @@ function ReferralsBoard() {
         title="งานส่งต่อ"
         description="นับทั้งจังหวัดตามช่วงเวลาคงที่ ไม่ขึ้นกับตัวกรอง — กดการ์ดเพื่อกรองรายการ"
       >
-        <KpiGrid>
+        <KpiGrid count={5}>
           <KpiTile
             testId="kpi-today"
             label="เริ่มส่งต่อวันนี้"

@@ -21,7 +21,7 @@ export function WardKpis({ summary }: { summary: BedSummary }) {
   const { minHours, cervixBelowCm } = PROLONGED_LATENT_RULE;
   return (
     <section aria-label="สรุปเตียงในห้องคลอด">
-      <KpiGrid>
+      <KpiGrid count={5}>
         <KpiTile testId="ward-kpi-total" label="เตียงทั้งหมด" count={summary.totalBeds} />
         <KpiTile
           testId="ward-kpi-occupied"
