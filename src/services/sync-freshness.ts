@@ -21,6 +21,22 @@ function toIso(v: string | Date | null): string | null {
   return v instanceof Date ? v.toISOString() : v;
 }
 
+type FeedClass = 'fresh' | 'stale' | 'never';
+
+/** One classification per hospital, shared by province counts and `own`,
+ *  so the strip agrees with /api/health. Future-dated → stale; missing or
+ *  unparseable → never; otherwise classifySyncHealth. */
+function classifyFeed(
+  iso: string | null,
+  now: Date,
+): { kind: FeedClass; health: ReturnType<typeof classifySyncHealth>; t: number | null } {
+  const t = iso ? new Date(iso).getTime() : NaN;
+  if (!Number.isFinite(t)) return { kind: 'never', health: 'never', t: null };
+  if (t > now.getTime()) return { kind: 'stale', health: 'stale', t: null };
+  const health = classifySyncHealth('OK', iso, now);
+  return { kind: health === 'ok' ? 'fresh' : 'stale', health, t };
+}
+
 export async function getSyncFreshness(
   db: DatabaseAdapter,
   opts: { hcode: string | null | undefined; now?: Date },
@@ -41,19 +57,11 @@ export async function getSyncFreshness(
   let never = 0;
   let latest: number | null = null;
   for (const h of reporting) {
-    const iso = toIso(h.last_sync_at);
-    const t = iso ? new Date(iso).getTime() : NaN;
-    if (!Number.isFinite(t)) {
-      never += 1;
-      continue;
-    }
-    if (t > now.getTime()) {
-      stale += 1; // future-dated: same treatment as /api/health
-      continue;
-    }
-    if (classifySyncHealth('OK', iso, now) === 'ok') fresh += 1;
+    const c = classifyFeed(toIso(h.last_sync_at), now);
+    if (c.kind === 'never') never += 1;
+    else if (c.kind === 'fresh') fresh += 1;
     else stale += 1;
-    if (latest === null || t > latest) latest = t;
+    if (c.t !== null && (latest === null || c.t > latest)) latest = c.t;
   }
 
   let own: FreshnessSummary['own'] = null;
@@ -65,7 +73,7 @@ export async function getSyncFreshness(
         hcode: h.hcode,
         name: h.name,
         lastSyncAt: iso,
-        health: classifySyncHealth('OK', iso, now),
+        health: classifyFeed(iso, now).health,
         highRisk: highByHcode.get(h.hcode) ?? 0,
       };
     }

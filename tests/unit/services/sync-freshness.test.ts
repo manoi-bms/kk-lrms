@@ -65,4 +65,11 @@ describe('getSyncFreshness', () => {
     expect(s.own?.hcode).toBe('11002');
     expect(JSON.stringify(s)).not.toContain('11000');
   });
+
+  it('own health agrees with province classification for future-dated and never-synced feeds', async () => {
+    const future = await getSyncFreshness(db, { hcode: '11004', now: NOW });
+    expect(future.own?.health).toBe('stale');
+    const never = await getSyncFreshness(db, { hcode: '77652', now: NOW });
+    expect(never.own?.health).toBe('never');
+  });
 });
