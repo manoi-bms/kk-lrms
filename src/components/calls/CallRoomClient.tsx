@@ -245,7 +245,7 @@ export function CallRoomClient({ callId }: { callId: string }) {
         </button>
         <button
           onClick={leave}
-          className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md bg-danger px-3 py-1.5 text-caption font-semibold text-white hover:bg-danger"
+          className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md bg-danger px-3 py-1.5 text-caption font-semibold text-white hover:bg-danger/90"
         >
           <PhoneOff className="h-3.5 w-3.5" /> วางสาย
         </button>

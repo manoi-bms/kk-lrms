@@ -212,7 +212,7 @@ export function ClinicalChatPanel({ mode = 'clinical' }: { mode?: ClinicalChatMo
               onClick={() => void resetChat()}
               title="เริ่มบทสนทนาใหม่ (ล้างประวัติทั้งฝั่งเครื่องและเซิร์ฟเวอร์)"
               aria-label="เริ่มบทสนทนาใหม่"
-              className="rounded p-1.5 hover:bg-brand"
+              className="rounded p-1.5 hover:bg-brand-strong"
             >
               <RotateCcw size={15} />
             </button>
@@ -241,7 +241,7 @@ export function ClinicalChatPanel({ mode = 'clinical' }: { mode?: ClinicalChatMo
                     <button
                       key={s}
                       onClick={() => void ask(s)}
-                      className="rounded-full border border-brand-soft bg-brand-soft px-2.5 py-1 text-caption text-brand hover:bg-brand-soft"
+                      className="rounded-full border border-brand bg-brand-soft px-2.5 py-1 text-caption text-brand hover:bg-brand-soft/70"
                     >
                       {s}
                     </button>

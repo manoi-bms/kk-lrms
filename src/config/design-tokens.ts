@@ -45,6 +45,8 @@ export const CONTRAST_PAIRS: ReadonlyArray<readonly [ColorToken, ColorToken]> = 
   ['riskMediumText', 'riskMediumTint'],
   ['riskLowText', 'riskLowTint'],
   ['surfaceCard', 'riskHigh'],
+  ['surfaceCard', 'riskMediumText'],
+  ['surfaceCard', 'riskLowText'],
   ['surfaceCard', 'brand'],
   ['brandStrong', 'brandSoft'],
 ];

@@ -475,10 +475,10 @@ export function BedTileFull({
     ? `linear-gradient(to right, rgba(220,38,38,0.08), ${C.paperCard} 60%)`
     : C.paperCard;
 
-  const headBg = isCrit ? '#FEF2F2' : '#F8FAFC';
+  const headBg = isCrit ? COLOR.riskHighTint : '#F8FAFC';
   const footBg = isCrit ? '#FECACA' : '#E2E8F0';
   const footColor = isCrit ? '#7F1D1D' : C.ink;
-  const footKeyColor = isCrit ? '#B91C1C' : C.mute;
+  const footKeyColor = isCrit ? COLOR.riskHighText : C.mute;
 
   return (
     <article

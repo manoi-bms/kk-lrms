@@ -34,6 +34,12 @@ describe('rewriteSource', () => {
     expect(r.sizeCount).toBe(2);
     expect(r.colorCount).toBe(2);
   });
+  it('scales an explicit opacity on light-shade edges instead of dropping the /40', () => {
+    expect(rewriteSource('"ring-rose-200/60"').output).toBe('"ring-danger/24"');
+    expect(rewriteSource('"border-amber-200/50"').output).toBe('"border-warn/20"');
+    expect(rewriteSource('"ring-red-500/60"').output).toBe('"ring-danger/60"');
+    expect(rewriteSource('"bg-amber-500/20"').output).toBe('"bg-warn/20"');
+  });
   it('does not touch look-alikes', () => {
     const src = `const a = "context-[11px]"; const b = "bg-red-500x";`;
     expect(rewriteSource(src).output).toBe(src);

@@ -248,8 +248,8 @@ export function SimulationControl() {
         className={cn(
           'inline-flex shrink-0 items-center gap-1.5 rounded-sm px-2.5 py-1.5 font-mono text-caption font-semibold tracking-[0.06em] transition-colors',
           status.running
-            ? 'bg-warn text-white hover:bg-warn'
-            : 'border border-warn bg-warn-tint text-warn-text hover:bg-warn-tint',
+            ? 'bg-warn-text text-white hover:bg-warn-text/90'
+            : 'border border-warn bg-warn-tint text-warn-text hover:bg-warn-tint/70',
         )}
         title="Dev simulation (visible in development only)"
       >
@@ -526,7 +526,7 @@ export function SimulationControl() {
                           type="button"
                           onClick={onClear}
                           disabled={clearing}
-                          className="inline-flex items-center gap-1 rounded-sm bg-danger px-3 py-1 font-mono text-caption font-semibold tracking-[0.06em] text-white hover:bg-danger disabled:opacity-60"
+                          className="inline-flex items-center gap-1 rounded-sm bg-danger px-3 py-1 font-mono text-caption font-semibold tracking-[0.06em] text-white hover:bg-danger/90 disabled:opacity-60"
                         >
                           <Trash2 className="h-3 w-3" />
                           {clearing ? 'Clearing…' : 'Clear patient data'}
@@ -595,7 +595,7 @@ export function SimulationControl() {
                           type="button"
                           onClick={onResetOnboarding}
                           disabled={resettingOnboarding}
-                          className="inline-flex items-center gap-1 rounded-sm bg-danger px-3 py-1 font-mono text-caption font-semibold tracking-[0.06em] text-white hover:bg-danger disabled:opacity-60"
+                          className="inline-flex items-center gap-1 rounded-sm bg-danger px-3 py-1 font-mono text-caption font-semibold tracking-[0.06em] text-white hover:bg-danger/90 disabled:opacity-60"
                         >
                           <Trash2 className="h-3 w-3" />
                           {resettingOnboarding ? 'Resetting…' : 'Reset onboarding'}
@@ -636,7 +636,7 @@ export function SimulationControl() {
                   {status.running ? (
                     <button
                       onClick={onStop}
-                      className="inline-flex items-center gap-1.5 rounded-sm bg-danger px-4 py-1.5 font-mono text-caption font-semibold tracking-[0.06em] text-white hover:bg-danger"
+                      className="inline-flex items-center gap-1.5 rounded-sm bg-danger px-4 py-1.5 font-mono text-caption font-semibold tracking-[0.06em] text-white hover:bg-danger/90"
                     >
                       <Square className="h-3.5 w-3.5" /> Stop simulation
                     </button>
@@ -644,7 +644,7 @@ export function SimulationControl() {
                     <button
                       onClick={onStart}
                       disabled={submitting || eventTypes.size === 0 || selectedHospitals.size === 0}
-                      className="inline-flex items-center gap-1.5 rounded-sm bg-warn px-4 py-1.5 font-mono text-caption font-semibold tracking-[0.06em] text-white hover:bg-warn disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-sm bg-warn-text px-4 py-1.5 font-mono text-caption font-semibold tracking-[0.06em] text-white hover:bg-warn-text/90 disabled:opacity-50"
                     >
                       <Play className="h-3.5 w-3.5" />
                       {submitting

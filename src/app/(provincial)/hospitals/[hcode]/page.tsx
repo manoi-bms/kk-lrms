@@ -317,8 +317,8 @@ function ConcernChip({ label, warn }: { label: string; warn?: boolean }) {
     <span
       className="ml-1.5 inline-block rounded-sm px-1.5 py-0.5 align-middle font-mono text-caption tracking-[0.06em]"
       style={{
-        background: warn ? '#fff5d8' : COLOR.riskHighTint,
-        color: warn ? '#92660b' : COLOR.riskHighText,
+        background: warn ? COLOR.riskMediumTint : COLOR.riskHighTint,
+        color: warn ? COLOR.riskMediumText : COLOR.riskHighText,
         fontWeight: 700,
       }}
     >
@@ -385,7 +385,7 @@ interface SigProps {
 }
 
 function Sig({ label, value, unit, sub, alarm, warn }: SigProps) {
-  const color = alarm ? '#9b2c1c' : warn ? '#92660b' : 'var(--ink-navy)';
+  const color = alarm ? COLOR.riskHighText : warn ? COLOR.riskMediumText : 'var(--ink-navy)';
   return (
     <div className="border-r border-[var(--rule-strong)] px-3 py-2.5 last:border-r-0">
       <div className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
@@ -403,7 +403,7 @@ function Sig({ label, value, unit, sub, alarm, warn }: SigProps) {
       {sub && (
         <div
           className="mt-0.5 font-mono text-caption"
-          style={{ color: alarm ? '#9b2c1c' : 'var(--ink-navy-muted)' }}
+          style={{ color: alarm ? COLOR.riskHighText : 'var(--ink-navy-muted)' }}
         >
           {sub}
         </div>
@@ -544,7 +544,7 @@ function AncRow({ j, isSelected, onSelect, onOpen }: AncRowProps) {
         <span
           className="font-mono text-caption"
           style={{
-            color: lastOverdue ? '#9b2c1c' : 'var(--ink-navy-dim)',
+            color: lastOverdue ? COLOR.riskHighText : 'var(--ink-navy-dim)',
             fontWeight: lastOverdue ? 700 : 400,
           }}
         >
@@ -885,7 +885,7 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
               <span
                 className="font-semibold"
                 style={{
-                  color: daysToEdc != null && daysToEdc <= 7 ? '#92660b' : 'var(--ink-navy)',
+                  color: daysToEdc != null && daysToEdc <= 7 ? COLOR.riskMediumText : 'var(--ink-navy)',
                 }}
               >
                 {edcText}
@@ -944,8 +944,8 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
               }
               const isHr3 = r.level === 'HR3';
               const isHr2 = r.level === 'HR2';
-              const bg = isHr3 ? '#fde2dc' : isHr2 ? '#fff5d8' : 'rgba(234,179,8,0.18)';
-              const ink = isHr3 ? '#9b2c1c' : COLOR.riskMediumText;
+              const bg = isHr3 ? COLOR.riskHighTint : isHr2 ? COLOR.riskMediumTint : 'rgba(234,179,8,0.18)';
+              const ink = isHr3 ? COLOR.riskHighText : COLOR.riskMediumText;
               return (
                 <div
                   key={rid}
@@ -1064,7 +1064,7 @@ function LabCell({
       <div
         className="mt-0.5 font-mono text-caption font-semibold"
         style={{
-          color: isAlarm ? '#9b2c1c' : isPending ? 'var(--ink-navy-muted)' : 'var(--ink-navy)',
+          color: isAlarm ? COLOR.riskHighText : isPending ? 'var(--ink-navy-muted)' : 'var(--ink-navy)',
           fontWeight: isAlarm ? 700 : isPending ? 400 : 600,
         }}
       >
@@ -1453,7 +1453,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
           group="ANC"
           label="OVERDUE / DUE 7d"
           value={`${ancOverdue}/${ancDueWeek}`}
-          valueColor={ancOverdue > 0 ? '#92660b' : undefined}
+          valueColor={ancOverdue > 0 ? COLOR.riskMediumText : undefined}
           sub={`ขาดนัด ${ancOverdue} · ครบกำหนด 7 วัน ${ancDueWeek}`}
         />
         <KpiCell
@@ -1530,7 +1530,7 @@ export default function HospitalConsolePage({ params }: { params: Promise<{ hcod
                     p.daysToEdc != null && p.daysToEdc < 0
                       ? 'var(--risk-high)'
                       : p.daysToEdc != null && p.daysToEdc <= 7
-                        ? '#92660b'
+                        ? COLOR.riskMediumText
                         : 'var(--ink-navy)';
                   const riskTier = ancTier(p.ancRiskLevel);
                   return (

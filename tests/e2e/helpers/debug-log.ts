@@ -12,11 +12,13 @@ function safeUrl(u: string): string {
   }
 }
 
+const clip = (t: string) => (t.length > 200 ? `${t.slice(0, 200)}…` : t); // PHI hygiene
+
 export function attachDebugLogging(page: Page): string[] {
   const log: string[] = [];
   const stamp = () => new Date().toISOString();
-  page.on('console', (m) => log.push(`${stamp()} console.${m.type()}: ${m.text()}`));
-  page.on('pageerror', (e) => log.push(`${stamp()} PAGEERROR: ${e.message}`));
+  page.on('console', (m) => log.push(`${stamp()} console.${m.type()}: ${clip(m.text())}`));
+  page.on('pageerror', (e) => log.push(`${stamp()} PAGEERROR: ${clip(e.message)}`));
   page.on('requestfailed', (r) => log.push(`${stamp()} REQFAILED ${r.method()} ${safeUrl(r.url())} ${r.failure()?.errorText}`));
   page.on('response', (r) => {
     if (r.url().includes('/api/')) log.push(`${stamp()} ${r.status()} ${r.request().method()} ${safeUrl(r.url())}`);

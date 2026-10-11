@@ -100,7 +100,7 @@ export function JitsiRoom({ roomId, displayName, onLeft }: JitsiRoomProps) {
             href={`https://${JITSI_DOMAIN}/${roomId}`}
             target="_blank"
             rel="noreferrer"
-            className="mt-4 inline-block rounded-md bg-ok px-4 py-2 text-caption font-semibold text-white hover:bg-ok"
+            className="mt-4 inline-block rounded-md bg-ok-text px-4 py-2 text-caption font-semibold text-white hover:bg-ok-text/90"
           >
             เปิดห้องสนทนาในแท็บใหม่
           </a>

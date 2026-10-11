@@ -224,7 +224,7 @@ export function PartographTab({
             type="button"
             onClick={openAdd}
             disabled={dialog.open}
-            className="ml-auto rounded bg-ok px-3 py-1 text-xs font-medium text-white disabled:opacity-50"
+            className="ml-auto rounded bg-ok-text px-3 py-1 text-xs font-medium text-white disabled:opacity-50"
           >
             + เพิ่มเวลาใหม่
           </button>

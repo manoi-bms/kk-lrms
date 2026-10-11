@@ -599,11 +599,11 @@ function HospitalTooltip({ pin }: { pin: PinEntry }) {
           ? 'NO SYNC'
           : 'UNKNOWN';
   const statusColor = isBlocked
-    ? '#eab308'
+    ? COLOR.riskMedium
     : conn === 'ONLINE' && !isNeverSynced
-      ? '#22c55e'
+      ? COLOR.riskLow
       : conn === 'OFFLINE'
-        ? '#ef4444'
+        ? COLOR.riskHigh
         : muted;
   const statusDetail = isBlocked
     ? `Sync ถูกระงับ — ${live?.syncBlockedReason ?? 'unknown'}`

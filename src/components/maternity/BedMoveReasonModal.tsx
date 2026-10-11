@@ -78,7 +78,7 @@ export function BedMoveReasonModal({
             type="button"
             onClick={() => onConfirm(selected)}
             disabled={selected === ''}
-            className="rounded-lg bg-ok px-4 py-2 text-sm font-medium text-white hover:bg-ok disabled:cursor-not-allowed disabled:bg-ok-tint"
+            className="rounded-lg bg-ok-text px-4 py-2 text-sm font-medium text-white hover:bg-ok-text/90 disabled:cursor-not-allowed disabled:bg-ok-tint"
           >
             ยืนยัน
           </button>

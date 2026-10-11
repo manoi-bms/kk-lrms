@@ -230,7 +230,7 @@ function ToneChip({
       unselected: 'border-slate-200 bg-white text-slate-700 hover:border-cyan-400 hover:bg-cyan-50/60 hover:text-cyan-700',
     },
     emerald: {
-      selected: 'border-ok bg-ok text-white shadow-sm ring-2 ring-ok/20',
+      selected: 'border-ok bg-ok-text text-white shadow-sm ring-2 ring-ok/20',
       unselected: 'border-ok/40 bg-ok-tint/40 text-ok-text hover:border-ok hover:bg-ok-tint',
     },
     lime: {
@@ -238,7 +238,7 @@ function ToneChip({
       unselected: 'border-lime-300 bg-lime-50/40 text-lime-700 hover:border-lime-500 hover:bg-lime-50',
     },
     amber: {
-      selected: 'border-warn bg-warn text-white shadow-sm ring-2 ring-warn/20',
+      selected: 'border-warn bg-warn-text text-white shadow-sm ring-2 ring-warn/20',
       unselected: 'border-warn/40 bg-warn-tint/40 text-warn-text hover:border-warn hover:bg-warn-tint',
     },
     rose: {
@@ -824,8 +824,8 @@ export function DischargeTab({ occupant }: { occupant: BedOccupancy | null }) {
                 className={cn(
                   'rounded-md border-2 px-4 py-2 text-caption font-bold text-white transition-colors disabled:opacity-40',
                   referOut.data
-                    ? 'border-ok bg-ok hover:bg-ok'
-                    : 'border-warn bg-warn hover:bg-warn',
+                    ? 'border-ok-text bg-ok-text hover:bg-ok-text/90'
+                    : 'border-warn-text bg-warn-text hover:bg-warn-text/90',
                 )}
               >
                 {referOut.data ? 'แก้ไขข้อมูลส่งต่อ' : 'เพิ่มข้อมูลส่งต่อ'}
@@ -955,7 +955,7 @@ export function DischargeTab({ occupant }: { occupant: BedOccupancy | null }) {
             className={cn(
               'rounded-md border-2 px-5 py-2 text-label font-bold text-white transition-colors disabled:opacity-40',
               draft.confirm_discharge === 'Y'
-                ? 'border-danger bg-danger hover:bg-danger'
+                ? 'border-danger bg-danger hover:bg-danger/90'
                 : 'border-slate-700 bg-slate-700 hover:bg-slate-800',
             )}
           >

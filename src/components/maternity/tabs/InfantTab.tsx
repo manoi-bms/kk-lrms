@@ -190,7 +190,7 @@ function ToggleChip({ label, checked, onToggle }: ToggleChipProps) {
       className={cn(
         'rounded-md border px-3 py-1.5 text-caption font-semibold transition-all',
         checked
-          ? 'border-ok bg-ok text-white shadow-sm ring-2 ring-ok/20'
+          ? 'border-ok bg-ok-text text-white shadow-sm ring-2 ring-ok/20'
           : 'border-slate-200 bg-white text-slate-600 hover:border-ok hover:bg-ok-tint/60 hover:text-ok-text',
       )}
     >

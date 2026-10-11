@@ -3,9 +3,10 @@
 import type { CdssSeverity, CdssSection } from '@/types/api';
 
 export const SEVERITY_DOT: Record<CdssSeverity, string> = {
-  CRITICAL: 'bg-danger',
-  ALERT: 'bg-warn',
-  WARN: 'bg-warn',
+  // graded clinical scale — keeps its own multi-step palette (needs >3 steps); allowlisted
+  CRITICAL: 'bg-red-500',
+  ALERT: 'bg-orange-500',
+  WARN: 'bg-amber-400',
   INFO: 'bg-slate-400',
 };
 

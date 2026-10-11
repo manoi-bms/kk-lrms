@@ -361,17 +361,18 @@ const TONE_TOKENS: Record<
   SectionTone,
   { ink: string; bar: string; bg: string; ring: string }
 > = {
-  fhr:       { ink: 'text-danger-text',     bar: 'bg-danger',     bg: 'bg-danger-tint/40',     ring: 'ring-danger/60' },
+  // categorical, not risk — allowlisted (section tones keep their own hues)
+  fhr:       { ink: 'text-rose-700',     bar: 'bg-rose-500',     bg: 'bg-rose-50/40',     ring: 'ring-rose-200/60' },
   labour:    { ink: 'text-indigo-700',   bar: 'bg-indigo-500',   bg: 'bg-indigo-50/40',   ring: 'ring-indigo-200/60' },
   cont:      { ink: 'text-violet-700',   bar: 'bg-violet-500',   bg: 'bg-violet-50/40',   ring: 'ring-violet-200/60' },
   vitals:    { ink: 'text-cyan-700',     bar: 'bg-cyan-500',     bg: 'bg-cyan-50/40',     ring: 'ring-cyan-200/60' },
-  interv:    { ink: 'text-ok-text',  bar: 'bg-ok',  bg: 'bg-ok-tint/40',  ring: 'ring-ok/60' },
-  urine:     { ink: 'text-warn-text',    bar: 'bg-warn',    bg: 'bg-warn-tint/40',    ring: 'ring-warn/60' },
+  interv:    { ink: 'text-emerald-700',  bar: 'bg-emerald-500',  bg: 'bg-emerald-50/40',  ring: 'ring-emerald-200/60' },
+  urine:     { ink: 'text-amber-700',    bar: 'bg-amber-500',    bg: 'bg-amber-50/40',    ring: 'ring-amber-200/60' },
   pps:       { ink: 'text-sky-700',      bar: 'bg-sky-500',      bg: 'bg-sky-50/40',      ring: 'ring-sky-200/60' },
-  biometric: { ink: 'text-warn-text',    bar: 'bg-warn',    bg: 'bg-warn-tint/40',    ring: 'ring-warn/60' },
+  biometric: { ink: 'text-amber-700',    bar: 'bg-amber-500',    bg: 'bg-amber-50/40',    ring: 'ring-amber-200/60' },
   pv:        { ink: 'text-indigo-700',   bar: 'bg-indigo-500',   bg: 'bg-indigo-50/40',   ring: 'ring-indigo-200/60' },
-  pe:        { ink: 'text-ok-text',  bar: 'bg-ok',  bg: 'bg-ok-tint/40',  ring: 'ring-ok/60' },
-  icu:       { ink: 'text-danger-text',     bar: 'bg-danger',     bg: 'bg-danger-tint/40',     ring: 'ring-danger/60' },
+  pe:        { ink: 'text-emerald-700',  bar: 'bg-emerald-500',  bg: 'bg-emerald-50/40',  ring: 'ring-emerald-200/60' },
+  icu:       { ink: 'text-rose-700',     bar: 'bg-rose-500',     bg: 'bg-rose-50/40',     ring: 'ring-rose-200/60' },
   fluid:     { ink: 'text-sky-700',      bar: 'bg-sky-500',      bg: 'bg-sky-50/40',      ring: 'ring-sky-200/60' },
   slate:     { ink: 'text-slate-600',    bar: 'bg-slate-400',    bg: 'bg-slate-50/60',    ring: 'ring-slate-200/60' },
 };
@@ -860,7 +861,7 @@ export function PartographEntryDialog({
               className={cn(
                 'rounded-md px-2.5 py-1 text-caption font-bold uppercase tracking-wide ring-1',
                 phase === 'ACTIVE'
-                  ? 'bg-ok text-white ring-ok'
+                  ? 'bg-ok-text text-white ring-ok'
                   : 'bg-slate-200 text-slate-700 ring-slate-300',
               )}
             >

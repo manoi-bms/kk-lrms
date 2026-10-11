@@ -247,13 +247,14 @@ export default function AboutPage() {
                 <div className="text-3xl font-bold text-blue-700 font-mono">30</div>
                 <div className="text-sm text-blue-600 mt-1">วินาที อัปเดตข้อมูล</div>
               </div>
-              <div className="text-center p-4 bg-warn-tint rounded-xl">
-                <div className="text-3xl font-bold text-warn-text font-mono">8</div>
-                <div className="text-sm text-warn-text mt-1">ปัจจัยเสี่ยง CPD</div>
+              {/* categorical, not risk — allowlisted */}
+              <div className="text-center p-4 bg-amber-50 rounded-xl">
+                <div className="text-3xl font-bold text-amber-700 font-mono">8</div>
+                <div className="text-sm text-amber-600 mt-1">ปัจจัยเสี่ยง CPD</div>
               </div>
-              <div className="text-center p-4 bg-danger-tint rounded-xl">
-                <div className="text-3xl font-bold text-danger-text font-mono">24/7</div>
-                <div className="text-sm text-danger-text mt-1">ติดตามตลอดเวลา</div>
+              <div className="text-center p-4 bg-rose-50 rounded-xl">
+                <div className="text-3xl font-bold text-rose-700 font-mono">24/7</div>
+                <div className="text-sm text-rose-600 mt-1">ติดตามตลอดเวลา</div>
               </div>
             </div>
           </div>
@@ -1087,7 +1088,7 @@ export default function AboutPage() {
           <p className="pt-4">
             <Link
               href="/login"
-              className="text-brand hover:text-brand font-medium transition-colors"
+              className="text-brand hover:text-brand-strong font-medium transition-colors"
             >
               เข้าสู่ระบบ
             </Link>

@@ -60,7 +60,7 @@ function TierChip({
       data-tier={tier}
       className={cn(
         'inline-block border px-1 py-0.5 font-mono font-semibold tracking-[0.03em]',
-        isKiosk ? 'text-caption' : 'text-caption',
+        isKiosk ? 'text-[11px]' : 'text-caption',
       )}
       style={{ color, borderColor: color, background: 'transparent' }}
     >
@@ -86,7 +86,7 @@ function AcuityChip({
       data-acuity={acuity}
       className={cn(
         'inline-block border px-1 py-0.5 font-mono font-semibold tracking-[0.03em]',
-        isKiosk ? 'text-caption' : 'text-caption',
+        isKiosk ? 'text-[11px]' : 'text-caption',
       )}
       style={{ color, borderColor: color, background: 'transparent' }}
     >

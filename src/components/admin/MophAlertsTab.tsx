@@ -181,7 +181,7 @@ export function MophAlertsTab() {
           className="font-mono text-caption px-3 py-2 border"
           style={{
             borderColor:
-              alertStatus.eventQueue.awaitingRecipients > 0 ? '#d97706' : 'var(--rule-strong)',
+              alertStatus.eventQueue.awaitingRecipients > 0 ? COLOR.riskMedium : 'var(--rule-strong)',
             color: 'var(--ink-navy-muted)',
           }}
         >

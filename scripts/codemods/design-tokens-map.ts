@@ -76,7 +76,13 @@ export function rewriteSource(src: string): RewriteResult {
       return m;
     }
     colorCount += 1;
-    const base = op ? mapped.split('/')[0] + op : mapped;
+    // A light-shade edge already mapped to `/40`: an explicit opacity scales that
+    // faintness (x0.4) instead of replacing it, e.g. ring-rose-200/60 -> ring-danger/24.
+    const base = op
+      ? mapped.includes('/')
+        ? `${mapped.split('/')[0]}/${Math.round(Number(op.slice(1)) * 0.4)}`
+        : mapped + op
+      : mapped;
     return `${variants}${base}`;
   });
   for (const m of out.match(MANUAL_RE) ?? []) manual.push(m);

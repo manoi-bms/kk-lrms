@@ -76,7 +76,7 @@ export function VitalSignChart({
             aria-pressed={page === p.chartTypeId}
             className={
               page === p.chartTypeId
-                ? 'rounded bg-ok px-3 py-1 text-xs font-medium text-white'
+                ? 'rounded bg-ok-text px-3 py-1 text-xs font-medium text-white'
                 : 'rounded border border-slate-300 px-3 py-1 text-xs text-slate-700 hover:bg-slate-50'
             }
           >

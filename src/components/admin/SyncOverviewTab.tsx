@@ -340,9 +340,9 @@ export function SyncOverviewTab() {
                     style={{
                       color:
                         outcome === 'failed'
-                          ? '#991b1b'
+                          ? COLOR.riskHighText
                           : outcome === 'partial'
-                            ? '#92400e'
+                            ? COLOR.riskMediumText
                             : 'var(--ink-navy-dim)',
                     }}
                     title={errorOrSummary}

@@ -89,9 +89,9 @@ function CpdTile({ score, riskLevel }: { score: number; riskLevel: RiskLevel }) 
   const scoreNum = typeof score === 'number' ? score : Number(score);
   const tone =
     riskLevel === RiskLevel.HIGH
-      ? { bg: '#7f1d1d', accent: '#fecaca', label: 'เสี่ยงสูง', icon: <AlertTriangle className="h-4 w-4" /> }
+      ? { bg: COLOR.riskHighText, accent: '#fecaca', label: 'เสี่ยงสูง', icon: <AlertTriangle className="h-4 w-4" /> }
       : riskLevel === RiskLevel.MEDIUM
-        ? { bg: '#78350f', accent: '#fde68a', label: 'เฝ้าระวัง', icon: <AlertTriangle className="h-4 w-4" /> }
+        ? { bg: COLOR.riskMediumText, accent: '#fde68a', label: 'เฝ้าระวัง', icon: <AlertTriangle className="h-4 w-4" /> }
         : { bg: COLOR.riskLowText, accent: '#bbf7d0', label: 'ปกติ', icon: <ShieldCheck className="h-4 w-4" /> };
   return (
     <div

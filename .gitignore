@@ -95,3 +95,6 @@ public/*-deck-*.zip
 # Production DB dumps (PHI) — never commit
 backups/
 logs/
+
+# Playwright private artefacts (may contain PHI)
+e2e-private/

@@ -48,14 +48,14 @@ export function IncomingCallToast({
         <button
           onClick={onAccept}
           disabled={busy}
-          className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md bg-ok px-3 py-2 text-caption font-semibold text-white transition-colors hover:bg-ok disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md bg-ok-text px-3 py-2 text-caption font-semibold text-white transition-colors hover:bg-ok-text/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Phone className="h-4 w-4" /> รับสาย
         </button>
         <button
           onClick={onDecline}
           disabled={busy}
-          className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md bg-danger px-3 py-2 text-caption font-semibold text-white transition-colors hover:bg-danger disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md bg-danger px-3 py-2 text-caption font-semibold text-white transition-colors hover:bg-danger/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <PhoneOff className="h-4 w-4" /> ปฏิเสธ
         </button>

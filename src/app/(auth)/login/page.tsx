@@ -230,19 +230,19 @@ function LoginForm() {
 
           <div className="space-y-3">
             <div className="flex items-center gap-4 bg-white/5 rounded-xl p-4">
-              <Building2 className="h-5 w-5 shrink-0 text-ok" />
+              <Building2 className="h-5 w-5 shrink-0 text-brand-soft" />
               <span className="text-sm text-slate-300">26 โรงพยาบาลในเครือข่าย</span>
             </div>
             <div className="flex items-center gap-4 bg-white/5 rounded-xl p-4">
-              <Activity className="h-5 w-5 shrink-0 text-ok" />
+              <Activity className="h-5 w-5 shrink-0 text-brand-soft" />
               <span className="text-sm text-slate-300">CPD Score คำนวณอัตโนมัติ</span>
             </div>
             <div className="flex items-center gap-4 bg-white/5 rounded-xl p-4">
-              <BarChart3 className="h-5 w-5 shrink-0 text-ok" />
+              <BarChart3 className="h-5 w-5 shrink-0 text-brand-soft" />
               <span className="text-sm text-slate-300">Partogram ติดตามความก้าวหน้าการคลอด</span>
             </div>
             <div className="flex items-center gap-4 bg-white/5 rounded-xl p-4">
-              <Clock className="h-5 w-5 shrink-0 text-ok" />
+              <Clock className="h-5 w-5 shrink-0 text-brand-soft" />
               <span className="text-sm text-slate-300">Real-time Dashboard ทุกโรงพยาบาล</span>
             </div>
           </div>
@@ -291,7 +291,7 @@ function LoginForm() {
                 placeholder="กรอก Session ID จาก BMS"
                 disabled={loading}
                 autoFocus
-                className="h-12 rounded-xl border-slate-200 focus-visible:ring-ok focus-visible:border-ok bg-slate-50 font-mono"
+                className="h-12 rounded-xl border-slate-200 focus-visible:ring-brand focus-visible:border-brand bg-slate-50 font-mono"
               />
             </div>
 

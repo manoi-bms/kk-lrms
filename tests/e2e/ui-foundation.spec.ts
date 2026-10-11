@@ -6,9 +6,10 @@ import { attachDebugLogging, flushDebugLog } from './helpers/debug-log';
 const TAG = process.env.UI_SNAPSHOT_TAG ?? 'after';
 // Only the PHI-free /login screenshots are committed (PUBLIC_OUT). Authenticated
 // pages can show patient names / AN / CID, so they go to the gitignored
-// PRIVATE_OUT and must never be added to git.
+// e2e-private/ (not test-results/, which Playwright wipes every run) and must
+// never be added to git.
 const PUBLIC_OUT = 'docs/ui-foundation-screenshots';
-const PRIVATE_OUT = 'test-results/ui-foundation';
+const PRIVATE_OUT = 'e2e-private/ui-foundation';
 const WIDTHS = [1440, 1024, 768] as const;
 const AUTH_ROUTES = ['/', '/pregnancies', '/hospitals', '/referrals', '/outcomes', '/hospital-maternity-ward', '/profile'];
 const SESSION = process.env.E2E_BMS_SESSION_ID;
