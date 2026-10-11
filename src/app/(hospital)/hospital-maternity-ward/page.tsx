@@ -198,11 +198,11 @@ export default function HospitalMaternityWardPage() {
         ? { feed: 'occupancy', error: occupancyError }
         : null;
 
+  // The whole roster, unplaced patients included (I2): one counting rule for
+  // the KPI row, and every patient — on a bed or not — opens in the drawer.
   const summary = summarizeBeds(beds, occupancy, now);
-  const bednoSet = new Set(beds.map((b) => b.bedno));
-  const wardOccupancy = occupancy.filter((o) => bednoSet.has(o.bedno));
   const wardName = wards.find((w) => w.ward === ward)?.name ?? `วอร์ด ${ward}`;
-  const selectedOccupant = selectedAn ? (wardOccupancy.find((o) => o.an === selectedAn) ?? null) : null;
+  const selectedOccupant = selectedAn ? (occupancy.find((o) => o.an === selectedAn) ?? null) : null;
   const stale = describeWardFeedStale(REFRESH_SECONDS);
 
   const handleBedMove = async (payload: BedMovePayload) => {
@@ -302,28 +302,27 @@ export default function HospitalMaternityWardPage() {
                 description="ยังไม่มีการตั้งค่าห้องและเตียง (roomno / bedno) ของวอร์ดนี้ใน HOSxP — แจ้งผู้ดูแล HOSxP ให้เพิ่มเตียง หรือเลือกวอร์ดอื่นจากเมนูวอร์ด"
               />
             ) : (
-              <>
-                {summary.occupied === 0 && (
-                  <EmptyState
-                    illustration="ward"
-                    title="ไม่มีผู้คลอดในห้องคลอดขณะนี้"
-                    description={`เตียงว่าง ${summary.free} เตียง · ข้อมูล HOSxP อัปเดตทุก ${REFRESH_SECONDS} วินาที`}
-                  />
-                )}
-                <WardLayoutViewFull
-                  beds={beds}
-                  occupancy={wardOccupancy}
-                  now={now}
-                  onBedClick={setSelectedAn}
-                  onBedMove={(p) => void handleBedMove(p)}
-                  onMoveRejected={handleMoveRejected}
-                  reasons={reasons}
-                  config={config}
-                  marketplaceToken={marketplaceToken}
-                  maternalScreenSummaries={maternalScreenSummaries}
+              summary.patients === 0 && (
+                <EmptyState
+                  illustration="ward"
+                  title="ไม่มีผู้คลอดในห้องคลอดขณะนี้"
+                  description={`เตียงว่าง ${summary.free} เตียง · ข้อมูล HOSxP อัปเดตทุก ${REFRESH_SECONDS} วินาที`}
                 />
-              </>
+              )
             )}
+            {/* Always rendered: a ward with no beds can still hold admitted patients (I2). */}
+            <WardLayoutViewFull
+              beds={beds}
+              occupancy={occupancy}
+              now={now}
+              onBedClick={setSelectedAn}
+              onBedMove={(p) => void handleBedMove(p)}
+              onMoveRejected={handleMoveRejected}
+              reasons={reasons}
+              config={config}
+              marketplaceToken={marketplaceToken}
+              maternalScreenSummaries={maternalScreenSummaries}
+            />
           </>
         )}
       </PageFrame>

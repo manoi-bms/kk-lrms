@@ -6,6 +6,7 @@ import {
   classifyLabourStage,
   groupBedsByRoom,
   hoursSinceAdmit,
+  placeOccupants,
   summarizeBeds,
 } from '@/services/ward-board';
 import { HOUR, localParts, makeBed, makeOccupant, wardScenario } from '../../helpers/ward-fixtures';
@@ -58,6 +59,9 @@ describe('summarizeBeds', () => {
     expect(summarizeBeds([...s.beds], [...s.occupancy], NOW)).toEqual({
       totalBeds: 9,
       occupied: 4,
+      patients: 4,
+      unplaced: 0,
+      sharedBeds: 0,
       free: 3,
       lockedEmpty: 2,
       lockedOccupied: 0,
@@ -66,10 +70,32 @@ describe('summarizeBeds', () => {
     });
   });
 
-  it('ignores occupants whose bed is not in this bed list (loose joins / another room)', () => {
+  it('I2: surfaces admitted patients whose bed is blank or not in this layout — counted, never dropped', () => {
+    const beds = [makeBed('01', 'LR1', 1), makeBed('02', 'LR1', 2)];
+    const blank = { ...occAt(13, null, 'X'), an: 'AN-BLANK', bedno: '' };
+    const nullBed = { ...occAt(1, 5, 'Y'), an: 'AN-NULL', bedno: null as unknown as string };
+    const occ = [occAt(1, 5, '01'), occAt(1, 5, '99'), blank, nullBed];
+    expect(summarizeBeds(beds, occ, NOW)).toEqual({
+      totalBeds: 2,
+      occupied: 1,
+      patients: 4,
+      unplaced: 3,
+      sharedBeds: 0,
+      free: 1,
+      lockedEmpty: 0,
+      lockedOccupied: 0,
+      // The blank-bed patient (13 h, Cx unknown) still counts as prolonged latent.
+      prolongedLatent: 1,
+      occupancyPct: 50,
+    });
+  });
+
+  it('I2: two admissions on one bed → one occupied bed, two patients, one shared bed; occupied never exceeds totalBeds', () => {
     const beds = [makeBed('01', 'LR1', 1)];
-    const occ = [occAt(1, 5, '01'), occAt(1, 5, '99')];
-    expect(summarizeBeds(beds, occ, NOW)).toMatchObject({ totalBeds: 1, occupied: 1, free: 0 });
+    const occ = [occAt(1, 5, '01'), { ...occAt(2, 6, '01'), an: 'AN-01-B' }];
+    const sum = summarizeBeds(beds, occ, NOW);
+    expect(sum).toMatchObject({ totalBeds: 1, occupied: 1, patients: 2, sharedBeds: 1, unplaced: 0, free: 0, occupancyPct: 100 });
+    expect(sum.occupied).toBeLessThanOrEqual(sum.totalBeds);
   });
 
   it('B1: a patient on a bed HOSxP has since locked is occupied, never locked or free', () => {
@@ -78,6 +104,9 @@ describe('summarizeBeds', () => {
     expect(summarizeBeds(beds, occ, NOW)).toEqual({
       totalBeds: 3,
       occupied: 1,
+      patients: 1,
+      unplaced: 0,
+      sharedBeds: 0,
       free: 1,
       lockedEmpty: 1,
       lockedOccupied: 1,
@@ -90,11 +119,31 @@ describe('summarizeBeds', () => {
     expect(summarizeBeds([], [], NOW)).toEqual({
       totalBeds: 0,
       occupied: 0,
+      patients: 0,
+      unplaced: 0,
+      sharedBeds: 0,
       free: 0,
       lockedEmpty: 0,
       lockedOccupied: 0,
       prolongedLatent: 0,
       occupancyPct: null,
     });
+  });
+});
+
+describe('placeOccupants (I2)', () => {
+  it('keeps every occupant: per bed (shared beds hold all of them) or unplaced with a reason', () => {
+    const beds = [makeBed('01', 'LR1', 1), makeBed('02', 'LR1', 2)];
+    const a = occAt(1, 5, '01');
+    const b = { ...occAt(2, 6, '01'), an: 'AN-01-B' };
+    const off = occAt(1, 5, '99');
+    const blank = { ...occAt(1, 5, 'X'), an: 'AN-BLANK', bedno: '  ' };
+    const p = placeOccupants(beds, [a, b, off, blank]);
+    expect(p.byBed.get('01')?.map((o) => o.an)).toEqual(['AN-01', 'AN-01-B']);
+    expect(p.byBed.get('02')).toBeUndefined();
+    expect(p.unplaced.map((u) => [u.occupant.an, u.reason])).toEqual([
+      ['AN-99', 'notInLayout'],
+      ['AN-BLANK', 'noBed'],
+    ]);
   });
 });

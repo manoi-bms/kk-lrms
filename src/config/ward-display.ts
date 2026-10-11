@@ -9,6 +9,7 @@ import {
   PROLONGED_LATENT_RULE,
   type BedSummary,
   type LabourStageKind,
+  type UnplacedReason,
 } from '@/services/ward-board';
 import { LABOUR_PHASE_LABEL_TH } from '@/config/obstetric-display';
 
@@ -64,7 +65,28 @@ export const LABOUR_STAGE_DISPLAY: Record<LabourStageKind, { labelTh: string; cl
   },
 };
 
+/** Room header line. "มีผู้คลอด" is patients (a shared bed holds two), so the
+ *  room lines plus the unplaced section add up to the ward KPI. */
 export function formatRoomSummary(s: BedSummary): string {
-  const base = `${s.totalBeds} เตียง · มีผู้คลอด ${s.occupied} · ว่าง ${s.free}`;
-  return s.lockedEmpty > 0 ? `${base} · ปิดใช้งาน ${s.lockedEmpty}` : base;
+  const parts = [`${s.totalBeds} เตียง`, `มีผู้คลอด ${s.patients}`, `ว่าง ${s.free}`];
+  if (s.lockedEmpty > 0) parts.push(`ปิดใช้งาน ${s.lockedEmpty}`);
+  if (s.sharedBeds > 0) parts.push(`เตียงซ้อน ${s.sharedBeds}`);
+  return parts.join(' · ');
+}
+
+/** I2: admitted patients with a blank bed or a bed outside this ward's layout. */
+export const UNPLACED_SECTION = {
+  title: 'ยังไม่ได้จัดเตียง / ไม่ตรงผังเตียง',
+  summary: (n: number) =>
+    `ผู้คลอด ${n} รายรับไว้ในวอร์ดนี้แต่ไม่มีเตียงในผัง — จัดหรือแก้เตียงใน HOSxP แล้วกด รีเฟรช`,
+} as const;
+
+/** Tile head for an unplaced patient (replaces "เตียง {bedno}"). */
+export function unplacedBedLabel(u: { reason: UnplacedReason; bedno: string | null }): string {
+  return u.reason === 'noBed' ? 'ยังไม่ได้จัดเตียง' : `เตียง ${u.bedno} · ไม่อยู่ในผังวอร์ดนี้`;
+}
+
+/** Conflict notice above a bed HOSxP has given to more than one admission. */
+export function sharedBedNotice(bedno: string, count: number): string {
+  return `เตียงซ้อน: ${count} รายบนเตียง ${bedno} ใน HOSxP — ตรวจและแก้เตียงใน HOSxP`;
 }

@@ -79,7 +79,8 @@ describe('WardLayoutViewFull — characterization', () => {
 
   it('only occupied beds are draggable', () => {
     const { container } = render(<WardLayoutViewFull beds={[...s.beds]} occupancy={[...s.occupancy]} now={NOW} />);
-    const wrapper = (b: string) => container.querySelector<HTMLElement>(`div[data-testid="bed-${b}"]`)!;
+    // Fix wave: the drag wrapper's id is bed-slot-<n> so bed-<n> is unique to the tile.
+    const wrapper = (b: string) => container.querySelector<HTMLElement>(`div[data-testid="bed-slot-${b}"]`)!;
     expect(wrapper('02').getAttribute('aria-disabled')).toBe('false');
     expect(wrapper('03').getAttribute('aria-disabled')).toBe('true');
   });

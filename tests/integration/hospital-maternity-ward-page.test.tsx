@@ -425,6 +425,39 @@ describe('Hospital maternity ward page — characterization', () => {
 
 });
 
+// ─── I2: a patient without a usable bed is never dropped ───────────────────
+describe('Hospital maternity ward page — patients without a usable bed (I2)', () => {
+  it('counts them in the KPI, lists them, opens them, and never claims the ward is empty', async () => {
+    const s = wardScenario(Date.now());
+    openSession();
+    mockListWards.mockResolvedValue([...s.wards]);
+    mockListInventory.mockResolvedValue([...s.beds]);
+    const nobed = { ...s.occupancy[0], an: 'AN-NOBED', bedno: '', fname: 'บุษบา' };
+    mockListOccupancyFull.mockResolvedValue([nobed]);
+    render(PAGE);
+    const section = await screen.findByRole('region', { name: 'ยังไม่ได้จัดเตียง / ไม่ตรงผังเตียง' }, { timeout: 2000 });
+    expect(within(section).getByText(/บุษบา ท\./)).toBeInTheDocument();
+    const occupied = within(PAGE_COPY.kpiRegion()).getByTestId('ward-kpi-occupied');
+    expect(occupied.querySelector('[data-kpi-value]')).toHaveTextContent(num(1));
+    expect(occupied).toHaveTextContent('ยังไม่ได้จัดเตียง 1');
+    expect(screen.queryByText('ไม่มีผู้คลอดในห้องคลอดขณะนี้')).toBeNull();
+    fireEvent.click(within(section).getByText(/บุษบา ท\./));
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument(), { timeout: 2000 });
+    expect(screen.getByText('AN AN-NOBED')).toBeInTheDocument();
+  });
+
+  it('a ward with no beds still lists admitted patients', async () => {
+    const s = wardScenario(Date.now());
+    openSession();
+    mockListWards.mockResolvedValue([...s.wards]);
+    mockListInventory.mockResolvedValue([]);
+    mockListOccupancyFull.mockResolvedValue([{ ...s.occupancy[0], an: 'AN-X', bedno: '07' }]);
+    render(PAGE);
+    expect(await screen.findByText('วอร์ดนี้ยังไม่มีเตียงใน HOSxP', undefined, { timeout: 2000 })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'ยังไม่ได้จัดเตียง / ไม่ตรงผังเตียง' })).toHaveTextContent('เตียง 07 · ไม่อยู่ในผังวอร์ดนี้');
+  });
+});
+
 // ─── C1: "not loaded" / "failed" must never read as "empty" ────────────────
 // A nurse must never be told the ward is empty (or that every bed is free)
 // because a HOSxP feed is still loading or has failed.

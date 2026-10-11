@@ -75,41 +75,89 @@ export function groupBedsByRoom(beds: BedSlot[]): RoomGroup[] {
   });
 }
 
+export type UnplacedReason = 'noBed' | 'notInLayout';
+
+export interface UnplacedOccupant {
+  occupant: BedOccupancyFull;
+  /** 'noBed' = iptadm.bedno blank; 'notInLayout' = a bedno that is not a bed in this layout. */
+  reason: UnplacedReason;
+}
+
+export interface OccupantPlacement {
+  /** Occupants per bed in the layout, in roster order. A shared bed holds them all. */
+  byBed: Map<string, BedOccupancyFull[]>;
+  /** Admitted patients with no usable bed in this layout. Never dropped (I2). */
+  unplaced: UnplacedOccupant[];
+}
+
+function hasBedno(o: BedOccupancyFull): boolean {
+  return typeof o.bedno === 'string' && o.bedno.trim() !== '';
+}
+
+/** Puts every occupant somewhere: on its bed, or in `unplaced` with the reason. */
+export function placeOccupants(beds: BedSlot[], occupancy: BedOccupancyFull[]): OccupantPlacement {
+  const bednos = new Set(beds.map((b) => b.bedno));
+  const byBed = new Map<string, BedOccupancyFull[]>();
+  const unplaced: UnplacedOccupant[] = [];
+  for (const o of occupancy) {
+    if (!hasBedno(o)) {
+      unplaced.push({ occupant: o, reason: 'noBed' });
+    } else if (!bednos.has(o.bedno)) {
+      unplaced.push({ occupant: o, reason: 'notInLayout' });
+    } else {
+      const list = byBed.get(o.bedno);
+      if (list) list.push(o);
+      else byBed.set(o.bedno, [o]);
+    }
+  }
+  return { byBed, unplaced };
+}
+
 export interface BedSummary {
   totalBeds: number;
-  /** Occupant rows on these beds, including patients on a locked bed (B1). */
+  /** Distinct beds holding at least one patient, locked beds included (B1). Never above totalBeds. */
   occupied: number;
+  /** Every patient passed in: on a bed of this list plus `unplaced` (I2). */
+  patients: number;
+  /** Patients whose bed is blank or not in this bed list (I2). */
+  unplaced: number;
+  /** Beds holding more than one admitted patient (a HOSxP data conflict). */
+  sharedBeds: number;
   free: number;
   /** Locked beds with nobody in them. */
   lockedEmpty: number;
   /** Locked beds that still hold a patient (B1). They are shown and counted as occupied. */
   lockedOccupied: number;
+  /** Prolonged-latent patients among all `patients`, unplaced included. */
   prolongedLatent: number;
   /** Rounded % of beds occupied; null for a ward with no beds. */
   occupancyPct: number | null;
 }
 
 /**
- * The one counting rule for a ward or a room (B1). An occupant always counts
- * as occupied, even on a bed HOSxP has since locked. `lockedEmpty` counts only
- * empty locked beds, and free = total − occupied − lockedEmpty (never below 0).
- * Occupants whose bed is not in `beds` are ignored.
+ * The one counting rule for a ward or a room (B1, I2). Every occupant passed
+ * in counts as a patient — on its bed, or unplaced; nobody is dropped. A bed
+ * counts once however many patients HOSxP puts on it, so occupied never
+ * exceeds totalBeds. A locked bed with a patient is occupied, never locked or
+ * free; free = total − occupied − lockedEmpty (never below 0).
+ * For a room, pass only that room's placed occupants (placeOccupants().byBed).
  */
 export function summarizeBeds(beds: BedSlot[], occupancy: BedOccupancyFull[], now: number): BedSummary {
-  const bednos = new Set(beds.map((b) => b.bedno));
-  const occ = occupancy.filter((o) => bednos.has(o.bedno));
-  const occupiedBednos = new Set(occ.map((o) => o.bedno));
+  const { byBed, unplaced } = placeOccupants(beds, occupancy);
   const locked = beds.filter((b) => b.bed_lock === 'Y');
-  const lockedEmpty = locked.filter((b) => !occupiedBednos.has(b.bedno)).length;
+  const lockedEmpty = locked.filter((b) => !byBed.has(b.bedno)).length;
   const totalBeds = beds.length;
-  const occupied = occ.length;
+  const occupied = byBed.size;
   return {
     totalBeds,
     occupied,
+    patients: occupancy.length,
+    unplaced: unplaced.length,
+    sharedBeds: [...byBed.values()].filter((list) => list.length > 1).length,
     free: Math.max(0, totalBeds - occupied - lockedEmpty),
     lockedEmpty,
     lockedOccupied: locked.length - lockedEmpty,
-    prolongedLatent: occ.filter((o) => classifyLabourStage(o, now) === 'prolongedLatent').length,
+    prolongedLatent: occupancy.filter((o) => classifyLabourStage(o, now) === 'prolongedLatent').length,
     occupancyPct: totalBeds > 0 ? Math.round((occupied / totalBeds) * 100) : null,
   };
 }
