@@ -147,3 +147,45 @@ describe('placeOccupants (I2)', () => {
     ]);
   });
 });
+
+describe('placeOccupants duplicates and bed-number whitespace', () => {
+  const beds = [makeBed('01', 'LR1', 1), makeBed('02', 'LR1', 2)];
+
+  it('keeps one row per AN: no false shared bed, no double count, unique keys', () => {
+    const a = occAt(3, 5, '01');
+    const dup = { ...a };
+    const p = placeOccupants(beds, [a, dup]);
+    expect(p.byBed.get('01')).toHaveLength(1);
+    const sum = summarizeBeds(beds, [a, dup], NOW);
+    expect(sum.patients).toBe(1);
+    expect(sum.sharedBeds).toBe(0);
+    expect(sum.occupied).toBe(1);
+  });
+
+  it('keeps the duplicate with the most recorded labour data', () => {
+    const sparse = { ...occAt(3, null, '01'), last_station: null, last_fhr: null };
+    const rich = { ...occAt(3, 5, '01'), last_station: '0', last_fhr: 140 };
+    const p = placeOccupants(beds, [sparse, rich]);
+    expect(p.byBed.get('01')?.[0].last_fhr).toBe(140);
+    const p2 = placeOccupants(beds, [rich, sparse]);
+    expect(p2.byBed.get('01')?.[0].last_fhr).toBe(140);
+  });
+
+  it('dedupes unplaced rows too', () => {
+    const x = { ...occAt(1, 5, '99'), an: 'AN-X' };
+    expect(placeOccupants(beds, [x, { ...x }]).unplaced).toHaveLength(1);
+  });
+
+  it('trims occupant bedno so " 01" lands on layout bed "01"', () => {
+    const p = placeOccupants(beds, [{ ...occAt(1, 5, '01'), bedno: ' 01 ' }]);
+    expect(p.byBed.get('01')).toHaveLength(1);
+    expect(p.unplaced).toHaveLength(0);
+  });
+
+  it('trims layout bed keys but keeps byBed keyed by the layout bedno', () => {
+    const padded = [makeBed(' 06', 'LR1', 1)];
+    const p = placeOccupants(padded, [occAt(1, 5, '06')]);
+    expect(p.byBed.get(' 06')).toHaveLength(1);
+    expect(p.unplaced).toHaveLength(0);
+  });
+});

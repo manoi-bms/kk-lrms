@@ -94,20 +94,56 @@ function hasBedno(o: BedOccupancyFull): boolean {
   return typeof o.bedno === 'string' && o.bedno.trim() !== '';
 }
 
-/** Puts every occupant somewhere: on its bed, or in `unplaced` with the reason. */
+function recordedLabourFields(o: BedOccupancyFull): number {
+  return Object.entries(o).filter(([k, v]) => k.startsWith('last_') && v !== null && v !== undefined).length;
+}
+
+/** One row per AN. The occupancy SQL LEFT-JOINs ipt_labour/ipt_pregnancy and
+ *  can return an AN twice; keep the row carrying the most recorded labour
+ *  data (ties keep the first). Rows without an AN are never merged. Order is
+ *  the first appearance of each AN. */
+export function dedupeOccupantsByAn(occupancy: BedOccupancyFull[]): BedOccupancyFull[] {
+  const out: BedOccupancyFull[] = [];
+  const index = new Map<string, number>();
+  for (const o of occupancy) {
+    const an = typeof o.an === 'string' ? o.an.trim() : '';
+    if (an === '') {
+      out.push(o);
+      continue;
+    }
+    const at = index.get(an);
+    if (at === undefined) {
+      index.set(an, out.length);
+      out.push(o);
+    } else if (recordedLabourFields(o) > recordedLabourFields(out[at])) {
+      out[at] = o;
+    }
+  }
+  return out;
+}
+
+/** Puts every occupant somewhere: on its bed, or in `unplaced` with the reason.
+ *  Bed numbers are matched trimmed; `byBed` stays keyed by the layout's own bedno. */
 export function placeOccupants(beds: BedSlot[], occupancy: BedOccupancyFull[]): OccupantPlacement {
-  const bednos = new Set(beds.map((b) => b.bedno));
+  const layoutKey = new Map<string, string>();
+  for (const b of beds) {
+    const t = b.bedno.trim();
+    if (!layoutKey.has(t)) layoutKey.set(t, b.bedno);
+  }
   const byBed = new Map<string, BedOccupancyFull[]>();
   const unplaced: UnplacedOccupant[] = [];
-  for (const o of occupancy) {
+  for (const o of dedupeOccupantsByAn(occupancy)) {
     if (!hasBedno(o)) {
       unplaced.push({ occupant: o, reason: 'noBed' });
-    } else if (!bednos.has(o.bedno)) {
+      continue;
+    }
+    const key = layoutKey.get(o.bedno.trim());
+    if (key === undefined) {
       unplaced.push({ occupant: o, reason: 'notInLayout' });
     } else {
-      const list = byBed.get(o.bedno);
+      const list = byBed.get(key);
       if (list) list.push(o);
-      else byBed.set(o.bedno, [o]);
+      else byBed.set(key, [o]);
     }
   }
   return { byBed, unplaced };
@@ -143,7 +179,8 @@ export interface BedSummary {
  * For a room, pass only that room's placed occupants (placeOccupants().byBed).
  */
 export function summarizeBeds(beds: BedSlot[], occupancy: BedOccupancyFull[], now: number): BedSummary {
-  const { byBed, unplaced } = placeOccupants(beds, occupancy);
+  const patientsList = dedupeOccupantsByAn(occupancy);
+  const { byBed, unplaced } = placeOccupants(beds, patientsList);
   const locked = beds.filter((b) => b.bed_lock === 'Y');
   const lockedEmpty = locked.filter((b) => !byBed.has(b.bedno)).length;
   const totalBeds = beds.length;
@@ -151,13 +188,13 @@ export function summarizeBeds(beds: BedSlot[], occupancy: BedOccupancyFull[], no
   return {
     totalBeds,
     occupied,
-    patients: occupancy.length,
+    patients: patientsList.length,
     unplaced: unplaced.length,
     sharedBeds: [...byBed.values()].filter((list) => list.length > 1).length,
     free: Math.max(0, totalBeds - occupied - lockedEmpty),
     lockedEmpty,
     lockedOccupied: locked.length - lockedEmpty,
-    prolongedLatent: occupancy.filter((o) => classifyLabourStage(o, now) === 'prolongedLatent').length,
+    prolongedLatent: patientsList.filter((o) => classifyLabourStage(o, now) === 'prolongedLatent').length,
     occupancyPct: totalBeds > 0 ? Math.round((occupied / totalBeds) * 100) : null,
   };
 }
