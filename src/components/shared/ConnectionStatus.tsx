@@ -2,6 +2,7 @@
 'use client';
 
 import { COLOR } from '@/config/design-tokens';
+import { CONNECTION_LABEL_TH } from '@/config/hospital-status';
 import { ConnectionStatus as ConnectionStatusEnum } from '@/types/domain';
 import { cn } from '@/lib/utils';
 import { formatThaiDate, formatThaiTime } from '@/lib/utils';
@@ -15,17 +16,17 @@ interface ConnectionStatusProps {
 const STATUS_CONFIG = {
   [ConnectionStatusEnum.ONLINE]: {
     color: COLOR.riskLow,
-    label: 'ออนไลน์',
+    label: CONNECTION_LABEL_TH[ConnectionStatusEnum.ONLINE],
     dotClass: 'bg-ok',
   },
   [ConnectionStatusEnum.OFFLINE]: {
     color: COLOR.riskHigh,
-    label: 'ออฟไลน์',
+    label: CONNECTION_LABEL_TH[ConnectionStatusEnum.OFFLINE],
     dotClass: 'bg-danger',
   },
   [ConnectionStatusEnum.UNKNOWN]: {
-    color: '#9ca3af',
-    label: 'ไม่ทราบ',
+    color: COLOR.inkSubtle,
+    label: CONNECTION_LABEL_TH[ConnectionStatusEnum.UNKNOWN],
     dotClass: 'bg-gray-400',
   },
 };

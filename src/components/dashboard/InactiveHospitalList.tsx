@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { DashboardHospital } from '@/types/api';
 import { ConnectionStatus as ConnectionStatusEnum } from '@/types/domain';
+import { CONNECTION_LABEL_TH } from '@/config/hospital-status';
 
 interface InactiveHospitalListProps {
   hospitals: DashboardHospital[];
@@ -23,15 +24,7 @@ function getStatusDotClass(status: ConnectionStatusEnum): string {
 }
 
 function getStatusLabel(status: ConnectionStatusEnum): string {
-  switch (status) {
-    case ConnectionStatusEnum.ONLINE:
-      return 'ออนไลน์';
-    case ConnectionStatusEnum.OFFLINE:
-      return 'ออฟไลน์';
-    case ConnectionStatusEnum.UNKNOWN:
-    default:
-      return 'ไม่ทราบ';
-  }
+  return CONNECTION_LABEL_TH[status] ?? CONNECTION_LABEL_TH[ConnectionStatusEnum.UNKNOWN];
 }
 
 export function InactiveHospitalList({ hospitals }: InactiveHospitalListProps) {

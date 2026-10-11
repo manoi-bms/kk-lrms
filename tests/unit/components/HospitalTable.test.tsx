@@ -102,9 +102,15 @@ describe('HospitalTable', () => {
     expect(screen.getByText('M1')).toBeTruthy();
   });
 
-  it('renders OFFLINE flag for offline hospital', () => {
+  it('keeps the English status word in kiosk mode', () => {
+    render(<HospitalTable hospitals={sampleHospitals} variant="kiosk" />);
+    expect(screen.getAllByText('OFFLINE').length).toBeGreaterThan(0);
+  });
+
+  it('renders the Thai offline status word in light mode', () => {
     render(<HospitalTable hospitals={sampleHospitals} />);
-    expect(screen.getByText('OFFLINE')).toBeTruthy();
+    expect(screen.getAllByText('ออฟไลน์').length).toBeGreaterThan(0);
+    expect(screen.queryByText('OFFLINE')).toBeNull();
   });
 
   it('shows total count for each hospital', () => {

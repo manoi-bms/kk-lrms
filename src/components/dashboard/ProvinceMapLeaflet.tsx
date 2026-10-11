@@ -9,7 +9,16 @@
 'use client';
 
 import { COLOR, MIN_TEXT_PX } from '@/config/design-tokens';
-import { mapBackground, mapLegendTheme, mapPalette, type MapPalette } from '@/config/map-palette';
+import {
+  classifyHospitalLink,
+  HOSPITAL_LINK_STATUS,
+  hospitalLinkText,
+  kioskLinkText,
+  type HospitalLinkStatus,
+  type StatusTone,
+} from '@/config/hospital-status';
+import { MapStatusLegend } from './MapStatusLegend';
+import { mapBackground, mapPalette, type MapPalette } from '@/config/map-palette';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
@@ -83,6 +92,20 @@ const HOSPITAL_CROSS_SVG =
   '<path d="M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6z" fill="currentColor"/>' +
   '</svg>';
 
+const PIN_STATUS_CLASS: Record<HospitalLinkStatus, string> = {
+  online: 'kk-pin__status--online',
+  blocked: 'kk-pin__status--blocked',
+  offline: 'kk-pin__status--offline',
+  noSync: 'kk-pin__status--unknown',
+  unknown: 'kk-pin__status--unknown',
+};
+
+const TONE_DOT: Partial<Record<StatusTone, string>> = {
+  ok: COLOR.riskLow,
+  warn: COLOR.riskMedium,
+  danger: COLOR.riskHigh,
+};
+
 function buildHospitalIcon(params: {
   color: string;
   sizePx: number;
@@ -91,8 +114,9 @@ function buildHospitalIcon(params: {
   connectionStatus: 'ONLINE' | 'OFFLINE' | 'UNKNOWN';
   syncStatus: 'OK' | 'BLOCKED' | 'NEVER_SYNCED';
   syncBlockedReason: string | null;
+  mode: 'light' | 'kiosk';
 }): DivIcon {
-  const { color, sizePx, isHigh, isSelected, connectionStatus, syncStatus, syncBlockedReason } =
+  const { color, sizePx, isHigh, isSelected, connectionStatus, syncStatus, syncBlockedReason, mode } =
     params;
   const isOffline = connectionStatus === 'OFFLINE';
   const classes = [
@@ -113,23 +137,12 @@ function buildHospitalIcon(params: {
   // BLOCKED takes priority over ONLINE so the operator doesn't read a
   // healthy tunnel as a healthy sync. NEVER_SYNCED falls under UNKNOWN
   // visually since it's a similar "no data flowing" message.
-  const isBlocked = syncStatus === 'BLOCKED';
-  const statusClass = isBlocked
-    ? 'kk-pin__status--blocked'
-    : connectionStatus === 'ONLINE' && syncStatus !== 'NEVER_SYNCED'
-      ? 'kk-pin__status--online'
-      : connectionStatus === 'OFFLINE'
-        ? 'kk-pin__status--offline'
-        : 'kk-pin__status--unknown';
-  const statusTitle = isBlocked
-    ? `Sync ถูกระงับ — ${syncBlockedReason ?? 'unknown'}`
-    : syncStatus === 'NEVER_SYNCED'
-      ? 'ยังไม่เคยมีการเชื่อมต่อ Sync'
-      : connectionStatus === 'ONLINE'
-        ? 'Online'
-        : connectionStatus === 'OFFLINE'
-          ? 'Offline'
-          : 'Unknown';
+  const link = classifyHospitalLink(connectionStatus, syncStatus);
+  const statusClass = PIN_STATUS_CLASS[link];
+  const statusTitle =
+    mode === 'kiosk'
+      ? kioskLinkText(connectionStatus, syncStatus, syncBlockedReason).pinTitle
+      : (({ label, detail }) => `${label} — ${detail}`)(hospitalLinkText(link, syncBlockedReason));
   const html =
     `<div class="${classes}" style="--kk-pin-color:${color};--kk-pin-size:${sizePx}px">` +
     '<div class="kk-pin__halo"></div>' +
@@ -337,6 +350,7 @@ export default function ProvinceMapLeaflet({
         connectionStatus,
         syncStatus,
         syncBlockedReason,
+        mode,
       });
       return {
         hcode,
@@ -383,7 +397,7 @@ export default function ProvinceMapLeaflet({
       pins.push(buildPin(h.hcode, h.name, h.level, coord));
     }
     return pins;
-  }, [activeMap, hospitals, liveByHcode, centroidByDistrict, selected, palette, w]);
+  }, [activeMap, hospitals, liveByHcode, centroidByDistrict, selected, palette, w, mode]);
 
   if (!activeMap) {
     return (
@@ -576,33 +590,13 @@ function HospitalTooltip({ pin, kiosk }: { pin: PinEntry; kiosk: boolean }) {
   // tooltip and the dot tell a consistent story.
   const conn = live?.connectionStatus ?? 'UNKNOWN';
   const syncStatus = live?.syncStatus ?? 'NEVER_SYNCED';
-  const isBlocked = syncStatus === 'BLOCKED';
-  const isNeverSynced = syncStatus === 'NEVER_SYNCED';
-  const statusLabel = isBlocked
-    ? 'BLOCKED'
-    : conn === 'ONLINE' && !isNeverSynced
-      ? 'ONLINE'
-      : conn === 'OFFLINE'
-        ? 'OFFLINE'
-        : isNeverSynced
-          ? 'NO SYNC'
-          : 'UNKNOWN';
-  const statusColor = isBlocked
-    ? COLOR.riskMedium
-    : conn === 'ONLINE' && !isNeverSynced
-      ? COLOR.riskLow
-      : conn === 'OFFLINE'
-        ? COLOR.riskHigh
-        : muted;
-  const statusDetail = isBlocked
-    ? `Sync ถูกระงับ — ${live?.syncBlockedReason ?? 'unknown'}`
-    : isNeverSynced
-      ? 'ยังไม่เคยเชื่อม sync'
-      : conn === 'OFFLINE'
-        ? 'ติดต่อตู้ BMS ไม่ได้'
-        : conn === 'ONLINE'
-          ? 'sync ปกติ'
-          : 'ยังไม่ทราบสถานะ';
+  const link = classifyHospitalLink(conn, syncStatus);
+  const text = kiosk
+    ? kioskLinkText(conn, syncStatus, live?.syncBlockedReason)
+    : hospitalLinkText(link, live?.syncBlockedReason);
+  const statusLabel = text.label;
+  const statusDetail = text.detail;
+  const statusColor = TONE_DOT[HOSPITAL_LINK_STATUS[link].tone] ?? muted;
 
   // Labor + ANC breakdown — fall back to "—" cells when no data so the
   // grid layout doesn't shift between hospitals with vs without data.
@@ -663,7 +657,7 @@ function HospitalTooltip({ pin, kiosk }: { pin: PinEntry; kiosk: boolean }) {
           }}
         />
         <span
-          style={{ fontWeight: 600, fontSize: kiosk ? 11 : MIN_TEXT_PX, letterSpacing: '0.04em' }}
+          style={{ fontWeight: 600, fontSize: kiosk ? 11 : MIN_TEXT_PX, letterSpacing: kiosk ? '0.04em' : undefined }}
         >
           {statusLabel}
         </span>
@@ -792,69 +786,4 @@ function formatRelativeAgeShort(iso: string | null): string {
   if (mins < 60) return `${Math.max(1, mins)} นาทีที่แล้ว`;
   if (hrs < 24) return `${hrs} ชม.ที่แล้ว`;
   return `${days} วันที่แล้ว`;
-}
-
-function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
-  const isKiosk = mode === 'kiosk';
-  const theme = mapLegendTheme(mode);
-  const { bg, ink, inkMuted, border } = theme;
-  const items: Array<{ color: string; label: string; sub: string }> = [
-    { color: COLOR.riskLow, label: 'ONLINE', sub: 'sync ปกติ' },
-    { color: COLOR.riskMedium, label: 'BLOCKED', sub: 'sync ถูกระงับ' },
-    { color: COLOR.riskHigh, label: 'OFFLINE', sub: 'ติดต่อไม่ได้' },
-    { color: theme.unknown, label: 'UNKNOWN', sub: 'ยังไม่ sync' },
-  ];
-  return (
-    <div
-      className="absolute"
-      style={{
-        top: 8,
-        left: 8,
-        zIndex: 500,
-        background: bg,
-        color: ink,
-        border: `1px solid ${border}`,
-        borderRadius: 4,
-        padding: '6px 8px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.18)',
-        fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
-        pointerEvents: 'none',
-      }}
-      aria-label="Map dot color legend"
-    >
-      <div
-        style={{
-          fontSize: isKiosk ? 9 : MIN_TEXT_PX,
-          letterSpacing: '0.14em',
-          color: inkMuted,
-          marginBottom: 4,
-        }}
-      >
-        STATUS DOT
-      </div>
-      <div className="flex flex-col gap-[2px]">
-        {items.map((it) => (
-          <div key={it.label} className="flex items-center gap-2">
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: it.color,
-                border: `1.5px solid ${theme.pinBorder}`,
-                boxShadow: '0 0 0 0.5px rgba(0,0,0,0.15)',
-                flexShrink: 0,
-              }}
-            />
-            <span style={{ fontSize: isKiosk ? 10 : MIN_TEXT_PX, fontWeight: 600 }}>
-              {it.label}
-            </span>
-            <span style={{ fontSize: isKiosk ? 10 : MIN_TEXT_PX, color: inkMuted }}>
-              ·&nbsp;{it.sub}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 }
