@@ -97,6 +97,13 @@ describe('BedTileFull', () => {
     render(<BedTileFull bedno="01" bedLock="N" occupant={occupant} now={now} />);
     expect(screen.getByTestId('patient-photo-placeholder')).toBeInTheDocument();
   });
+
+  it('B1: a patient on a locked bed stays visible, flagged as locked in HOSxP', () => {
+    render(<BedTileFull bedno="01" bedLock="Y" occupant={occupant} now={now} />);
+    expect(screen.getByText(/นาง ทดสอบ ร\./)).toBeInTheDocument();
+    expect(screen.getByTestId('bed-locked-occupied')).toHaveTextContent('เตียงถูกล็อกใน HOSxP');
+    expect(screen.queryByText('ปิดบำรุง')).toBeNull();
+  });
 });
 
 // Phase 6 Task H4 — cross-source maternal-screen pills

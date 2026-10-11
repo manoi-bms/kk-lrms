@@ -26,6 +26,7 @@ import { useMaternalScreenSummaries } from '@/hooks/useMaternalScreenSummaries';
 import { WardLayoutViewFull, type BedMovePayload } from '@/components/maternity/WardLayoutViewFull';
 import { PatientDrawer } from '@/components/maternity/PatientDrawer';
 import { getBedMoveReasons, movePatientBed } from '@/services/maternity-ward';
+import { summarizeBeds } from '@/services/ward-board';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
 const LIVE_GREEN = COLOR.riskLow;
@@ -221,23 +222,17 @@ export default function HospitalMaternityWardPage() {
   // Filter occupancy to current ward's beds (defensive against loose joins).
   const bednoSet = new Set(beds.map((b) => b.bedno));
   const wardOccupancy = occupancy.filter((o) => bednoSet.has(o.bedno));
-  const lockedCount = beds.filter((b) => b.bed_lock === 'Y').length;
-  const occupiedCount = wardOccupancy.length;
-  const totalBeds = beds.length;
-  const freeCount = Math.max(0, totalBeds - occupiedCount - lockedCount);
+  const summary = summarizeBeds(beds, occupancy, now);
+  const lockedCount = summary.lockedEmpty;
+  const occupiedCount = summary.occupied;
+  const totalBeds = summary.totalBeds;
+  const freeCount = summary.free;
   const wardName = wards.find((w) => w.ward === ward)?.name ?? `ward ${ward}`;
   const selectedOccupant = selectedAn
     ? (wardOccupancy.find((o) => o.an === selectedAn) ?? null)
     : null;
 
-  // Critical count — same heuristic as BedTileFull.classify (mirrors page-level
-  // KPI "high-risk" with the per-tile pill so the two never disagree).
-  const critical = wardOccupancy.filter((o) => {
-    const ts = Date.parse(`${o.regdate}T${o.regtime ?? '00:00:00'}`);
-    const hrs = Number.isFinite(ts) ? (now - ts) / 3_600_000 : 0;
-    const cx = o.last_cervix_cm;
-    return hrs >= 12 && (cx === null || cx < 4);
-  }).length;
+  const critical = summary.prolongedLatent;
 
   const handleRefresh = () => {
     void mutateBeds();

@@ -30,6 +30,7 @@ import type { BedSlot, BedOccupancyFull } from '@/types/maternity-ward';
 import type { ConnectionConfig } from '@/types/bms-browser';
 import type { MaternalScreenSummaryItem } from '@/types/api';
 import { MIN_TEXT_PX } from '@/config/design-tokens';
+import { groupBedsByRoom, summarizeBeds } from '@/services/ward-board';
 
 export interface BedMovePayload {
   an: string;
@@ -77,44 +78,6 @@ export interface WardLayoutViewFullProps {
    * resolves to `null` — GC-H4 degrade-to-no-chips, never an error tile.
    */
   maternalScreenSummaries?: Map<string, MaternalScreenSummaryItem> | null;
-}
-
-interface RoomGroup {
-  roomno: string;
-  room_name: string | null;
-  room_display_number: number | null;
-  beds: BedSlot[];
-}
-
-function groupByRoom(beds: BedSlot[]): RoomGroup[] {
-  const map = new Map<string, RoomGroup>();
-  for (const b of beds) {
-    let g = map.get(b.roomno);
-    if (!g) {
-      g = {
-        roomno: b.roomno,
-        room_name: b.room_name,
-        room_display_number: b.room_display_number,
-        beds: [],
-      };
-      map.set(b.roomno, g);
-    }
-    g.beds.push(b);
-  }
-  for (const g of map.values()) {
-    g.beds.sort((a, b) => {
-      const ao = a.bed_order ?? Number.MAX_SAFE_INTEGER;
-      const bo = b.bed_order ?? Number.MAX_SAFE_INTEGER;
-      if (ao !== bo) return ao - bo;
-      return a.bedno.localeCompare(b.bedno);
-    });
-  }
-  return [...map.values()].sort((a, b) => {
-    const ad = a.room_display_number ?? Number.MAX_SAFE_INTEGER;
-    const bd = b.room_display_number ?? Number.MAX_SAFE_INTEGER;
-    if (ad !== bd) return ad - bd;
-    return a.roomno.localeCompare(b.roomno);
-  });
 }
 
 // Drag-id encoding — bednos are unique per ward in HOSxP (PK on `bedno`).
@@ -198,7 +161,7 @@ export function WardLayoutViewFull({
   marketplaceToken,
   maternalScreenSummaries,
 }: WardLayoutViewFullProps) {
-  const rooms = groupByRoom(beds);
+  const rooms = groupBedsByRoom(beds);
   const occupantByBedno = new Map(occupancy.map((o) => [o.bedno, o] as const));
   const bedByBedno = new Map(beds.map((b) => [b.bedno, b] as const));
 
@@ -269,12 +232,11 @@ export function WardLayoutViewFull({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
         {rooms.map((room) => {
-          const occCount = room.beds.filter(
-            (b) => b.bed_lock !== 'Y' && occupantByBedno.has(b.bedno),
-          ).length;
-          const lockedCount = room.beds.filter((b) => b.bed_lock === 'Y').length;
-          const total = room.beds.length;
-          const free = Math.max(0, total - occCount - lockedCount);
+          const sum = summarizeBeds(room.beds, occupancy, now);
+          const occCount = sum.occupied;
+          const lockedCount = sum.lockedEmpty;
+          const total = sum.totalBeds;
+          const free = sum.free;
           return (
             <section key={room.roomno}>
               <header

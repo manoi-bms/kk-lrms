@@ -23,6 +23,7 @@ import type { BedOccupancyFull } from '@/types/maternity-ward';
 import type { ConnectionConfig } from '@/types/bms-browser';
 import type { MaternalScreenSummaryItem } from '@/types/api';
 import { maskName } from '@/lib/pii-mask';
+import { classifyLabourStage, type LabourStageKind } from '@/services/ward-board';
 import { PatientPhoto } from '@/components/shared/PatientPhoto';
 import {
   MATERNAL_SCREEN_TIER_LABEL_TH,
@@ -158,27 +159,14 @@ function fmtHours(regdate: string, regtime: string | null, now: number): string 
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-// Stage / severity classification — drives the status pill text + color.
-// Mirrors page-level classifyOccupantSeverity exactly so the dashboard KPI
-// "high-risk" count and the tile pill never disagree.
-type Stage =
-  | { kind: 'crit'; label: string }
-  | { kind: 'transition'; label: string }
-  | { kind: 'active'; label: string }
-  | { kind: 'latent'; label: string };
-
-function classify(o: BedOccupancyFull, now: number): Stage {
-  const cx = o.last_cervix_cm;
-  const ts = Date.parse(`${o.regdate}T${o.regtime ?? '00:00:00'}`);
-  const hrs = Number.isFinite(ts) ? (now - ts) / 3_600_000 : 0;
-  // Prolonged latent (Friedman-curve-ish) — 12+h with cervix unknown or <4cm
-  if (hrs >= 12 && (cx === null || cx < 4)) {
-    return { kind: 'crit', label: 'Action · Partogram +2h' };
-  }
-  if (cx !== null && cx >= 7) return { kind: 'transition', label: 'Stage I · Transition' };
-  if (cx !== null && cx >= 4) return { kind: 'active', label: 'Stage I · Active' };
-  return { kind: 'latent', label: 'Stage I · Latent' };
-}
+// Stage rule lives in src/services/ward-board.ts (shared with the KPI masthead).
+// Labels are still today's English strings; Task 5 replaces them with Thai.
+const STAGE_LABEL: Record<LabourStageKind, string> = {
+  prolongedLatent: 'Action · Partogram +2h',
+  transition: 'Stage I · Transition',
+  active: 'Stage I · Active',
+  latent: 'Stage I · Latent',
+};
 
 function thaiName(o: BedOccupancyFull): string {
   const raw = [o.pname, o.fname, o.lname].filter(Boolean).join(' ').trim();
@@ -440,11 +428,14 @@ export function BedTileFull({
   marketplaceToken,
   maternalScreenSummary,
 }: BedTileFullProps) {
-  if (bedLock === 'Y') return <LockedTile bedno={bedno} />;
-  if (!occupant) return <EmptyTile bedno={bedno} />;
+  // B1: an admitted patient always wins over the lock flag. Hiding a
+  // patient behind "ปิดบำรุง" is a safety defect.
+  if (!occupant) return bedLock === 'Y' ? <LockedTile bedno={bedno} /> : <EmptyTile bedno={bedno} />;
+  const lockedInHosxp = bedLock === 'Y';
 
-  const stage = classify(occupant, now);
-  const isCrit = stage.kind === 'crit';
+  const stageKind = classifyLabourStage(occupant, now);
+  const stage = { kind: stageKind, label: STAGE_LABEL[stageKind] };
+  const isCrit = stageKind === 'prolongedLatent';
   const age = calcAge(occupant.birthday, now);
 
   // Cross-source maternal-screen pills (Task H4) — zero DOM unless at least
@@ -618,6 +609,14 @@ export function BedTileFull({
               }}
             >
               {occupant.blood_grp}
+            </span>
+          )}
+          {lockedInHosxp && (
+            <span
+              data-testid="bed-locked-occupied"
+              className="whitespace-nowrap rounded-full border border-warn/40 bg-warn-tint px-2 py-0.5 text-caption font-semibold text-warn-text"
+            >
+              เตียงถูกล็อกใน HOSxP
             </span>
           )}
           {/* Cross-source maternal-screen pills (Task H4, GC-H3/GC-H4) — shadow-mode,
