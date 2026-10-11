@@ -13,7 +13,7 @@ import {
   formatRelativeTime,
 } from '@/lib/utils';
 import { RiskLevel, HospitalLevel } from '@/types/domain';
-import { COLOR } from '@/config/design-tokens';
+import { COLOR, TYPE_SCALE } from '@/config/design-tokens';
 
 describe('utils', () => {
   describe('cn', () => {
@@ -40,6 +40,10 @@ describe('utils', () => {
 
     it('handles empty input', () => {
       expect(cn()).toBe('');
+    });
+
+    it.each(Object.keys(TYPE_SCALE))('keeps text-%s when a text colour follows', (token) => {
+      expect(cn(`text-${token}`, 'text-brand')).toBe(`text-${token} text-brand`);
     });
   });
 

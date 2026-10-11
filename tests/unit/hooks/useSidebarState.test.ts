@@ -1,11 +1,12 @@
 // tests/unit/hooks/useSidebarState.test.ts
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useSidebarState } from '@/hooks/useSidebarState';
+import { useSidebarState, __resetSidebarStateForTests } from '@/hooks/useSidebarState';
 
 afterEach(() => {
   vi.restoreAllMocks();
   window.localStorage.clear();
+  __resetSidebarStateForTests();
 });
 
 describe('useSidebarState', () => {

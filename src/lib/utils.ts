@@ -4,6 +4,7 @@ import { extendTailwindMerge } from 'tailwind-merge';
 import { RiskLevel, type HospitalLevel } from '@/types/domain';
 import { RISK_LEVELS } from '@/config/risk-levels';
 import { HOSPITAL_LEVELS } from '@/config/hospitals';
+import { TYPE_SCALE } from '@/config/design-tokens';
 
 // The design-system type scale (text-caption … text-kpi) must be recognised as
 // font-size utilities; otherwise tailwind-merge reads them as text colours and
@@ -11,7 +12,7 @@ import { HOSPITAL_LEVELS } from '@/config/hospitals';
 const twMerge = extendTailwindMerge({
   extend: {
     classGroups: {
-      'font-size': [{ text: ['caption', 'label', 'body', 'body-lg', 'title', 'page', 'kpi-sm', 'kpi'] }],
+      'font-size': [{ text: Object.keys(TYPE_SCALE) }],
     },
   },
 });

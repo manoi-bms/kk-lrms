@@ -40,6 +40,12 @@ function write(collapsed: boolean): void {
   listeners.forEach((l) => l());
 }
 
+/** Test-only: clears the module-level in-memory fallback so one test's
+ *  blocked-storage toggle cannot leak into the next. */
+export function __resetSidebarStateForTests(): void {
+  memoryOverride = null;
+}
+
 export function useSidebarState(): { collapsed: boolean; toggle: () => void } {
   // Server snapshot is always expanded, so hydration matches; the saved state
   // applies right after hydration.

@@ -41,7 +41,7 @@ export function Sidebar({ items, isActive, collapsed, onToggle, homeHref, onNavi
     <aside
       className={cn(
         'flex h-full flex-col gap-1 bg-brand px-2.5 py-4 text-white transition-[width] duration-200',
-        collapsed ? 'w-16' : 'w-58',
+        collapsed ? 'w-[64px]' : 'w-[232px]',
         className,
       )}
     >

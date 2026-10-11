@@ -73,16 +73,24 @@ export function contrastRatio(fg: string, bg: string): number {
 /** Sarabun type scale in px (the html root is 18px, so rem would mislead).
  *  Thai stacks vowels/tone marks above and below the line — line-heights are
  *  deliberately generous. */
+export interface TypeScaleEntry {
+  px: number;
+  lineHeight: number;
+  /** Omitted for caption and body on purpose: a declared weight would override
+   *  the weight inherited from a bold parent (e.g. a <th>). */
+  weight?: number;
+}
+
 export const TYPE_SCALE = {
-  caption: { px: 13, lineHeight: 1.5, weight: 400 },
+  caption: { px: 13, lineHeight: 1.5 },
   label: { px: 14, lineHeight: 1.5, weight: 500 },
-  body: { px: 15, lineHeight: 1.65, weight: 400 },
+  body: { px: 15, lineHeight: 1.65 },
   'body-lg': { px: 17, lineHeight: 1.6, weight: 500 },
   title: { px: 22, lineHeight: 1.35, weight: 600 },
   page: { px: 26, lineHeight: 1.3, weight: 700 },
   'kpi-sm': { px: 26, lineHeight: 1.15, weight: 700 },
   kpi: { px: 34, lineHeight: 1.15, weight: 700 },
-} as const;
+} as const satisfies Record<string, TypeScaleEntry>;
 
 export type TypeToken = keyof typeof TYPE_SCALE;
 

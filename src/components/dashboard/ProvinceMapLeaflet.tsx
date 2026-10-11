@@ -595,6 +595,10 @@ function HospitalTooltip({ pin, kiosk }: { pin: PinEntry; kiosk: boolean }) {
   const ink = '#e6ecf5';
   const muted = 'rgba(255,255,255,0.65)';
   const ruleColor = 'rgba(255,255,255,0.18)';
+  // The tooltip surface is dark in BOTH modes (.kk-map-tooltip), so the light
+  // palette's riskHigh (~3.2:1 on it) fails AA everywhere; use the kiosk
+  // palette's lighter high red for the H / HR3 counts.
+  const highInk = buildPalette('kiosk').high;
 
   // Connection + sync state — same precedence as the corner dot so the
   // tooltip and the dot tell a consistent story.
@@ -729,7 +733,7 @@ function HospitalTooltip({ pin, kiosk }: { pin: PinEntry; kiosk: boolean }) {
               marginTop: 2,
             }}
           >
-            <span style={{ color: COLOR.riskHigh }}>H {labor.high}</span>
+            <span style={{ color: highInk }}>H {labor.high}</span>
             <span style={{ color: muted }}> · </span>
             <span style={{ color: COLOR.riskMedium }}>M {labor.medium}</span>
             <span style={{ color: muted }}> · </span>
@@ -759,7 +763,7 @@ function HospitalTooltip({ pin, kiosk }: { pin: PinEntry; kiosk: boolean }) {
                 fontSize: kiosk ? 10 : MIN_TEXT_PX,
                 fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
                 marginTop: 2,
-                color: COLOR.riskHigh,
+                color: highInk,
                 fontWeight: 700,
               }}
             >

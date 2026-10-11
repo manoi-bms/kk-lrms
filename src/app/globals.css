@@ -104,13 +104,11 @@
 @theme inline {
   --text-caption: 13px;
   --text-caption--line-height: 1.5;
-  --text-caption--font-weight: 400;
   --text-label: 14px;
   --text-label--line-height: 1.5;
   --text-label--font-weight: 500;
   --text-body: 15px;
   --text-body--line-height: 1.65;
-  --text-body--font-weight: 400;
   --text-body-lg: 17px;
   --text-body-lg--line-height: 1.6;
   --text-body-lg--font-weight: 500;

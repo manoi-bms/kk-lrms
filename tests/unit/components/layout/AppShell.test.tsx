@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -24,6 +24,9 @@ import { AppShell } from '@/components/layout/AppShell';
 describe('AppShell', () => {
   beforeEach(() => {
     crumbsMock.value = [{ label: 'ห้องคลอด' }];
+  });
+  afterEach(() => {
+    window.localStorage.clear();
   });
 
   it('kiosk contract: sidebar is <aside>, top bar is header.sticky, strip lives inside the header', () => {
@@ -70,5 +73,16 @@ describe('AppShell', () => {
   it('keeps the notification-settings link reachable for the provincial variant', () => {
     render(<AppShell variant="provincial">page</AppShell>);
     expect(screen.getByRole('link', { name: 'การตั้งค่าการแจ้งเตือน' })).toHaveAttribute('href', '/profile');
+  });
+
+  it('mobile drawer: focus moves in on open, Escape closes it and returns focus to the menu button', async () => {
+    render(<AppShell variant="hospital">page</AppShell>);
+    const opener = screen.getByRole('button', { name: 'เปิดเมนู' });
+    await userEvent.click(opener);
+    const dialog = screen.getByRole('dialog', { name: 'เมนู' });
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(opener).toHaveFocus();
   });
 });

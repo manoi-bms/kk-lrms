@@ -27,7 +27,7 @@ export type ChipTone =
   | 'severity-8'
   | 'severity-10';
 
-// graded clinical scale — keeps its own multi-step palette (needs >3 steps); allowlisted
+// kept as raw palette on purpose (graded clinical scale, ruling R16); the lint rule does not inspect config-object strings
 export const CHIP_TONE_CLASSES: Record<ChipTone, { selected: string; unselected: string }> = {
   default: {
     selected: 'border-cyan-600 bg-cyan-600 text-white shadow-sm ring-2 ring-cyan-600/20',

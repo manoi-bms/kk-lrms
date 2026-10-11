@@ -1,6 +1,12 @@
 // Blocks ad-hoc design values in className/cn()/style so the app can't drift
 // off the design tokens (spec §6). Neutral greys are intentionally allowed
 // until sub-projects 2–5 give them tokens.
+//
+// Known gap: only string literals that sit lexically inside a className / cn()
+// / clsx() / cva() / twMerge() call (or a style attribute) are inspected.
+// Palette strings kept in plain objects or constants and passed to className
+// later (e.g. CHIP_TONE_CLASSES, SEVERITY_DOT) are NOT detected. Such tables
+// are reviewed by hand and annotated where they keep raw palette on purpose.
 const SIZE = /(?<![\w-])(?:[a-z0-9-]+:)*text-\[\d+(?:\.\d+)?(?:px|rem)\]/;
 const PALETTE =
   /(?<![\w-])(?:[a-z0-9-]+:)*(?:bg|text|border|ring|fill|stroke|outline|decoration|divide|accent|caret|from|via|to)-(?:red|rose|orange|amber|yellow|green|emerald|teal)-\d{2,3}(?![\w-])/;
