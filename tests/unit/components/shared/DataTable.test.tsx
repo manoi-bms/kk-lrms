@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DataTable, type DataTableColumn } from '@/components/shared/DataTable';
 import { RiskLevel } from '@/types/domain';
@@ -37,15 +37,49 @@ describe('DataTable', () => {
     const cell = screen.getByText('ยังไม่มีผู้คลอด').closest('td')!;
     expect(cell).toHaveAttribute('colspan', '2');
   });
-  it('clickable rows respond to click and Enter', async () => {
+  it('clickable rows are named, and activate on click, Enter and Space', async () => {
     const onRowClick = vi.fn();
-    render(<DataTable columns={columns} rows={rows} rowKey={(r) => r.an} onRowClick={onRowClick} />);
-    const tr = screen.getByText('นาง ก.').closest('tr')!;
+    render(
+      <DataTable
+        columns={columns}
+        rows={rows}
+        rowKey={(r) => r.an}
+        onRowClick={onRowClick}
+        rowLabel={(r) => `เปิดข้อมูล ${r.name}`}
+      />,
+    );
+    const tr = screen.getByRole('row', { name: 'เปิดข้อมูล นาง ก.' });
+    expect(tr).toHaveAttribute('tabindex', '0');
     await userEvent.click(tr);
     tr.focus();
     await userEvent.keyboard('{Enter}');
-    expect(onRowClick).toHaveBeenCalledTimes(2);
+    await userEvent.keyboard(' ');
+    expect(onRowClick).toHaveBeenCalledTimes(3);
     expect(onRowClick).toHaveBeenCalledWith(rows[1]);
+    // Space must not scroll the page: the handler prevents the default.
+    expect(fireEvent.keyDown(tr, { key: ' ' })).toBe(false);
     expect(within(tr).getByText('2.5')).toBeInTheDocument();
+  });
+  it('non-clickable rows are neither focusable nor labelled', () => {
+    render(<DataTable columns={columns} rows={rows} rowKey={(r) => r.an} />);
+    const tr = screen.getByText('นาง ก.').closest('tr')!;
+    expect(tr).not.toHaveAttribute('tabindex');
+    expect(tr).not.toHaveAttribute('aria-label');
+  });
+  it('onRowClick without rowLabel does not compile', () => {
+    // @ts-expect-error a clickable row must say what it opens
+    const bad = <DataTable columns={columns} rows={rows} rowKey={(r) => r.an} onRowClick={() => {}} />;
+    expect(bad).toBeTruthy();
+  });
+  it('maxHeight makes the table its own scroller and only then sticks the header', () => {
+    const { container } = render(<DataTable columns={columns} rows={rows} rowKey={(r) => r.an} maxHeight={320} />);
+    const scroller = container.querySelector('[data-slot="table-container"]') as HTMLElement;
+    expect(scroller.style.maxHeight).toBe('320px');
+    expect(scroller.className).toContain('overflow-y-auto');
+    expect(container.querySelector('thead')!.className).toContain('sticky');
+  });
+  it('an unbounded table does not claim a sticky header', () => {
+    const { container } = render(<DataTable columns={columns} rows={rows} rowKey={(r) => r.an} />);
+    expect(container.querySelector('thead')!.className).not.toContain('sticky');
   });
 });
