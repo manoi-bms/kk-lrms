@@ -1,3 +1,4 @@
+// Kiosk-only since UI sub-project 2; normal mode renders province/LaborVitalsSection + ContinuumSection.
 // ProvinceVitalsStrip — merges the old SummaryCards + RiskDistributionChart
 // into a single grid: total-with-risk-bar | HIGH | MED | LOW | 24h admissions.
 // Replaces SummaryCards.tsx and RiskDistributionChart.tsx per the 2026-04-21 redesign.
@@ -9,6 +10,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { VITALS_HINTS, admissionsHint } from './province/metric-hints';
 import Link from 'next/link';
 import type { DashboardSummary, DashboardTrends, DashboardContinuum } from '@/types/api';
 import { RiskBar, StatCell, BarStrip } from './shared';
@@ -68,6 +70,7 @@ function CellWithTooltip({
 }
 
 export function ProvinceVitalsStrip({ summary, trends, continuum }: ProvinceVitalsStripProps) {
+  const adm = admissionsHint(trends.admissionsToday, trends.admissions7dAvg);
   return (
     <>
       <div
@@ -77,16 +80,8 @@ export function ProvinceVitalsStrip({ summary, trends, continuum }: ProvinceVita
         {/* Total + inline risk bar */}
         <CellWithTooltip
           ariaLabel={`ACTIVE LABOR · PROVINCE: ${summary.totalActive} เคส (เสี่ยงต่ำ ${summary.totalLow}, เสี่ยงปานกลาง ${summary.totalMedium}, เสี่ยงสูง ${summary.totalHigh})`}
-          title="ผู้ป่วยในห้องคลอดทั้งจังหวัด"
-          body={
-            <>
-              จำนวนผู้ป่วยที่ยังอยู่ในห้องคลอด (<strong>labor_status = ACTIVE</strong>) รวมทุก รพ.
-              ใน จ.ขอนแก่นที่เปิดใช้งานในระบบ KK-LRMS. ตัวเลข <strong>+N ราย/24h</strong> =
-              จำนวนรับใหม่ในรอบ 24 ชม.ที่ผ่านมา. แถบสีด้านล่างเป็นสัดส่วนตามระดับความเสี่ยง CPD ของ
-              score ล่าสุด — LOW (เขียว) / MED (ส้ม) / HIGH (แดง). คะแนน CPD คำนวณจาก
-              src/services/cpd-score.ts.
-            </>
-          }
+          title={VITALS_HINTS.active.title}
+          body={VITALS_HINTS.active.body}
         >
           <div className="border-r border-[var(--rule-strong)] px-5 py-4">
             <div className="font-mono text-caption uppercase tracking-[0.14em] text-[var(--ink-navy-muted)]">
@@ -131,15 +126,8 @@ export function ProvinceVitalsStrip({ summary, trends, continuum }: ProvinceVita
 
         <CellWithTooltip
           ariaLabel={`HIGH RISK: ${summary.totalHigh} เคส, รับใหม่ ${trends.newByRisk24h.high} ใน 24 ชั่วโมง`}
-          title="ผู้ป่วยเสี่ยงสูง (CPD HIGH)"
-          body={
-            <>
-              ผู้ป่วย <strong>labor_status = ACTIVE</strong> ที่ <strong>CPD score ล่าสุด</strong>{' '}
-              อยู่ในเกณฑ์ HIGH ตาม src/config/risk-levels.ts. ▲ <strong>+N</strong> = รับใหม่ใน 24
-              ชม.ล่าสุดที่ปัจจุบันอยู่ในระดับนี้. ปฏิบัติ: เฝ้าระวังใกล้ชิด พร้อมส่งต่อ รพ.ที่มี
-              ศักยภาพสูงกว่าถ้าจำเป็น.
-            </>
-          }
+          title={VITALS_HINTS.high.title}
+          body={VITALS_HINTS.high.body}
         >
           <StatCell
             label="HIGH RISK"
@@ -151,14 +139,8 @@ export function ProvinceVitalsStrip({ summary, trends, continuum }: ProvinceVita
 
         <CellWithTooltip
           ariaLabel={`MEDIUM: ${summary.totalMedium} เคส, รับใหม่ ${trends.newByRisk24h.medium} ใน 24 ชั่วโมง`}
-          title="ผู้ป่วยเสี่ยงปานกลาง (CPD MEDIUM)"
-          body={
-            <>
-              ผู้ป่วย <strong>labor_status = ACTIVE</strong> ที่ CPD score ล่าสุดอยู่ในเกณฑ์ MEDIUM.
-              ▲ <strong>+N</strong> = รับใหม่ใน 24 ชม.ล่าสุดที่ปัจจุบันอยู่ในระดับนี้. ปฏิบัติ:
-              ติดตามดูแลตามแนวทาง, ทบทวนคะแนน CPD ถ้าอาการเปลี่ยน.
-            </>
-          }
+          title={VITALS_HINTS.medium.title}
+          body={VITALS_HINTS.medium.body}
         >
           <StatCell
             label="MEDIUM"
@@ -170,13 +152,8 @@ export function ProvinceVitalsStrip({ summary, trends, continuum }: ProvinceVita
 
         <CellWithTooltip
           ariaLabel={`LOW: ${summary.totalLow} เคส, รับใหม่ ${trends.newByRisk24h.low} ใน 24 ชั่วโมง`}
-          title="ผู้ป่วยเสี่ยงต่ำ (CPD LOW)"
-          body={
-            <>
-              ผู้ป่วย <strong>labor_status = ACTIVE</strong> ที่ CPD score ล่าสุดอยู่ในเกณฑ์ LOW
-              (ปกติ). ▲ <strong>+N</strong> = รับใหม่ใน 24 ชม.ล่าสุดที่ปัจจุบันอยู่ในระดับนี้.
-            </>
-          }
+          title={VITALS_HINTS.low.title}
+          body={VITALS_HINTS.low.body}
         >
           <StatCell
             label="LOW"
@@ -189,17 +166,8 @@ export function ProvinceVitalsStrip({ summary, trends, continuum }: ProvinceVita
         {/* 24h admissions */}
         <CellWithTooltip
           ariaLabel={`ADMISSIONS · LAST 24H: ${trends.admissionsToday} today, avg ${trends.admissions7dAvg.toFixed(1)} per day`}
-          title="รับเข้าห้องคลอดในรอบ 24 ชั่วโมง"
-          body={
-            <>
-              กราฟแท่งแสดงจำนวนผู้ป่วยรับเข้าใหม่ <strong>ทุกชั่วโมงตลอด 24 ชม.ล่าสุด</strong>{' '}
-              (เวลาประเทศไทย, Asia/Bangkok). <strong>{trends.admissionsToday} today</strong> =
-              รับเข้าตั้งแต่ 00:00 ของวันนี้.{' '}
-              <strong>avg {trends.admissions7dAvg.toFixed(1)}</strong> = ค่าเฉลี่ยรับเข้าต่อวันใน 7
-              วันที่ผ่านมา. ถ้า today สูงกว่า avg อย่างเห็นได้ชัด แสดงว่ามีการรับเข้าผิดปกติ
-              ควรตรวจสอบสาเหตุ.
-            </>
-          }
+          title={adm.title}
+          body={adm.body}
         >
           <div className="border-l border-[var(--rule-strong)] px-5 py-3">
             <div className="flex items-baseline justify-between">

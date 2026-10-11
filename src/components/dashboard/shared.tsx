@@ -197,17 +197,31 @@ export function BarStrip({
   width = 280,
   height = 26,
   color = 'var(--accent-navy)',
+  fluid = false,
+  label = '24-hour admissions',
 }: {
   values: number[];
   width?: number;
   height?: number;
   color?: string;
+  /** Stretch to the container width (bars are drawn in a width×height viewBox). */
+  fluid?: boolean;
+  /** Accessible name of the chart. */
+  label?: string;
 }) {
   if (values.length === 0) return null;
   const max = Math.max(...values, 1);
   const bw = width / values.length;
   return (
-    <svg width={width} height={height} className="block" role="img" aria-label="24-hour admissions">
+    <svg
+      width={fluid ? '100%' : width}
+      height={height}
+      viewBox={fluid ? `0 0 ${width} ${height}` : undefined}
+      preserveAspectRatio={fluid ? 'none' : undefined}
+      className="block"
+      role="img"
+      aria-label={label}
+    >
       {values.map((v, i) => (
         <rect
           key={i}
