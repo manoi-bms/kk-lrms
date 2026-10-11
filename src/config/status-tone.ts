@@ -4,7 +4,7 @@
 /** Semantic tone for status chips/dots (maps onto the direction-C tokens). */
 export type StatusTone = 'ok' | 'warn' | 'danger' | 'brand' | 'neutral';
 
-export const STATUS_TONE: Record<
+const BASE: Record<
   StatusTone,
   { tint: string; text: string; solid: string; border: string; accent: string }
 > = {
@@ -44,3 +44,15 @@ export const STATUS_TONE: Record<
     accent: 'border-l-ink-subtle',
   },
 };
+
+/** Every tone with the derived `chip` (border + tint + text, the pill recipe)
+ *  and `dot` (the solid swatch) so no surface re-spells these strings. */
+export const STATUS_TONE: Record<
+  StatusTone,
+  { tint: string; text: string; solid: string; border: string; accent: string; chip: string; dot: string }
+> = Object.fromEntries(
+  (Object.keys(BASE) as StatusTone[]).map((t) => {
+    const b = BASE[t];
+    return [t, { ...b, chip: `${b.border} ${b.tint} ${b.text}`, dot: b.solid }];
+  }),
+) as Record<StatusTone, (typeof BASE)[StatusTone] & { chip: string; dot: string }>;

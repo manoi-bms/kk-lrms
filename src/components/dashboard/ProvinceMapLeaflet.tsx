@@ -15,7 +15,7 @@ import {
   hospitalLinkText,
   kioskLinkText,
   type HospitalLinkStatus,
-  type StatusTone,
+  type HospitalStatusTone,
 } from '@/config/hospital-status';
 import { MapStatusLegend } from './MapStatusLegend';
 import { mapBackground, mapPalette, type MapPalette } from '@/config/map-palette';
@@ -100,7 +100,7 @@ const PIN_STATUS_CLASS: Record<HospitalLinkStatus, string> = {
   unknown: 'kk-pin__status--unknown',
 };
 
-const TONE_DOT: Partial<Record<StatusTone, string>> = {
+const TONE_DOT: Partial<Record<HospitalStatusTone, string>> = {
   ok: COLOR.riskLow,
   warn: COLOR.riskMedium,
   danger: COLOR.riskHigh,

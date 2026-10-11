@@ -2,8 +2,9 @@
 // classifySyncHealth (the same 60-min / 24-h policy /api/health uses), so the
 // badge, the status strip and the health endpoint can never disagree.
 import { classifySyncHealth, SYNC_FRESHNESS_POLL, type SyncHealthClass } from '@/config/hospital-network';
+import type { StatusTone } from '@/config/status-tone';
 
-export type FreshnessTone = 'ok' | 'warn' | 'danger';
+export type FreshnessTone = Extract<StatusTone, 'ok' | 'warn' | 'danger'>;
 
 export interface SyncAge {
   health: SyncHealthClass;

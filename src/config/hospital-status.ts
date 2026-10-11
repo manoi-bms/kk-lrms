@@ -7,7 +7,11 @@ import { ConnectionStatus } from '@/types/domain';
 import { SYNC_HEALTH, type SyncHealthClass } from '@/config/hospital-network';
 
 export type HospitalLinkStatus = 'online' | 'blocked' | 'offline' | 'noSync' | 'unknown';
-export type StatusTone = 'ok' | 'warn' | 'danger' | 'neutral';
+import type { StatusTone as BaseStatusTone } from '@/config/status-tone';
+
+/** The hospital-link vocabulary has no brand tone: the shared StatusTone
+ *  minus 'brand' (single source: src/config/status-tone.ts). */
+export type HospitalStatusTone = Exclude<BaseStatusTone, 'brand'>;
 
 /** Same precedence as the inline chains it replaces (map pin dot, map
  *  tooltip, HospitalTable badge): BLOCKED wins over a live tunnel, and a
@@ -27,7 +31,7 @@ export function classifyHospitalLink(
 export interface HospitalLinkMeta {
   labelTh: string;
   detailTh: string;
-  tone: StatusTone;
+  tone: HospitalStatusTone;
   /** Frozen kiosk / legacy badge word — do not translate. */
   kioskLabel: string;
 }
@@ -112,7 +116,7 @@ export const CONNECTION_LABEL_TH: Record<ConnectionStatus, string> = {
 };
 
 export interface MapLegendItem {
-  tone: StatusTone;
+  tone: HospitalStatusTone;
   label: string;
   sub: string;
 }

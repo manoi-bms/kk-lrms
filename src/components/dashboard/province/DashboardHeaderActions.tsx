@@ -7,12 +7,15 @@ import type { SseConnectionState } from '@/hooks/useSSE';
 import { SSE_STATUS_META } from '@/config/sse-status';
 import { StatusChip } from '@/components/shared/StatusChip';
 import { HOSXP_SYNC_STATUS_TH, hosxpSyncTone, type HosxpSyncStatus, type HosxpSyncTone } from '@/lib/hosxp-sync-status';
+import { STATUS_TONE } from '@/config/status-tone';
 import { cn } from '@/lib/utils';
 
+// Chip + dot come from STATUS_TONE; neutral keeps its card surface (not the
+// muted tint) exactly as before the consolidation.
 const HOSXP_CHIP: Record<HosxpSyncTone, { box: string; dot: string }> = {
-  danger: { box: 'border-danger/40 bg-danger-tint text-danger-text', dot: 'bg-danger' },
-  ok: { box: 'border-ok/40 bg-ok-tint text-ok-text', dot: 'bg-ok' },
-  neutral: { box: 'border-border bg-surface-card text-ink-muted', dot: 'bg-ink-subtle' },
+  danger: { box: STATUS_TONE.danger.chip, dot: STATUS_TONE.danger.dot },
+  ok: { box: STATUS_TONE.ok.chip, dot: STATUS_TONE.ok.dot },
+  neutral: { box: `${STATUS_TONE.neutral.border} bg-surface-card ${STATUS_TONE.neutral.text}`, dot: STATUS_TONE.neutral.dot },
 };
 
 export interface DashboardHeaderActionsProps {

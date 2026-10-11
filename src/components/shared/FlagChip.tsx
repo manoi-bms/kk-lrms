@@ -4,16 +4,19 @@
 // detail page flag rows (/pregnancies/[journeyId]), NewbornOutcomesCard and
 // ReferralHistoryCard (patient detail). Do not use it in new code.
 import type { ReactNode } from 'react';
+import { STATUS_TONE, type StatusTone } from '@/config/status-tone';
 import { cn } from '@/lib/utils';
 
-export type FlagTone = 'danger' | 'warn' | 'ok' | 'brand' | 'neutral';
+export type FlagTone = StatusTone;
 
+// brand keeps the stronger text shade on the soft tint (AA) — the one place
+// this chip deliberately differs from STATUS_TONE.chip.
 const TONE: Record<FlagTone, string> = {
-  danger: 'border-danger/40 bg-danger-tint text-danger-text',
-  warn: 'border-warn/40 bg-warn-tint text-warn-text',
-  ok: 'border-ok/40 bg-ok-tint text-ok-text',
-  brand: 'border-brand/30 bg-brand-soft text-brand-strong',
-  neutral: 'border-border bg-surface-muted text-ink-muted',
+  danger: STATUS_TONE.danger.chip,
+  warn: STATUS_TONE.warn.chip,
+  ok: STATUS_TONE.ok.chip,
+  brand: `${STATUS_TONE.brand.border} ${STATUS_TONE.brand.tint} text-brand-strong`,
+  neutral: STATUS_TONE.neutral.chip,
 };
 
 export function FlagChip({

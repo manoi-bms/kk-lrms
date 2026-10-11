@@ -3,16 +3,16 @@
 // selects on the direction-C tokens. Text never uses the base risk hue (B3).
 import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import type { StatusTone } from '@/config/status-tone';
+import { STATUS_TONE, type StatusTone } from '@/config/status-tone';
 import { cn } from '@/lib/utils';
 
-export const TONE_CLASSES: Record<StatusTone, { chip: string; text: string; dot: string }> = {
-  ok: { chip: 'border-ok/40 bg-ok-tint text-ok-text', text: 'text-ok-text', dot: 'bg-ok' },
-  warn: { chip: 'border-warn/40 bg-warn-tint text-warn-text', text: 'text-warn-text', dot: 'bg-warn' },
-  danger: { chip: 'border-danger/40 bg-danger-tint text-danger-text', text: 'text-danger-text', dot: 'bg-danger' },
-  brand: { chip: 'border-brand/30 bg-brand-soft text-brand', text: 'text-brand', dot: 'bg-brand' },
-  neutral: { chip: 'border-border bg-surface-muted text-ink-muted', text: 'text-ink-muted', dot: 'bg-ink-subtle' },
-};
+/** Derived from the single STATUS_TONE vocabulary (chip / text / dot). */
+export const TONE_CLASSES: Record<StatusTone, { chip: string; text: string; dot: string }> = Object.fromEntries(
+  (Object.keys(STATUS_TONE) as StatusTone[]).map((t) => [
+    t,
+    { chip: STATUS_TONE[t].chip, text: STATUS_TONE[t].text, dot: STATUS_TONE[t].dot },
+  ]),
+) as Record<StatusTone, { chip: string; text: string; dot: string }>;
 
 export function StatusPill({
   tone, icon: Icon, title, children, className,

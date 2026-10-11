@@ -2,6 +2,7 @@
 // Moved out of src/app/(provincial)/page.tsx (UI sub-project 2) so the header
 // chip, the diagnostic dialog and the copyable report cannot disagree. The
 // English status codes stay in the report: IT tickets quote them.
+import type { StatusTone } from '@/config/status-tone';
 import type { OnboardHosxpSyncState } from '@/hooks/useOnboardHosxpSync';
 
 export type HosxpSyncStatus = 'ERROR' | 'QUERYING' | 'RUNNING' | 'SKIPPED' | 'STARTING';
@@ -14,7 +15,7 @@ export const HOSXP_SYNC_STATUS_TH: Record<HosxpSyncStatus, string> = {
   STARTING: 'กำลังเริ่ม',
 };
 
-export type HosxpSyncTone = 'danger' | 'ok' | 'neutral';
+export type HosxpSyncTone = Extract<StatusTone, 'danger' | 'ok' | 'neutral'>;
 
 export function hosxpSyncTone(status: HosxpSyncStatus): HosxpSyncTone {
   if (status === 'ERROR') return 'danger';

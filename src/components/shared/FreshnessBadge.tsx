@@ -1,14 +1,15 @@
 'use client';
 import { describeSyncAge, HEALTH_TONE, type FreshnessTone } from '@/lib/sync-age';
 import type { SyncHealthClass } from '@/config/hospital-network';
+import { STATUS_TONE } from '@/config/status-tone';
 import { cn } from '@/lib/utils';
 
 const TEXT: Record<FreshnessTone, string> = {
-  ok: 'text-ok-text',
-  warn: 'text-warn-text',
-  danger: 'text-danger-text',
+  ok: STATUS_TONE.ok.text,
+  warn: STATUS_TONE.warn.text,
+  danger: STATUS_TONE.danger.text,
 };
-const DOT: Record<FreshnessTone, string> = { ok: 'bg-ok', warn: 'bg-warn', danger: 'bg-danger' };
+const DOT: Record<FreshnessTone, string> = { ok: STATUS_TONE.ok.dot, warn: STATUS_TONE.warn.dot, danger: STATUS_TONE.danger.dot };
 
 export interface FreshnessBadgeProps {
   lastSyncAt: string | null | undefined;

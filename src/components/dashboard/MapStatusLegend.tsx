@@ -2,14 +2,14 @@
 
 import { COLOR, MIN_TEXT_PX } from '@/config/design-tokens';
 import { mapLegendTheme } from '@/config/map-palette';
-import { MAP_LEGEND, type StatusTone } from '@/config/hospital-status';
+import { MAP_LEGEND, type HospitalStatusTone } from '@/config/hospital-status';
 
 export function MapStatusLegend({ mode }: { mode: 'light' | 'kiosk' }) {
   const isKiosk = mode === 'kiosk';
   const theme = mapLegendTheme(mode);
   const { bg, ink, inkMuted, border } = theme;
   const legend = MAP_LEGEND[mode];
-  const dot: Record<StatusTone, string> = {
+  const dot: Record<HospitalStatusTone, string> = {
     ok: COLOR.riskLow,
     warn: COLOR.riskMedium,
     danger: COLOR.riskHigh,

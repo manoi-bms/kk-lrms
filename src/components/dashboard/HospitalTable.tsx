@@ -17,7 +17,7 @@ import {
   HOSPITAL_LINK_STATUS,
   hospitalLinkText,
   kioskLinkText,
-  type StatusTone,
+  type HospitalStatusTone,
 } from '@/config/hospital-status';
 
 interface HospitalTableProps {
@@ -147,7 +147,7 @@ export function HospitalTable({
   const ink = isKiosk ? 'var(--kiosk-ink)' : 'var(--ink-navy)';
   const inkMuted = isKiosk ? 'var(--kiosk-dim)' : 'var(--ink-navy-muted)';
   // HOSPITAL_LINK_STATUS tone → ink colour; neutral follows the surface's muted ink.
-  const linkToneColor: Record<StatusTone, string> = {
+  const linkToneColor: Record<HospitalStatusTone, string> = {
     ok: 'var(--risk-low)',
     warn: 'var(--risk-medium)',
     danger: 'var(--risk-high)',
