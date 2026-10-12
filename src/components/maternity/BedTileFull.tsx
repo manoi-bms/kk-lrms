@@ -8,6 +8,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { Lock } from 'lucide-react';
 import type { BedOccupancyFull } from '@/types/maternity-ward';
 import type { ConnectionConfig } from '@/types/bms-browser';
 import type { MaternalScreenSummaryItem } from '@/types/api';
@@ -15,7 +16,14 @@ import { maskName } from '@/lib/pii-mask';
 import { cn } from '@/lib/utils';
 import { PatientPhoto } from '@/components/shared/PatientPhoto';
 import { classifyLabourStage, LABOUR_STAGE_CM } from '@/services/ward-board';
-import { allergyStatus, labourStageDisplay } from '@/config/ward-display';
+import {
+  BED_TILE_SECTION_EMPTY_TH,
+  BED_TILE_SECTION_TITLE,
+  allergyStatus,
+  isBedTileSectionEmpty,
+  labourStageDisplay,
+  type BedTileSection,
+} from '@/config/ward-display';
 import {
   MATERNAL_SCREEN_TIER_LABEL_TH,
   MATERNAL_SCREEN_TIER_COLOR,
@@ -175,11 +183,42 @@ function TileHead({ label, pill, className }: { label: string; pill: ReactNode; 
   );
 }
 
+const SECTION_TITLE = 'mb-1 text-caption font-semibold text-brand';
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="border-b border-border px-4 py-2">
-      <div className="mb-1 text-caption font-semibold text-brand">{title}</div>
+      <div className={SECTION_TITLE}>{title}</div>
       {children}
+    </div>
+  );
+}
+
+/**
+ * One clinical block of the tile. When EVERY field of the block is blank it
+ * collapses to its heading plus one muted line; any recorded value renders
+ * the block exactly as before (`children`), so nothing recorded is hidden.
+ */
+function TileSection({
+  section,
+  occupant,
+  children,
+}: {
+  section: BedTileSection;
+  occupant: BedOccupancyFull;
+  children: ReactNode;
+}) {
+  const empty = isBedTileSectionEmpty(occupant, section);
+  return (
+    <div data-section={section} data-empty={empty ? 'true' : 'false'}>
+      {empty ? (
+        <div className="border-b border-border px-4 py-2">
+          <div className={SECTION_TITLE}>{BED_TILE_SECTION_TITLE[section]}</div>
+          <p className="text-label text-ink-muted">{BED_TILE_SECTION_EMPTY_TH}</p>
+        </div>
+      ) : (
+        children
+      )}
     </div>
   );
 }
@@ -195,25 +234,24 @@ function Field({ k, v, className }: { k: string; v: string; className?: string }
   );
 }
 
+/** Vacant/locked bed: a short card (content height) — the grid slot keeps it
+ *  from stretching to the occupied tiles beside it (WardLayoutViewFull). */
 function VacantTile({ bedno, locked }: { bedno: string; locked: boolean }) {
   return (
     <article
       data-testid={`bed-${bedno}`}
       data-stage={locked ? 'locked' : 'empty'}
-      className={cn(
-        TILE,
-        'min-h-64 border-dashed border-border bg-surface-page',
-        locked ? 'cursor-not-allowed' : 'cursor-default',
-      )}
+      className={cn(TILE, 'border-dashed border-border bg-surface-page', locked ? 'cursor-not-allowed' : 'cursor-default')}
     >
       <TileHead
         label={`เตียง ${bedno}`}
         className="bg-surface-muted"
         pill={<span className={cn(PILL, 'border-border text-ink-muted')}>{locked ? 'ปิดใช้งาน' : 'เตียงว่าง'}</span>}
       />
-      <div className="flex flex-1 flex-col items-center justify-center gap-1 px-4 py-8 text-center">
-        <span className={cn('text-title', locked ? 'text-ink-muted' : 'text-brand')}>{locked ? 'ปิดบำรุง' : 'ว่าง'}</span>
-        <span className="text-body text-ink-muted">{locked ? 'ล็อกใน HOSxP' : 'พร้อมรับผู้คลอด'}</span>
+      <div className="flex items-baseline gap-2 px-4 py-3">
+        {locked && <Lock aria-hidden="true" className="h-4 w-4 shrink-0 self-center text-ink-muted" />}
+        <span className={cn('text-body-lg', locked ? 'text-ink-muted' : 'text-brand')}>{locked ? 'ปิดบำรุง' : 'ว่าง'}</span>
+        <span className="text-label text-ink-muted">{locked ? 'ล็อกใน HOSxP' : 'พร้อมรับผู้คลอด'}</span>
       </div>
     </article>
   );
@@ -365,75 +403,85 @@ export function BedTileFull({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-3 gap-y-1 border-b border-border bg-surface-page px-4 py-2">
-        <Field k="แพทย์" v={fmt(occupant.incharge_doctor_name)} />
-        <Field k="สิทธิ" v={fmt(occupant.pttype_name)} />
-        <Field k="ร่างกาย" v={fmtBodyMetrics(occupant)} className="col-span-2" />
-        {occupant.prediag && (
-          <div className="col-span-2 min-w-0">
-            <div className="text-caption font-semibold text-warn-text">อาการแรกรับ</div>
-            <div title={occupant.prediag} className="truncate text-body text-ink">
-              {occupant.prediag}
+      <TileSection section="admission" occupant={occupant}>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1 border-b border-border bg-surface-page px-4 py-2">
+          <Field k="แพทย์" v={fmt(occupant.incharge_doctor_name)} />
+          <Field k="สิทธิ" v={fmt(occupant.pttype_name)} />
+          <Field k="ร่างกาย" v={fmtBodyMetrics(occupant)} className="col-span-2" />
+          {occupant.prediag && (
+            <div className="col-span-2 min-w-0">
+              <div className="text-caption font-semibold text-warn-text">อาการแรกรับ</div>
+              <div title={occupant.prediag} className="truncate text-body text-ink">
+                {occupant.prediag}
+              </div>
+            </div>
+          )}
+        </div>
+      </TileSection>
+
+      <TileSection section="vitals" occupant={occupant}>
+        <Section title={BED_TILE_SECTION_TITLE.vitals}>
+          <div className="grid grid-cols-3 gap-x-3 gap-y-1">
+            <Field k="BP" v={fmtBp(occupant.last_bp_sys, occupant.last_bp_dia)} />
+            <Field k="T (°C)" v={fmtTemp(occupant.last_temp)} />
+            <Field k="P" v={fmt(occupant.last_pulse)} />
+            <Field k="R" v={fmt(occupant.last_rr)} />
+            <Field k="SpO₂ RA" v={fmt(occupant.last_spo2)} />
+            <Field k="O₂" v={fmt(occupant.last_spo2_o2)} />
+          </div>
+        </Section>
+      </TileSection>
+
+      <TileSection section="progress" occupant={occupant}>
+        <Section title={BED_TILE_SECTION_TITLE.progress}>
+          <div className="grid grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))] gap-x-3 gap-y-1">
+            <div className="min-w-0">
+              <div className="text-caption text-ink-muted">ปากมดลูก</div>
+              <div className={cn('text-body font-semibold tabular-nums', CX_TEXT[cxTone])}>
+                {cx !== null ? `${cx} ซม.` : '—'}
+              </div>
+              <div aria-hidden="true" className="mt-0.5 h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
+                <div className={cn('h-full rounded-full', CX_BAR[cxTone])} style={{ width: `${cervixFillPercent(cx)}%` }} />
+              </div>
+            </div>
+            <Field k="ส่วนนำ" v={fmt(occupant.last_station)} />
+            <Field k="ถุงน้ำ" v={fmt(occupant.last_amniotic)} />
+            <Field k="ปวด" v={occupant.last_pain !== null ? `${occupant.last_pain}/10` : '—'} />
+          </div>
+        </Section>
+      </TileSection>
+
+      <TileSection section="contractionFhr" occupant={occupant}>
+        <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] border-b border-border">
+          <div className="min-w-0 px-4 py-2">
+            <div className="mb-1 text-caption font-semibold text-brand">การหดรัดตัว</div>
+            <div className="text-body font-semibold tabular-nums text-ink">{contractionText(occupant)}</div>
+          </div>
+          <div className="min-w-0 border-l border-border px-4 py-2 text-right">
+            <div className="mb-1 text-caption font-semibold text-brand">FHR (ครั้ง/นาที)</div>
+            <div className="flex items-center justify-end gap-2">
+              <span className="text-title tabular-nums text-ink">{fmt(occupant.last_fhr)}</span>
+              {occupant.last_fhr !== null && (
+                <span
+                  data-testid="fhr-pulse"
+                  aria-hidden="true"
+                  className="h-2.5 w-2.5 rounded-full bg-brand motion-safe:animate-[kk-heartbeat_0.85s_ease-in-out_infinite]"
+                />
+              )}
             </div>
           </div>
-        )}
-      </div>
-
-      <Section title="สัญญาณชีพ (บันทึกพยาบาล)">
-        <div className="grid grid-cols-3 gap-x-3 gap-y-1">
-          <Field k="BP" v={fmtBp(occupant.last_bp_sys, occupant.last_bp_dia)} />
-          <Field k="T (°C)" v={fmtTemp(occupant.last_temp)} />
-          <Field k="P" v={fmt(occupant.last_pulse)} />
-          <Field k="R" v={fmt(occupant.last_rr)} />
-          <Field k="SpO₂ RA" v={fmt(occupant.last_spo2)} />
-          <Field k="O₂" v={fmt(occupant.last_spo2_o2)} />
         </div>
-      </Section>
+      </TileSection>
 
-      <Section title="ความก้าวหน้าการคลอด (พาร์โทกราฟ)">
-        <div className="grid grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))] gap-x-3 gap-y-1">
-          <div className="min-w-0">
-            <div className="text-caption text-ink-muted">ปากมดลูก</div>
-            <div className={cn('text-body font-semibold tabular-nums', CX_TEXT[cxTone])}>
-              {cx !== null ? `${cx} ซม.` : '—'}
-            </div>
-            <div aria-hidden="true" className="mt-0.5 h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
-              <div className={cn('h-full rounded-full', CX_BAR[cxTone])} style={{ width: `${cervixFillPercent(cx)}%` }} />
-            </div>
+      <TileSection section="fluids" occupant={occupant}>
+        <Section title={BED_TILE_SECTION_TITLE.fluids}>
+          <div className="grid grid-cols-3 gap-x-3 gap-y-1">
+            <Field k="IV" v={fmt(occupant.last_iv_fluids)} />
+            <Field k="Oxytocin" v={occupant.last_oxytocin_uml !== null ? `${occupant.last_oxytocin_uml} mU/นาที` : '—'} />
+            <Field k="หยด" v={fmt(occupant.last_oxytocin_drops, ' หยด/นาที')} />
           </div>
-          <Field k="ส่วนนำ" v={fmt(occupant.last_station)} />
-          <Field k="ถุงน้ำ" v={fmt(occupant.last_amniotic)} />
-          <Field k="ปวด" v={occupant.last_pain !== null ? `${occupant.last_pain}/10` : '—'} />
-        </div>
-      </Section>
-
-      <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] border-b border-border">
-        <div className="min-w-0 px-4 py-2">
-          <div className="mb-1 text-caption font-semibold text-brand">การหดรัดตัว</div>
-          <div className="text-body font-semibold tabular-nums text-ink">{contractionText(occupant)}</div>
-        </div>
-        <div className="min-w-0 border-l border-border px-4 py-2 text-right">
-          <div className="mb-1 text-caption font-semibold text-brand">FHR (ครั้ง/นาที)</div>
-          <div className="flex items-center justify-end gap-2">
-            <span className="text-title tabular-nums text-ink">{fmt(occupant.last_fhr)}</span>
-            {occupant.last_fhr !== null && (
-              <span
-                data-testid="fhr-pulse"
-                aria-hidden="true"
-                className="h-2.5 w-2.5 rounded-full bg-brand motion-safe:animate-[kk-heartbeat_0.85s_ease-in-out_infinite]"
-              />
-            )}
-          </div>
-        </div>
-      </div>
-
-      <Section title="สารน้ำและยา">
-        <div className="grid grid-cols-3 gap-x-3 gap-y-1">
-          <Field k="IV" v={fmt(occupant.last_iv_fluids)} />
-          <Field k="Oxytocin" v={occupant.last_oxytocin_uml !== null ? `${occupant.last_oxytocin_uml} mU/นาที` : '—'} />
-          <Field k="หยด" v={fmt(occupant.last_oxytocin_drops, ' หยด/นาที')} />
-        </div>
-      </Section>
+        </Section>
+      </TileSection>
 
       <div
         className={cn(

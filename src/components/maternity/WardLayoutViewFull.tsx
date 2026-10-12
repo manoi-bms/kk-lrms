@@ -140,7 +140,13 @@ function DraggableBedTile({
       style={style}
       data-testid={`bed-slot-${bed.bedno}`}
       data-over={isOver ? 'true' : undefined}
-      className={cn('flex flex-col gap-2', isOver && 'rounded-2xl ring-2 ring-brand ring-offset-2')}
+      className={cn(
+        'flex flex-col gap-2',
+        // A vacant/locked card keeps its own short height (and drop ring)
+        // rather than stretching to the occupied tiles in its grid row.
+        occupants.length === 0 && 'self-start',
+        isOver && 'rounded-2xl ring-2 ring-brand ring-offset-2',
+      )}
       {...(occupants.length === 1 ? draggable.listeners : {})}
       {...draggable.attributes}
     >

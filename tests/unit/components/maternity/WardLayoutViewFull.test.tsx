@@ -113,4 +113,13 @@ describe('WardLayoutViewFull — test ids and keyboard', () => {
     expect(screen.getByText('1 เตียง · มีผู้คลอด 0 · ว่าง 1')).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'ยังไม่ได้จัดเตียง / ไม่ตรงผังเตียง' })).toBeInTheDocument();
   });
+
+  it('vacant and locked slots sit at the top of their grid row instead of stretching to the occupied tiles', () => {
+    const { container } = render(<WardLayoutViewFull beds={[...s.beds]} occupancy={[...s.occupancy]} now={NOW} />);
+    const slot = (b: string) => container.querySelector<HTMLElement>(`div[data-testid="bed-slot-${b}"]`)!;
+    for (const b of ['03', '05', '07', '08', '09']) expect(slot(b).className).toContain('self-start');
+    for (const b of ['01', '02', '04', '06']) expect(slot(b).className).not.toContain('self-start');
+    // Still a drop target: dnd-kit enrols every slot, empty ones included.
+    expect(slot('03').getAttribute('aria-disabled')).toBe('true');
+  });
 });

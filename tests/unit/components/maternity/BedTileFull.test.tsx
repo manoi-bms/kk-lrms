@@ -289,3 +289,96 @@ describe('BedTileFull — fix wave minors', () => {
     expect(screen.getByText('ระยะแฝงนาน · ประเมินด่วน')).toBeInTheDocument();
   });
 });
+
+// ─── feat/ward-summary: compact vacant tiles, empty clinical sections ──────
+describe('BedTileFull — compact vacant and locked tiles', () => {
+  it.each([
+    ['N', 'empty', 'เตียงว่าง', 'ว่าง', 'พร้อมรับผู้คลอด'],
+    ['Y', 'locked', 'ปิดใช้งาน', 'ปิดบำรุง', 'ล็อกใน HOSxP'],
+  ] as const)('bedLock %s → a short %s card: head, chip and status line, no forced height', (lock, stage, chip, word, line) => {
+    render(<BedTileFull bedno="05" bedLock={lock} occupant={null} now={now} />);
+    const tile = screen.getByTestId('bed-05');
+    expect(tile.dataset.stage).toBe(stage);
+    expect(tile).toHaveTextContent('เตียง 05');
+    expect(screen.getByText(chip)).toBeInTheDocument();
+    expect(screen.getByText(word)).toBeInTheDocument();
+    expect(screen.getByText(line)).toBeInTheDocument();
+    expect(tile.className).not.toMatch(/\bmin-h-/);
+    expect(tile.querySelector('.flex-1')).toBeNull();
+  });
+});
+
+describe('BedTileFull — a section with nothing recorded collapses to one muted line', () => {
+  const blank: BedOccupancyFull = {
+    ...occupant,
+    incharge_doctor_name: null,
+    pttype_name: null,
+    prediag: null,
+    admit_bw_kg: null,
+    patient_height: null,
+    last_weight: null,
+    last_height: null,
+    last_bsa: null,
+    last_bp_sys: null,
+    last_bp_dia: null,
+    last_temp: null,
+    last_pulse: null,
+    last_rr: null,
+    last_spo2: null,
+    last_spo2_o2: null,
+    last_cervix_cm: null,
+    last_station: null,
+    last_amniotic: null,
+    last_pain: null,
+    last_contr_freq: null,
+    last_contr_duration: null,
+    last_contr_strength: null,
+    last_fhr: null,
+    last_iv_fluids: null,
+    last_oxytocin_uml: null,
+    last_oxytocin_drops: null,
+  };
+  const section = (name: string) => document.querySelector<HTMLElement>(`[data-section="${name}"]`)!;
+
+  it('all five sections empty → each keeps its heading plus "ยังไม่มีบันทึก", no dash grids', () => {
+    render(<BedTileFull bedno="01" bedLock="N" occupant={blank} now={now} />);
+    for (const [name, heading] of [
+      ['admission', 'แพทย์ · สิทธิ · ร่างกาย'],
+      ['vitals', 'สัญญาณชีพ (บันทึกพยาบาล)'],
+      ['progress', 'ความก้าวหน้าการคลอด (พาร์โทกราฟ)'],
+      ['contractionFhr', 'การหดรัดตัว · FHR'],
+      ['fluids', 'สารน้ำและยา'],
+    ] as const) {
+      const el = section(name);
+      expect(el.dataset.empty).toBe('true');
+      expect(el).toHaveTextContent(heading);
+      expect(el).toHaveTextContent('ยังไม่มีบันทึก');
+      expect(el).not.toHaveTextContent('—');
+    }
+    expect(screen.getAllByText('ยังไม่มีบันทึก')).toHaveLength(5);
+    expect(screen.queryByText('BP')).toBeNull();
+    expect(screen.queryByText('Oxytocin')).toBeNull();
+    expect(screen.queryByTestId('fhr-pulse')).toBeNull();
+  });
+
+  it.each([
+    ['admission', { pttype_name: 'UC' }, ['แพทย์', 'สิทธิ', 'ร่างกาย', 'UC']],
+    ['vitals', { last_pulse: 88 }, ['BP', 'T (°C)', 'P', '88', 'SpO₂ RA']],
+    ['progress', { last_pain: 0 }, ['ปากมดลูก', 'ส่วนนำ', 'ถุงน้ำ', '0/10']],
+    ['contractionFhr', { last_fhr: 140 }, ['การหดรัดตัว', 'FHR (ครั้ง/นาที)', '140']],
+    ['fluids', { last_oxytocin_drops: 0 }, ['IV', 'Oxytocin', 'หยด', '0 หยด/นาที']],
+  ] as const)('%s: one recorded value renders the whole section exactly as before', (name, patch, texts) => {
+    render(<BedTileFull bedno="01" bedLock="N" occupant={{ ...blank, ...patch }} now={now} />);
+    const el = section(name);
+    expect(el.dataset.empty).toBe('false');
+    expect(el).not.toHaveTextContent('ยังไม่มีบันทึก');
+    for (const t of texts) expect(el).toHaveTextContent(t);
+    expect(screen.getAllByText('ยังไม่มีบันทึก')).toHaveLength(4);
+  });
+
+  it('a fully recorded tile shows no "ยังไม่มีบันทึก" line at all', () => {
+    render(<BedTileFull bedno="01" bedLock="N" occupant={occupant} now={now} />);
+    expect(screen.queryByText('ยังไม่มีบันทึก')).toBeNull();
+    expect(document.querySelectorAll('[data-section][data-empty="false"]')).toHaveLength(5);
+  });
+});
