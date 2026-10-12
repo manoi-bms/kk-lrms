@@ -8,7 +8,7 @@
 // every other fetch falls through to the real network call against the mock
 // server's 127.0.0.1:port URL.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { SWRConfig } from 'swr';
 import type { ReactNode } from 'react';
 import HospitalLayout from '@/app/(hospital)/layout';
@@ -175,8 +175,10 @@ describe('Maternity ward page (against in-process mock BMS server)', () => {
     // KPI masthead summarises the ward. It is a labelled region, so the label
     // is asserted inside it (the empty tiles also carry an "เตียงว่าง" pill).
     expect(screen.getByRole('region', { name: 'สรุปเตียงในห้องคลอด' })).toHaveTextContent('เตียงทั้งหมด');
-    // 3 empty beds (occupant lookup uses bedno; the only occupant is at bed 01)
-    const empty = screen.getAllByText('ว่าง');
+    // 3 empty beds (occupant lookup uses bedno; the only occupant is at bed 01).
+    // Counted on the tiles: the summary legend also reads "ว่าง".
+    const tiles = [...document.querySelectorAll<HTMLElement>('article[data-testid^="bed-"]')];
+    const empty = tiles.flatMap((t) => within(t).queryAllByText('ว่าง'));
     expect(empty.length).toBe(3);
   });
 
