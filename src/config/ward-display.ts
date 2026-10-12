@@ -4,6 +4,8 @@
 // (Task 5). Rules live in src/services/ward-board.ts; this file is display only.
 import type { WardFeedHealth } from '@/hooks/useMaternityWardStateFull';
 import type { StatusTone } from '@/config/status-tone';
+import type { BedOccupancyFull } from '@/types/maternity-ward';
+import { bangkokClock } from '@/lib/sync-age';
 import {
   LABOUR_STAGE_CM,
   PROLONGED_LATENT_RULE,
@@ -18,6 +20,14 @@ export const WARD_FEED_STATUS: Record<WardFeedHealth, { labelTh: string; tone: S
   reconnecting: { labelTh: 'กำลังเชื่อมต่อ HOSxP ใหม่…', tone: 'warn', pulse: true },
   error: { labelTh: 'ขาดการเชื่อมต่อ HOSxP', tone: 'danger', pulse: true },
 };
+
+/** The live pill carries the ward's own last-update time (the page's single
+ *  freshness indicator). An unknown or unparseable time shows the bare label. */
+export function wardFeedChipLabel(health: WardFeedHealth, lastUpdatedAt: string | null): string {
+  const label = WARD_FEED_STATUS[health].labelTh;
+  const t = lastUpdatedAt ? new Date(lastUpdatedAt) : null;
+  return t && Number.isFinite(t.getTime()) ? `${label} · อัปเดต ${bangkokClock(t)}` : label;
+}
 
 /** Bed-move outcomes: today's page copy, split into what happened / what to do. */
 export const BED_MOVE_ALERTS = {
@@ -123,4 +133,74 @@ export function unplacedBedLabel(u: { reason: UnplacedReason; bedno: string | nu
 /** Conflict notice above a bed HOSxP has given to more than one admission. */
 export function sharedBedNotice(bedno: string, count: number): string {
   return `เตียงซ้อน: ${count} รายบนเตียง ${bedno} ใน HOSxP — ตรวจและแก้เตียงใน HOSxP`;
+}
+
+// ─── Ward summary (capacity + urgent panels) ────────────────────────────────
+
+/** The prolonged-latent rule as one line, from PROLONGED_LATENT_RULE. */
+export const PROLONGED_LATENT_RULE_TH = `รับเข้า ≥${minHours} ชม. · ปากมดลูก <${cervixBelowCm} ซม.`;
+
+export const PROLONGED_LATENT_HINT = {
+  title: 'ระยะแฝงนาน',
+  body: `นับผู้คลอดที่รับเข้ามาแล้วอย่างน้อย ${minHours} ชั่วโมง และปากมดลูกยังไม่ถึง ${cervixBelowCm} ซม. หรือยังไม่มีบันทึก — เกณฑ์เดียวกับป้ายบนการ์ดเตียง ควรประเมินตามเส้นปฏิบัติการของพาร์โทกราฟ`,
+} as const;
+
+/** The capacity bar is BEDS: occupied beds + free + locked-empty = totalBeds. */
+export function capacityAriaLabel(s: BedSummary): string {
+  if (s.totalBeds === 0) return 'วอร์ดนี้ยังไม่มีเตียงในผัง';
+  return `เตียงทั้งหมด ${s.totalBeds} เตียง: มีผู้คลอด ${s.occupied} เตียง, ว่าง ${s.free} เตียง, ปิด ${s.lockedEmpty} เตียง`;
+}
+
+/** Footer call-outs after "เตียงทั้งหมด N", each only when it is > 0 — a
+ *  patient without a usable bed is never invisible in the summary (I2). */
+export function capacityFooterNotes(s: BedSummary): string[] {
+  return [
+    s.lockedOccupied > 0 ? `ผู้คลอดบนเตียงล็อก ${s.lockedOccupied}` : null,
+    s.unplaced > 0 ? `ยังไม่ได้จัดเตียง ${s.unplaced}` : null,
+    s.sharedBeds > 0 ? `เตียงซ้อน ${s.sharedBeds}` : null,
+  ].filter((p): p is string => p !== null);
+}
+
+// ─── Bed-tile sections ──────────────────────────────────────────────────────
+
+/** The clinical blocks of an occupied bed tile and the fields each renders. */
+export const BED_TILE_SECTION_FIELDS = {
+  admission: [
+    'incharge_doctor_name',
+    'pttype_name',
+    'last_weight',
+    'admit_bw_kg',
+    'last_height',
+    'patient_height',
+    'last_bsa',
+    'prediag',
+  ],
+  vitals: ['last_bp_sys', 'last_bp_dia', 'last_temp', 'last_pulse', 'last_rr', 'last_spo2', 'last_spo2_o2'],
+  progress: ['last_cervix_cm', 'last_station', 'last_amniotic', 'last_pain'],
+  contractionFhr: ['last_contr_freq', 'last_contr_duration', 'last_contr_strength', 'last_fhr'],
+  fluids: ['last_iv_fluids', 'last_oxytocin_uml', 'last_oxytocin_drops'],
+} as const satisfies Record<string, ReadonlyArray<keyof BedOccupancyFull>>;
+
+export type BedTileSection = keyof typeof BED_TILE_SECTION_FIELDS;
+export const BED_TILE_SECTIONS = Object.keys(BED_TILE_SECTION_FIELDS) as BedTileSection[];
+
+/** Headings for the tile blocks (the admission block has none while it shows values). */
+export const BED_TILE_SECTION_TITLE: Record<BedTileSection, string> = {
+  admission: 'แพทย์ · สิทธิ · ร่างกาย',
+  vitals: 'สัญญาณชีพ (บันทึกพยาบาล)',
+  progress: 'ความก้าวหน้าการคลอด (พาร์โทกราฟ)',
+  contractionFhr: 'การหดรัดตัว · FHR',
+  fluids: 'สารน้ำและยา',
+};
+
+export const BED_TILE_SECTION_EMPTY_TH = 'ยังไม่มีบันทึก';
+
+function isBlank(v: unknown): boolean {
+  return v === null || v === undefined || (typeof v === 'string' && v.trim() === '');
+}
+
+/** True only when EVERY field of the section is null/undefined/blank. One
+ *  recorded value (0 included) and the tile renders the whole block as before. */
+export function isBedTileSectionEmpty(o: BedOccupancyFull, section: BedTileSection): boolean {
+  return BED_TILE_SECTION_FIELDS[section].every((f) => isBlank(o[f]));
 }

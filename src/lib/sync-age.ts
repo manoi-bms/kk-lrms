@@ -23,7 +23,8 @@ export const HEALTH_TONE: Record<SyncHealthClass, FreshnessTone> = {
 
 const DAY_MIN = 1440;
 
-function bangkokClock(d: Date): string {
+/** HH:MM on the Bangkok wall clock, whatever the client's time zone. */
+export function bangkokClock(d: Date): string {
   return d.toLocaleTimeString('en-GB', {
     timeZone: 'Asia/Bangkok',
     hour: '2-digit',

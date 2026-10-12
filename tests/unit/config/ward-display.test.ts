@@ -121,3 +121,109 @@ describe('ward-display — stage pill + room summary', () => {
   });
 });
 
+
+// ─── Ward summary redesign (feat/ward-summary) ─────────────────────────────
+import {
+  BED_TILE_SECTION_EMPTY_TH,
+  BED_TILE_SECTION_FIELDS,
+  BED_TILE_SECTIONS,
+  PROLONGED_LATENT_HINT,
+  PROLONGED_LATENT_RULE_TH,
+  capacityAriaLabel,
+  capacityFooterNotes,
+  isBedTileSectionEmpty,
+  wardFeedChipLabel,
+} from '@/config/ward-display';
+import { PROLONGED_LATENT_RULE, type BedSummary } from '@/services/ward-board';
+import { makeOccupant } from '../../helpers/ward-fixtures';
+
+const SUMMARY: BedSummary = {
+  totalBeds: 9,
+  occupied: 4,
+  patients: 4,
+  unplaced: 0,
+  sharedBeds: 0,
+  free: 3,
+  lockedEmpty: 2,
+  lockedOccupied: 0,
+  prolongedLatent: 1,
+  occupancyPct: 44,
+};
+
+describe('ward-display — ward summary', () => {
+  it('prolonged-latent rule text is built from PROLONGED_LATENT_RULE, never restated', () => {
+    expect(PROLONGED_LATENT_RULE_TH).toBe(
+      `รับเข้า ≥${PROLONGED_LATENT_RULE.minHours} ชม. · ปากมดลูก <${PROLONGED_LATENT_RULE.cervixBelowCm} ซม.`,
+    );
+    expect(PROLONGED_LATENT_RULE_TH).toBe('รับเข้า ≥12 ชม. · ปากมดลูก <4 ซม.');
+    expect(PROLONGED_LATENT_HINT.title).toBe('ระยะแฝงนาน');
+    expect(PROLONGED_LATENT_HINT.body).toContain('อย่างน้อย 12 ชั่วโมง');
+  });
+
+  it('capacity aria-label states every bed count in Thai (the bar is beds, not patients)', () => {
+    expect(capacityAriaLabel(SUMMARY)).toBe('เตียงทั้งหมด 9 เตียง: มีผู้คลอด 4 เตียง, ว่าง 3 เตียง, ปิด 2 เตียง');
+    expect(capacityAriaLabel({ ...SUMMARY, totalBeds: 0, occupied: 0, free: 0, lockedEmpty: 0 })).toBe(
+      'วอร์ดนี้ยังไม่มีเตียงในผัง',
+    );
+  });
+
+  it('capacity footer notes appear only when > 0, so unplaced patients are never invisible', () => {
+    expect(capacityFooterNotes(SUMMARY)).toEqual([]);
+    expect(capacityFooterNotes({ ...SUMMARY, lockedOccupied: 1, unplaced: 2, sharedBeds: 1 })).toEqual([
+      'ผู้คลอดบนเตียงล็อก 1',
+      'ยังไม่ได้จัดเตียง 2',
+      'เตียงซ้อน 1',
+    ]);
+  });
+
+  it('feed chip: the ward’s own update time rides in the live pill; no time → the bare label', () => {
+    expect(wardFeedChipLabel('ok', null)).toBe('เชื่อมต่อ HOSxP สด');
+    expect(wardFeedChipLabel('ok', '2026-10-12T03:32:00.000Z')).toBe('เชื่อมต่อ HOSxP สด · อัปเดต 10:32');
+    expect(wardFeedChipLabel('error', '2026-10-12T03:32:00.000Z')).toBe('ขาดการเชื่อมต่อ HOSxP · อัปเดต 10:32');
+    expect(wardFeedChipLabel('reconnecting', 'not-a-date')).toBe('กำลังเชื่อมต่อ HOSxP ใหม่…');
+  });
+});
+
+describe('ward-display — bed-tile empty sections', () => {
+  const blank = makeOccupant({ an: 'AN-B', bedno: '01', roomno: 'LR1' });
+
+  it('every section is "all empty" for a patient with nothing recorded', () => {
+    for (const s of BED_TILE_SECTIONS) expect(isBedTileSectionEmpty(blank, s)).toBe(true);
+    expect(BED_TILE_SECTION_EMPTY_TH).toBe('ยังไม่มีบันทึก');
+  });
+
+  it('blank strings and undefined count as empty; zero is a recorded value', () => {
+    expect(isBedTileSectionEmpty({ ...blank, last_iv_fluids: '  ' }, 'fluids')).toBe(true);
+    expect(isBedTileSectionEmpty({ ...blank, last_spo2: undefined as unknown as null }, 'vitals')).toBe(true);
+    expect(isBedTileSectionEmpty({ ...blank, last_pain: 0 }, 'progress')).toBe(false);
+    expect(isBedTileSectionEmpty({ ...blank, last_oxytocin_drops: 0 }, 'fluids')).toBe(false);
+  });
+
+  it.each(
+    Object.entries(BED_TILE_SECTION_FIELDS).flatMap(([section, fields]) =>
+      fields.map((f) => [section, f] as const),
+    ),
+  )('%s: a value in %s alone makes the section non-empty (never hide a recorded value)', (section, field) => {
+    const o = { ...blank, [field]: 1 };
+    expect(isBedTileSectionEmpty(o, section as (typeof BED_TILE_SECTIONS)[number])).toBe(false);
+  });
+
+  it('each section lists exactly the fields its tile block renders', () => {
+    expect(BED_TILE_SECTION_FIELDS).toEqual({
+      admission: [
+        'incharge_doctor_name',
+        'pttype_name',
+        'last_weight',
+        'admit_bw_kg',
+        'last_height',
+        'patient_height',
+        'last_bsa',
+        'prediag',
+      ],
+      vitals: ['last_bp_sys', 'last_bp_dia', 'last_temp', 'last_pulse', 'last_rr', 'last_spo2', 'last_spo2_o2'],
+      progress: ['last_cervix_cm', 'last_station', 'last_amniotic', 'last_pain'],
+      contractionFhr: ['last_contr_freq', 'last_contr_duration', 'last_contr_strength', 'last_fhr'],
+      fluids: ['last_iv_fluids', 'last_oxytocin_uml', 'last_oxytocin_drops'],
+    });
+  });
+});
