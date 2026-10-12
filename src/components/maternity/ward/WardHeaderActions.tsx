@@ -7,7 +7,7 @@
 import { RefreshCw } from 'lucide-react';
 import type { MaternityWard } from '@/types/maternity-ward';
 import type { WardFeedHealth } from '@/hooks/useMaternityWardStateFull';
-import { WARD_FEED_STATUS, wardFeedChipLabel } from '@/config/ward-display';
+import { WARD_FEED_STATUS, wardFeedChipDetail, wardFeedChipLabel } from '@/config/ward-display';
 import { StatusChip } from '@/components/shared/StatusChip';
 
 export interface WardHeaderActionsProps {
@@ -52,7 +52,8 @@ export function WardHeaderActions({
       )}
       <StatusChip
         tone={feed.tone}
-        label={wardFeedChipLabel(health, lastUpdatedAt)}
+        label={wardFeedChipLabel(health)}
+        detail={wardFeedChipDetail(lastUpdatedAt)}
         pulse={feed.pulse}
         title={health === 'ok' ? undefined : errorMessage}
       />

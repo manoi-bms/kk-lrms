@@ -132,6 +132,7 @@ import {
   capacityAriaLabel,
   capacityFooterNotes,
   isBedTileSectionEmpty,
+  wardFeedChipDetail,
   wardFeedChipLabel,
 } from '@/config/ward-display';
 import { PROLONGED_LATENT_RULE, type BedSummary } from '@/services/ward-board';
@@ -177,10 +178,14 @@ describe('ward-display — ward summary', () => {
   });
 
   it('feed chip: the ward’s own update time rides in the live pill; no time → the bare label', () => {
-    expect(wardFeedChipLabel('ok', null)).toBe('เชื่อมต่อ HOSxP สด');
-    expect(wardFeedChipLabel('ok', '2026-10-12T03:32:00.000Z')).toBe('เชื่อมต่อ HOSxP สด · อัปเดต 10:32');
-    expect(wardFeedChipLabel('error', '2026-10-12T03:32:00.000Z')).toBe('ขาดการเชื่อมต่อ HOSxP · อัปเดต 10:32');
-    expect(wardFeedChipLabel('reconnecting', 'not-a-date')).toBe('กำลังเชื่อมต่อ HOSxP ใหม่…');
+    // The live label carries status only; the time is a separate, non-live
+    // detail so screen readers don't re-announce it on every 20 s refresh.
+    expect(wardFeedChipLabel('ok')).toBe('เชื่อมต่อ HOSxP สด');
+    expect(wardFeedChipLabel('error')).toBe('ขาดการเชื่อมต่อ HOSxP');
+    expect(wardFeedChipLabel('reconnecting')).toBe('กำลังเชื่อมต่อ HOSxP ใหม่…');
+    expect(wardFeedChipDetail('2026-10-12T03:32:00.000Z')).toBe('อัปเดต 10:32');
+    expect(wardFeedChipDetail(null)).toBeUndefined();
+    expect(wardFeedChipDetail('not-a-date')).toBeUndefined();
   });
 });
 

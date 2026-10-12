@@ -1,7 +1,8 @@
 // src/components/shared/StatusChip.tsx
 // One live-status pill (dot + Thai label). Used by the dashboard SSE chip and
 // the ward feed chip (spec D11). `role="status"` so screen readers announce
-// changes.
+// changes. `detail` (e.g. an update time) is shown but marked aria-live=off so
+// a value that changes every refresh is not re-announced each time.
 import { STATUS_TONE, type StatusTone } from '@/config/status-tone';
 import { cn } from '@/lib/utils';
 
@@ -10,10 +11,11 @@ export interface StatusChipProps {
   label: string;
   title?: string;
   pulse?: boolean;
+  detail?: string;
   className?: string;
 }
 
-export function StatusChip({ tone, label, title, pulse = false, className }: StatusChipProps) {
+export function StatusChip({ tone, label, title, pulse = false, detail, className }: StatusChipProps) {
   const t = STATUS_TONE[tone];
   return (
     <span
@@ -24,6 +26,12 @@ export function StatusChip({ tone, label, title, pulse = false, className }: Sta
     >
       <span aria-hidden="true" className={cn('h-2.5 w-2.5 rounded-full', t.solid, pulse && 'motion-safe:animate-pulse')} />
       {label}
+      {detail && (
+        <>
+          <span aria-hidden="true"> · </span>
+          <span aria-live="off">{detail}</span>
+        </>
+      )}
     </span>
   );
 }

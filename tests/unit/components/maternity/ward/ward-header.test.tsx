@@ -44,6 +44,8 @@ describe('WardHeaderActions', () => {
       <WardHeaderActions {...base} wards={one} health="ok" lastUpdatedAt="2026-10-12T03:32:00.000Z" />,
     );
     expect(screen.getByRole('status')).toHaveTextContent(/^เชื่อมต่อ HOSxP สด · อัปเดต 10:32$/);
+    // Visible, but not re-announced by screen readers on every refresh.
+    expect(screen.getByText('อัปเดต 10:32')).toHaveAttribute('aria-live', 'off');
     rerender(<WardHeaderActions {...base} wards={one} health="ok" lastUpdatedAt={null} />);
     expect(screen.getByRole('status')).toHaveTextContent(/^เชื่อมต่อ HOSxP สด$/);
   });

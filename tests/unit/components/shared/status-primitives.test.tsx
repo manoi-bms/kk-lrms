@@ -6,6 +6,12 @@ import { DismissibleAlert } from '@/components/shared/DismissibleAlert';
 import { STATUS_TONE } from '@/config/status-tone';
 
 describe('StatusChip', () => {
+  it('renders an optional detail inside the pill that is not a live announcement', () => {
+    render(<StatusChip tone="ok" label="เชื่อมต่อ" detail="อัปเดต 10:32" />);
+    expect(screen.getByRole('status')).toHaveTextContent('เชื่อมต่อ · อัปเดต 10:32');
+    expect(screen.getByText('อัปเดต 10:32')).toHaveAttribute('aria-live', 'off');
+  });
+
   it.each(['ok', 'warn', 'danger', 'neutral'] as const)('%s tone uses the token tint/text classes', (tone) => {
     render(<StatusChip tone={tone} label="สถานะ" title="รายละเอียด" />);
     const chip = screen.getByRole('status');

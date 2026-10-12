@@ -21,12 +21,16 @@ export const WARD_FEED_STATUS: Record<WardFeedHealth, { labelTh: string; tone: S
   error: { labelTh: 'ขาดการเชื่อมต่อ HOSxP', tone: 'danger', pulse: true },
 };
 
-/** The live pill carries the ward's own last-update time (the page's single
- *  freshness indicator). An unknown or unparseable time shows the bare label. */
-export function wardFeedChipLabel(health: WardFeedHealth, lastUpdatedAt: string | null): string {
-  const label = WARD_FEED_STATUS[health].labelTh;
+/** The live pill's status label (announced to screen readers on change). */
+export function wardFeedChipLabel(health: WardFeedHealth): string {
+  return WARD_FEED_STATUS[health].labelTh;
+}
+
+/** The ward's own update time for the live pill ("อัปเดต HH:MM") — the page's
+ *  single freshness indicator; nothing for an unknown or unparseable time. */
+export function wardFeedChipDetail(lastUpdatedAt: string | null): string | undefined {
   const t = lastUpdatedAt ? new Date(lastUpdatedAt) : null;
-  return t && Number.isFinite(t.getTime()) ? `${label} · อัปเดต ${bangkokClock(t)}` : label;
+  return t && Number.isFinite(t.getTime()) ? `อัปเดต ${bangkokClock(t)}` : undefined;
 }
 
 /** Bed-move outcomes: today's page copy, split into what happened / what to do. */
