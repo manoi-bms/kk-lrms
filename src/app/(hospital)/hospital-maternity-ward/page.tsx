@@ -265,13 +265,13 @@ export default function HospitalMaternityWardPage() {
         <PageHeader
           title="ห้องคลอด"
           subtitle={`${wardName} · อัปเดตอัตโนมัติทุก ${REFRESH_SECONDS} วินาที`}
-          freshness={{ lastSyncAt: lastUpdatedAt, label: 'ข้อมูล HOSxP ณ' }}
           actions={
             <WardHeaderActions
               wards={wards}
               selectedWard={selectedWard}
               onSelectWard={setSelectedWard}
               health={health}
+              lastUpdatedAt={lastUpdatedAt}
               errorMessage={error?.message}
               onRefresh={refresh}
             />

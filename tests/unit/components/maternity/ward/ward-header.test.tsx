@@ -38,6 +38,15 @@ describe('WardHeaderActions', () => {
     if (health === 'ok') expect(chip).not.toHaveAttribute('title');
     else expect(chip).toHaveAttribute('title', 'BMS unavailable');
   });
+
+  it('the live pill carries the ward’s own update time — the page’s single freshness indicator', () => {
+    const { rerender } = render(
+      <WardHeaderActions {...base} wards={one} health="ok" lastUpdatedAt="2026-10-12T03:32:00.000Z" />,
+    );
+    expect(screen.getByRole('status')).toHaveTextContent(/^เชื่อมต่อ HOSxP สด · อัปเดต 10:32$/);
+    rerender(<WardHeaderActions {...base} wards={one} health="ok" lastUpdatedAt={null} />);
+    expect(screen.getByRole('status')).toHaveTextContent(/^เชื่อมต่อ HOSxP สด$/);
+  });
 });
 
 describe('WardKpis', () => {

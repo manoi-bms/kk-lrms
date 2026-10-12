@@ -1,12 +1,13 @@
 // src/components/maternity/ward/WardHeaderActions.tsx
 // PageHeader actions for the ward board: ward picker (only with more than one
-// maternity ward), live HOSxP feed status, and a manual refresh.
+// maternity ward), live HOSxP feed status with the ward's own last-update
+// time (the page's single freshness indicator), and a manual refresh.
 'use client';
 
 import { RefreshCw } from 'lucide-react';
 import type { MaternityWard } from '@/types/maternity-ward';
 import type { WardFeedHealth } from '@/hooks/useMaternityWardStateFull';
-import { WARD_FEED_STATUS } from '@/config/ward-display';
+import { WARD_FEED_STATUS, wardFeedChipLabel } from '@/config/ward-display';
 import { StatusChip } from '@/components/shared/StatusChip';
 
 export interface WardHeaderActionsProps {
@@ -14,6 +15,8 @@ export interface WardHeaderActionsProps {
   selectedWard: string | null;
   onSelectWard: (ward: string) => void;
   health: WardFeedHealth;
+  /** ISO time of the ward's last successful occupancy fetch; null until loaded. */
+  lastUpdatedAt?: string | null;
   /** Raw feed error; shown as the chip tooltip while the feed is unhealthy. */
   errorMessage?: string;
   onRefresh: () => void;
@@ -24,6 +27,7 @@ export function WardHeaderActions({
   selectedWard,
   onSelectWard,
   health,
+  lastUpdatedAt = null,
   errorMessage,
   onRefresh,
 }: WardHeaderActionsProps) {
@@ -48,7 +52,7 @@ export function WardHeaderActions({
       )}
       <StatusChip
         tone={feed.tone}
-        label={feed.labelTh}
+        label={wardFeedChipLabel(health, lastUpdatedAt)}
         pulse={feed.pulse}
         title={health === 'ok' ? undefined : errorMessage}
       />

@@ -50,7 +50,7 @@ export interface MaternityWardStateFull {
   /** Live-data health for the masthead LIVE badge. */
   health: WardFeedHealth;
   /** ISO time of the last successful occupancy fetch FOR THE CURRENT WARD —
-   *  the board's "ข้อมูล HOSxP ณ". Null after a ward switch until it loads. */
+   *  the live pill's "อัปเดต HH:MM". Null after a ward switch until it loads. */
   lastUpdatedAt: string | null;
   mutateWards: () => Promise<unknown>;
   mutateBeds: () => Promise<unknown>;

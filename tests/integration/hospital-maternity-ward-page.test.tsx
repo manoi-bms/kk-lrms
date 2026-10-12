@@ -348,6 +348,19 @@ describe('Hospital maternity ward page — characterization', () => {
     expect(within(region).getByText(/44%/)).toBeInTheDocument(); // 4 of 9 beds
   });
 
+  it('one freshness indicator: the ward update time rides in the live pill, not under the title', async () => {
+    const s = wardScenario(Date.now());
+    openSession();
+    mockListWards.mockResolvedValue([...s.wards]);
+    mockListInventory.mockResolvedValue([...s.beds]);
+    mockListOccupancyFull.mockResolvedValue([...s.occupancy]);
+    render(PAGE);
+    await screen.findByText(/ลัดดา ท\./, undefined, { timeout: 2000 });
+    expect(screen.queryByText(/ข้อมูล HOSxP ณ/)).toBeNull();
+    const pill = screen.getAllByRole('status').find((el) => el.textContent?.startsWith('เชื่อมต่อ HOSxP สด'));
+    expect(pill?.textContent).toMatch(/^เชื่อมต่อ HOSxP สด · อัปเดต \d{2}:\d{2}$/);
+  });
+
   it('switching ward queries the chosen ward', async () => {
     const s = wardScenario(Date.now());
     openSession();
