@@ -255,6 +255,17 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Locked-bed swatch/segment on the ward capacity bar: neutral diagonal
+   hatch from the ink/surface tokens, so "closed" reads apart from "free". */
+@utility bg-hatch-neutral {
+  background-color: var(--surface-muted);
+  background-image: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--ink-subtle) 45%, transparent) 0 2px,
+    transparent 2px 6px
+  );
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

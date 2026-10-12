@@ -21,6 +21,12 @@ describe('SectionCard', () => {
     render(<SectionCard title="t" tone="danger">x</SectionCard>);
     expect(screen.getByRole('region').className).toContain('bg-danger-tint');
   });
+  it('ok tone uses the ok tint and border (the calm "nothing urgent" state)', () => {
+    render(<SectionCard title="t" tone="ok">x</SectionCard>);
+    const region = screen.getByRole('region');
+    expect(region.className).toContain('bg-ok-tint');
+    expect(region.className).toContain('border-ok/40');
+  });
 });
 
 describe('PageHeader', () => {

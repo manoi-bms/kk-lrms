@@ -145,6 +145,21 @@ export const PROLONGED_LATENT_HINT = {
   body: `นับผู้คลอดที่รับเข้ามาแล้วอย่างน้อย ${minHours} ชั่วโมง และปากมดลูกยังไม่ถึง ${cervixBelowCm} ซม. หรือยังไม่มีบันทึก — เกณฑ์เดียวกับป้ายบนการ์ดเตียง ควรประเมินตามเส้นปฏิบัติการของพาร์โทกราฟ`,
 } as const;
 
+/** Capacity-bar segments, in bar order. Every segment counts BEDS; the
+ *  legend's "มีผู้คลอด" number is patients (see WardKpis). */
+export const CAPACITY_SEGMENTS = [
+  { key: 'occupied', labelTh: 'มีผู้คลอด', className: 'bg-brand' },
+  { key: 'free', labelTh: 'ว่าง', className: 'border border-ok/40 bg-ok-tint' },
+  { key: 'locked', labelTh: 'ปิด', className: 'border border-border bg-hatch-neutral' },
+] as const;
+
+export type CapacitySegment = (typeof CAPACITY_SEGMENTS)[number]['key'];
+
+/** Beds per capacity segment; the three always sum to totalBeds. */
+export function capacityBeds(s: BedSummary): Record<CapacitySegment, number> {
+  return { occupied: s.occupied, free: s.free, locked: s.lockedEmpty };
+}
+
 /** The capacity bar is BEDS: occupied beds + free + locked-empty = totalBeds. */
 export function capacityAriaLabel(s: BedSummary): string {
   if (s.totalBeds === 0) return 'วอร์ดนี้ยังไม่มีเตียงในผัง';

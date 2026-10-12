@@ -6,13 +6,18 @@ export function isStackedBelow(list: Pick<DOMRect, 'bottom'>, preview: Pick<DOMR
   return preview.top >= list.bottom - 1;
 }
 
-export function scrollPreviewIntoViewIfStacked(list: HTMLElement | null, preview: HTMLElement | null): boolean {
-  if (!list || !preview) return false;
-  if (!isStackedBelow(list.getBoundingClientRect(), preview.getBoundingClientRect())) return false;
+/** 'smooth', or 'auto' (an instant jump) under prefers-reduced-motion. */
+export function preferredScrollBehavior(): ScrollBehavior {
   const reduce =
     typeof window !== 'undefined' &&
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  preview.scrollIntoView?.({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  return reduce ? 'auto' : 'smooth';
+}
+
+export function scrollPreviewIntoViewIfStacked(list: HTMLElement | null, preview: HTMLElement | null): boolean {
+  if (!list || !preview) return false;
+  if (!isStackedBelow(list.getBoundingClientRect(), preview.getBoundingClientRect())) return false;
+  preview.scrollIntoView?.({ behavior: preferredScrollBehavior(), block: 'start' });
   return true;
 }

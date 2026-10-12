@@ -211,8 +211,9 @@ describe('Hospital maternity ward page (full render)', () => {
     // Both rooms render (room_name from the bedno inventory).
     expect(screen.getByText('LR1')).toBeInTheDocument();
     expect(screen.getByText('LR2')).toBeInTheDocument();
-    // One occupied + three empty beds.
-    expect(screen.getAllByText('ว่าง').length).toBe(3);
+    // One occupied + three empty beds (the tiles; the summary legend also reads "ว่าง").
+    const tiles = [...document.querySelectorAll<HTMLElement>('article[data-testid^="bed-"]')];
+    expect(tiles.flatMap((t) => within(t).queryAllByText('ว่าง')).length).toBe(3);
     // Refresh control (redesign labels it "Refresh ↻").
     expect(screen.getByRole('button', { name: /รีเฟรช/ })).toBeInTheDocument();
   });
@@ -310,7 +311,7 @@ describe('Hospital maternity ward page (full render)', () => {
 // PAGE_COPY values only.
 const PAGE_COPY = {
   kpiRegion: () => screen.getByRole('region', { name: 'สรุปเตียงในห้องคลอด' }),
-  kpiLabels: ['เตียงทั้งหมด', 'มีผู้คลอด', 'เตียงว่าง', 'ปิดใช้งาน', 'ระยะแฝงนาน'],
+  kpiLabels: ['เตียงทั้งหมด', 'มีผู้คลอด', 'ว่าง', 'ปิด', 'ระยะแฝงนาน'],
   refreshButton: /รีเฟรช/,
   noWards: 'ไม่พบห้องคลอดใน HOSxP',
 };
@@ -452,7 +453,7 @@ describe('Hospital maternity ward page — patients without a usable bed (I2)', 
     expect(within(section).getByText(/บุษบา ท\./)).toBeInTheDocument();
     const occupied = within(PAGE_COPY.kpiRegion()).getByTestId('ward-kpi-occupied');
     expect(occupied.querySelector('[data-kpi-value]')).toHaveTextContent(num(1));
-    expect(occupied).toHaveTextContent('ยังไม่ได้จัดเตียง 1');
+    expect(PAGE_COPY.kpiRegion()).toHaveTextContent('ยังไม่ได้จัดเตียง 1');
     expect(screen.queryByText('ไม่มีผู้คลอดในห้องคลอดขณะนี้')).toBeNull();
     fireEvent.click(within(section).getByText(/บุษบา ท\./));
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument(), { timeout: 2000 });
