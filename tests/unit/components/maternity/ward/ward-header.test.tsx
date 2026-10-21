@@ -9,7 +9,33 @@ const one = [{ ward: '03', name: 'ห้องคลอด', real_bedcount: 9 }]
 const two = [...one, { ward: '05', name: 'ห้องคลอดสอง', real_bedcount: 2 }];
 
 describe('WardHeaderActions', () => {
-  const base = { selectedWard: '03', onSelectWard: vi.fn(), onRefresh: vi.fn() };
+  const base = {
+    selectedWard: '03',
+    onSelectWard: vi.fn(),
+    onRefresh: vi.fn(),
+    hosxpStatus: 'RUNNING' as const,
+    hosxpDetail: 'scheduled · 2/3 cycles',
+    onOpenHosxp: vi.fn(),
+    syncing: false,
+  };
+
+  // Hospitals that only open this page sync to the province from here, so
+  // the board shows the same sync status `/` does and opens the same dialog.
+  it('shows the KK-LRMS sync status (same chip as `/`); clicking opens the diagnostics', () => {
+    render(<WardHeaderActions {...base} wards={one} health="ok" />);
+    const chip = screen.getByRole('button', { name: 'ส่งข้อมูลเข้า KK-LRMS: ทำงานอยู่' });
+    expect(chip).toHaveAttribute('title', 'scheduled · 2/3 cycles');
+    fireEvent.click(chip);
+    expect(base.onOpenHosxp).toHaveBeenCalled();
+  });
+
+  it('refresh spins while a sync cycle runs but stays usable (the board refetch is independent)', () => {
+    render(<WardHeaderActions {...base} wards={one} health="ok" syncing />);
+    const refresh = screen.getByRole('button', { name: 'รีเฟรชข้อมูลเตียง' });
+    expect(refresh).toBeEnabled();
+    expect(refresh).toHaveAttribute('aria-busy', 'true');
+    expect(refresh.querySelector('svg')!.getAttribute('class')).toContain('animate-spin');
+  });
 
   it('hides the ward picker for a single ward; refresh is a named button', () => {
     render(<WardHeaderActions {...base} wards={one} health="ok" />);

@@ -102,6 +102,10 @@ describe('useProvinceDashboard', () => {
     expect(result.current.syncing).toBe(true);
     expect(result.current.onboardingError).toBe('boom');
     expect(result.current.hosxpSyncState).toEqual({ ran: false });
+    // Derived once in useHosxpBrowserSync — the page no longer re-derives it.
+    expect(result.current.hosxpStatus).toBe('SKIPPED');
+    expect(result.current.hosxpDetail).toBe('NO BMS SESSION');
+    expect(result.current.hosxpHelp).toBe('ระบบกำลังเริ่มการเชื่อมต่อ HOSxP');
   });
 
   // Guards for the 2026-07-17 79 req/s incident.

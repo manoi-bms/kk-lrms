@@ -26,6 +26,11 @@ export function wardFeedChipLabel(health: WardFeedHealth): string {
   return WARD_FEED_STATUS[health].labelTh;
 }
 
+/** Label for the HOSxP → KK-LRMS sync chip on the ward board. The live pill
+ *  already says "HOSxP" (this page reads HOSxP directly), so the sync chip
+ *  names where the data goes instead — the same pipeline `/` calls "HOSxP". */
+export const WARD_SYNC_CHIP_LABEL = 'ส่งข้อมูลเข้า KK-LRMS';
+
 /** The ward's own update time for the live pill ("อัปเดต HH:MM") — the page's
  *  single freshness indicator; nothing for an unknown or unparseable time. */
 export function wardFeedChipDetail(lastUpdatedAt: string | null): string | undefined {

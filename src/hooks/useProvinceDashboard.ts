@@ -9,20 +9,16 @@ import { debounceLeadingTrailing, SSE_REFRESH_DEBOUNCE_MS } from '@/lib/debounce
 import { useDashboard } from '@/hooks/useDashboard';
 import { useHighRiskPatients } from '@/hooks/useHighRiskPatients';
 import { useSSE } from '@/hooks/useSSE';
-import { useBrowserPoll } from '@/hooks/useBrowserPoll';
-import { useOnboardHosxpWebhook } from '@/hooks/useOnboardHosxpWebhook';
-import { useOnboardHosxpSync } from '@/hooks/useOnboardHosxpSync';
+import { useHosxpBrowserSync } from '@/hooks/useHosxpBrowserSync';
 import { ConnectionStatus as ConnectionStatusEnum } from '@/types/domain';
 import { classifySyncHealth, isNonReportingHcode } from '@/config/hospital-network';
 
 export function useProvinceDashboard() {
-  // Auto-provisions HOSxP's webhook_setting row on first onboarding; no-op
-  // without a BMS session / marketplace_token.
-  const { state: onboardingState } = useOnboardHosxpWebhook();
-  const { state: hosxpSyncState } = useOnboardHosxpSync();
-  // Server-side polling is disabled in production: this browser poll keeps
-  // this user's hospital fresh, and its SSE fan-out refreshes everyone.
-  const { state: browserPollState, runNow } = useBrowserPoll();
+  // Server-side polling is disabled in production: this browser sync keeps
+  // this user's hospital fresh, and its SSE fan-out refreshes everyone. The
+  // ward board (/hospital-maternity-ward) mounts the same hook.
+  const sync = useHosxpBrowserSync();
+  const { syncNow } = sync;
   const dash = useDashboard();
   const hr = useHighRiskPatients();
   const { mutate } = dash;
@@ -36,9 +32,9 @@ export function useProvinceDashboard() {
   // Manual refresh: run a poll cycle, then revalidate (the SSE fan-out stays
   // silent when no rows changed, but "ดึงข้อมูลทันที" must still feel live).
   const triggerSync = useCallback(async () => {
-    await runNow();
+    await syncNow();
     refreshAll();
-  }, [runNow, refreshAll]);
+  }, [syncNow, refreshAll]);
 
   // Leading+trailing debounce — the 2026-07-17 79-req/s incident. Built over
   // the stable SWR mutates so the timer survives re-renders.
@@ -74,9 +70,12 @@ export function useProvinceDashboard() {
     highRiskPatients: hr.patients,
     hrLoading: hr.isLoading,
     sseState,
-    hosxpSyncState,
-    onboardingError: onboardingState?.error ?? null,
-    syncing: browserPollState.isRunning,
+    hosxpSyncState: sync.hosxpSyncState,
+    hosxpStatus: sync.hosxpStatus,
+    hosxpDetail: sync.hosxpDetail,
+    hosxpHelp: sync.hosxpHelp,
+    onboardingError: sync.onboardingError,
+    syncing: sync.syncing,
     refreshAll,
     triggerSync,
     // Fetch failed but SWR still holds the last good payload (Constitution VI).

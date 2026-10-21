@@ -28,11 +28,6 @@ import { ProvinceOverviewPanel } from '@/components/dashboard/province/ProvinceO
 import { ProvinceOverviewDialog } from '@/components/dashboard/province/ProvinceOverviewDialog';
 import { HosxpSyncDialog } from '@/components/dashboard/province/HosxpSyncDialog';
 import type { OverviewMode } from '@/components/dashboard/province/OverviewModeToggle';
-import {
-  deriveHosxpSyncStatus,
-  describeHosxpSyncDetail,
-  describeHosxpSyncHelp,
-} from '@/lib/hosxp-sync-status';
 
 export default function DashboardPage() {
   useSetBreadcrumbs([{ label: 'แดชบอร์ด' }]);
@@ -89,8 +84,6 @@ export default function DashboardPage() {
     );
   }
 
-  const hosxpStatus = deriveHosxpSyncStatus(d.hosxpSyncState);
-
   return (
     <div className="@container min-h-full bg-surface-page">
       {/* Fetch failed but SWR still holds the last good payload — keep it on
@@ -112,8 +105,8 @@ export default function DashboardPage() {
           actions={
             <DashboardHeaderActions
               sseState={d.sseState}
-              hosxpStatus={hosxpStatus}
-              hosxpDetail={describeHosxpSyncDetail(d.hosxpSyncState, hosxpStatus)}
+              hosxpStatus={d.hosxpStatus}
+              hosxpDetail={d.hosxpDetail}
               onOpenHosxp={() => setHosxpOpen(true)}
               syncing={d.syncing}
               onSync={() => void d.triggerSync()}
@@ -176,8 +169,8 @@ export default function DashboardPage() {
         open={hosxpOpen}
         onOpenChange={setHosxpOpen}
         state={d.hosxpSyncState}
-        status={hosxpStatus}
-        help={describeHosxpSyncHelp(d.hosxpSyncState, hosxpStatus)}
+        status={d.hosxpStatus}
+        help={d.hosxpHelp}
       />
     </div>
   );

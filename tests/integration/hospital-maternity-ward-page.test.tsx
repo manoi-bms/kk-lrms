@@ -394,6 +394,23 @@ describe('Hospital maternity ward page — characterization', () => {
     await waitFor(() => expect(mockListOccupancyFull.mock.calls.length).toBeGreaterThan(before));
   });
 
+  // Some hospitals open only this page from HOSxP — never `/` — so the board
+  // runs the same browser sync and exposes the same status + IT report.
+  it('HOSxP → KK-LRMS sync: same status chip and diagnostics dialog as `/`', async () => {
+    const s = wardScenario(Date.now());
+    openSession();
+    mockListWards.mockResolvedValue([...s.wards]);
+    mockListInventory.mockResolvedValue([...s.beds]);
+    mockListOccupancyFull.mockResolvedValue([...s.occupancy]);
+    render(PAGE);
+    await screen.findByText(/ลัดดา ท\./, undefined, { timeout: 2000 });
+    const chip = screen.getByRole('button', { name: /^ส่งข้อมูลเข้า KK-LRMS: / });
+    fireEvent.click(chip);
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('สถานะการดึงข้อมูลจาก HOSxP')).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'คัดลอกรายงาน' })).toBeInTheDocument();
+  });
+
   it('a hospital with no maternity ward gets an explanation', async () => {
     openSession();
     mockListWards.mockResolvedValue([]);

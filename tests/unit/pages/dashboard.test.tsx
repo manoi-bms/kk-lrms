@@ -48,6 +48,10 @@ function baseDash(over: Partial<ProvinceDashboard> = {}): ProvinceDashboard {
     hrLoading: false,
     sseState: 'connected',
     hosxpSyncState: null,
+    // What useHosxpBrowserSync derives for a null sync state.
+    hosxpStatus: 'STARTING',
+    hosxpDetail: 'CONNECTING',
+    hosxpHelp: 'ระบบกำลังเริ่มการเชื่อมต่อ HOSxP',
     onboardingError: null,
     syncing: false,
     refreshAll: vi.fn(),

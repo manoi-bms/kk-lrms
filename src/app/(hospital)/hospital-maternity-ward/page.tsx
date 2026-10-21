@@ -16,15 +16,14 @@ import {
   WARD_LIST_REFRESH_MS,
   WARD_OCCUPANCY_REFRESH_MS,
 } from '@/hooks/useMaternityWardStateFull';
-import { useOnboardHosxpWebhook } from '@/hooks/useOnboardHosxpWebhook';
-import { useOnboardHosxpSync } from '@/hooks/useOnboardHosxpSync';
-import { useBrowserPoll } from '@/hooks/useBrowserPoll';
+import { useHosxpBrowserSync } from '@/hooks/useHosxpBrowserSync';
 import { useMaternalScreenSummaries } from '@/hooks/useMaternalScreenSummaries';
 import { WardLayoutViewFull, type BedMovePayload } from '@/components/maternity/WardLayoutViewFull';
 import { PatientDrawer } from '@/components/maternity/PatientDrawer';
 import { WardHeaderActions } from '@/components/maternity/ward/WardHeaderActions';
 import { WardKpis } from '@/components/maternity/ward/WardKpis';
 import { OnboardingWebhookAlert } from '@/components/dashboard/province/OnboardingWebhookAlert';
+import { HosxpSyncDialog } from '@/components/dashboard/province/HosxpSyncDialog';
 import { DismissibleAlert } from '@/components/shared/DismissibleAlert';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ErrorState } from '@/components/shared/ErrorState';
@@ -65,25 +64,20 @@ function BoardLoading() {
 
 export default function HospitalMaternityWardPage() {
   const { isReady, error: sessionError, config, userInfo, marketplaceToken } = useBmsSession();
-  const { state: onboardingState } = useOnboardHosxpWebhook();
-  // Provision the polling pipeline alongside the webhook. Without this,
-  // a nurse who only ever lands on /hospital-maternity-ward never gets
-  // their hospital onto the 30s server-side poll rotation, so the
-  // provincial dashboard, cached_patients, and the new "Sync Log" tab
-  // stay empty for that hospital. Same gate as the provincial dashboard
-  // (`/`) — runs at most once per tab and only with a marketplace_token.
-  useOnboardHosxpSync();
-  // Browser-side HOSxP poll — same skip-conditions and 60s cadence as the
-  // provincial dashboard. Without this, the nurse's tab would never push
-  // ipt_labour / partograph updates to the central cache after server-side
-  // polling was disabled.
-  useBrowserPoll();
+  // HOSxP → KK-LRMS sync — the same hook `/` mounts. Some hospitals only
+  // ever open this page, and with server-side polling disabled this tab is
+  // then the ONLY thing pushing their labour / partograph / ANC rows to the
+  // central cache (and so to the provincial dashboard).
+  const sync = useHosxpBrowserSync();
+  const [hosxpOpen, setHosxpOpen] = useState(false);
   // Cross-source maternal-screen summaries (Phase 6 Task H4, GC-H4) — a
   // SEPARATE central-DB fetch, independent of the live HOSxP feed above. A
   // failed/slow fetch here degrades `byAn` to an empty map (see the hook),
   // so every bed tile renders exactly as it does today; it can never block
   // or error the ward board.
-  const { byAn: maternalScreenSummaries } = useMaternalScreenSummaries(userInfo?.hospcode ?? null);
+  const { byAn: maternalScreenSummaries, mutate: mutateScreenSummaries } = useMaternalScreenSummaries(
+    userInfo?.hospcode ?? null,
+  );
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
   const {
@@ -141,6 +135,9 @@ export default function HospitalMaternityWardPage() {
     void mutateWards();
     void mutateBeds();
     void mutateOccupancy();
+    // Push this hospital to KK-LRMS now (like "ดึงข้อมูลทันที" on `/`), then
+    // re-read the one central-DB feed on this page. No-op mid-cycle.
+    void sync.syncNow().then(() => mutateScreenSummaries());
   };
 
   if (sessionError) {
@@ -273,12 +270,16 @@ export default function HospitalMaternityWardPage() {
               health={health}
               lastUpdatedAt={lastUpdatedAt}
               errorMessage={error?.message}
+              hosxpStatus={sync.hosxpStatus}
+              hosxpDetail={sync.hosxpDetail}
+              onOpenHosxp={() => setHosxpOpen(true)}
+              syncing={sync.syncing}
               onRefresh={refresh}
             />
           }
         />
-        {onboardingState?.error && !onboardingDismissed && (
-          <OnboardingWebhookAlert error={onboardingState.error} onDismiss={() => setOnboardingDismissed(true)} />
+        {sync.onboardingError && !onboardingDismissed && (
+          <OnboardingWebhookAlert error={sync.onboardingError} onDismiss={() => setOnboardingDismissed(true)} />
         )}
         {writeAlert && (
           <DismissibleAlert
@@ -331,6 +332,13 @@ export default function HospitalMaternityWardPage() {
         )}
       </PageFrame>
       <PatientDrawer open={selectedAn !== null} occupant={selectedOccupant} onClose={() => setSelectedAn(null)} />
+      <HosxpSyncDialog
+        open={hosxpOpen}
+        onOpenChange={setHosxpOpen}
+        state={sync.hosxpSyncState}
+        status={sync.hosxpStatus}
+        help={sync.hosxpHelp}
+      />
     </div>
   );
 }
