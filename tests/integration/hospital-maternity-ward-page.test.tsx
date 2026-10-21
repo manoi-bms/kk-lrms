@@ -32,7 +32,10 @@ vi.mock('next-auth/react', () => ({
   }),
   signOut: vi.fn(),
 }));
-vi.mock('next/navigation', () => ({ usePathname: () => '/hospital-maternity-ward', useRouter: () => ({ push: () => {}, back: () => {}, replace: () => {}, prefetch: () => {} }) }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/hospital-maternity-ward',
+  useRouter: () => ({ push: () => {}, back: () => {}, replace: () => {}, prefetch: () => {} }),
+}));
 
 vi.mock('@/services/maternity-ward', () => ({
   listMaternityWards: vi.fn(),
@@ -341,7 +344,8 @@ describe('Hospital maternity ward page — characterization', () => {
     render(PAGE);
     await screen.findByText(/ลัดดา ท\./, undefined, { timeout: 2000 });
     const region = PAGE_COPY.kpiRegion();
-    for (const label of PAGE_COPY.kpiLabels) expect(within(region).getByText(label)).toBeInTheDocument();
+    for (const label of PAGE_COPY.kpiLabels)
+      expect(within(region).getByText(label)).toBeInTheDocument();
     const e = s.expected;
     for (const n of [e.totalBeds, e.occupied, e.free, e.locked, e.prolongedLatent]) {
       expect(within(region).getByText(num(n))).toBeInTheDocument();
@@ -358,14 +362,19 @@ describe('Hospital maternity ward page — characterization', () => {
     render(PAGE);
     await screen.findByText(/ลัดดา ท\./, undefined, { timeout: 2000 });
     expect(screen.queryByText(/ข้อมูล HOSxP ณ/)).toBeNull();
-    const pill = screen.getAllByRole('status').find((el) => el.textContent?.startsWith('เชื่อมต่อ HOSxP สด'));
+    const pill = screen
+      .getAllByRole('status')
+      .find((el) => el.textContent?.startsWith('เชื่อมต่อ HOSxP สด'));
     expect(pill?.textContent).toMatch(/^เชื่อมต่อ HOSxP สด · อัปเดต \d{2}:\d{2}$/);
   });
 
   it('switching ward queries the chosen ward', async () => {
     const s = wardScenario(Date.now());
     openSession();
-    mockListWards.mockResolvedValue([...s.wards, { ward: '05', name: 'ห้องคลอดสอง', real_bedcount: 1 }]);
+    mockListWards.mockResolvedValue([
+      ...s.wards,
+      { ward: '05', name: 'ห้องคลอดสอง', real_bedcount: 1 },
+    ]);
     mockListInventory.mockImplementation(async (_c: unknown, ward: string) =>
       ward === '05' ? [makeBed('11', 'LR9', 1)] : [...s.beds],
     );
@@ -375,9 +384,12 @@ describe('Hospital maternity ward page — characterization', () => {
     const { container } = render(PAGE);
     await screen.findByText(/ลัดดา ท\./, undefined, { timeout: 2000 });
     fireEvent.change(screen.getByDisplayValue('ห้องคลอดทดสอบ (03)'), { target: { value: '05' } });
-    await waitFor(() => expect(container.querySelector('article[data-testid="bed-11"]')).not.toBeNull(), {
-      timeout: 2000,
-    });
+    await waitFor(
+      () => expect(container.querySelector('article[data-testid="bed-11"]')).not.toBeNull(),
+      {
+        timeout: 2000,
+      },
+    );
     expect(mockListInventory).toHaveBeenCalledWith(expect.anything(), '05');
   });
 
@@ -415,7 +427,9 @@ describe('Hospital maternity ward page — characterization', () => {
     openSession();
     mockListWards.mockResolvedValue([]);
     render(PAGE);
-    expect(await screen.findByText(PAGE_COPY.noWards, undefined, { timeout: 2000 })).toBeInTheDocument();
+    expect(
+      await screen.findByText(PAGE_COPY.noWards, undefined, { timeout: 2000 }),
+    ).toBeInTheDocument();
   });
 
   it('missing bms_url → actionable Thai session error with the raw text kept', async () => {
@@ -439,7 +453,9 @@ describe('Hospital maternity ward page — characterization', () => {
     mockListInventory.mockResolvedValue([]);
     mockListOccupancyFull.mockResolvedValue([]);
     render(PAGE);
-    expect(await screen.findByText('วอร์ดนี้ยังไม่มีเตียงใน HOSxP', undefined, { timeout: 2000 })).toBeInTheDocument();
+    expect(
+      await screen.findByText('วอร์ดนี้ยังไม่มีเตียงใน HOSxP', undefined, { timeout: 2000 }),
+    ).toBeInTheDocument();
   });
 
   it('zero occupants → EmptyState above a still-usable bed grid', async () => {
@@ -449,11 +465,14 @@ describe('Hospital maternity ward page — characterization', () => {
     mockListInventory.mockResolvedValue([...s.beds]);
     mockListOccupancyFull.mockResolvedValue([]);
     const { container } = render(PAGE);
-    expect(await screen.findByText('ไม่มีผู้คลอดในห้องคลอดขณะนี้', undefined, { timeout: 2000 })).toBeInTheDocument();
-    expect(screen.getByText('เตียงว่าง 7 เตียง · ข้อมูล HOSxP อัปเดตทุก 20 วินาที')).toBeInTheDocument();
+    expect(
+      await screen.findByText('ไม่มีผู้คลอดในห้องคลอดขณะนี้', undefined, { timeout: 2000 }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('เตียงว่าง 7 เตียง · ข้อมูล HOSxP อัปเดตทุก 20 วินาที'),
+    ).toBeInTheDocument();
     expect(container.querySelectorAll('article[data-testid^="bed-"]')).toHaveLength(9);
   });
-
 });
 
 // ─── I2: a patient without a usable bed is never dropped ───────────────────
@@ -466,7 +485,11 @@ describe('Hospital maternity ward page — patients without a usable bed (I2)', 
     const nobed = { ...s.occupancy[0], an: 'AN-NOBED', bedno: '', fname: 'บุษบา' };
     mockListOccupancyFull.mockResolvedValue([nobed]);
     render(PAGE);
-    const section = await screen.findByRole('region', { name: 'ยังไม่ได้จัดเตียง / ไม่ตรงผังเตียง' }, { timeout: 2000 });
+    const section = await screen.findByRole(
+      'region',
+      { name: 'ยังไม่ได้จัดเตียง / ไม่ตรงผังเตียง' },
+      { timeout: 2000 },
+    );
     expect(within(section).getByText(/บุษบา ท\./)).toBeInTheDocument();
     const occupied = within(PAGE_COPY.kpiRegion()).getByTestId('ward-kpi-occupied');
     expect(occupied.querySelector('[data-kpi-value]')).toHaveTextContent(num(1));
@@ -484,8 +507,12 @@ describe('Hospital maternity ward page — patients without a usable bed (I2)', 
     mockListInventory.mockResolvedValue([]);
     mockListOccupancyFull.mockResolvedValue([{ ...s.occupancy[0], an: 'AN-X', bedno: '07' }]);
     render(PAGE);
-    expect(await screen.findByText('วอร์ดนี้ยังไม่มีเตียงใน HOSxP', undefined, { timeout: 2000 })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'ยังไม่ได้จัดเตียง / ไม่ตรงผังเตียง' })).toHaveTextContent('เตียง 07 · ไม่อยู่ในผังวอร์ดนี้');
+    expect(
+      await screen.findByText('วอร์ดนี้ยังไม่มีเตียงใน HOSxP', undefined, { timeout: 2000 }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: 'ยังไม่ได้จัดเตียง / ไม่ตรงผังเตียง' }),
+    ).toHaveTextContent('เตียง 07 · ไม่อยู่ในผังวอร์ดนี้');
   });
 });
 
@@ -508,27 +535,34 @@ describe('Hospital maternity ward page — load failures are not an empty ward (
   it.each([
     ['occupancy', 'รายชื่อผู้คลอดบนเตียง'],
     ['beds', 'ผังเตียง'],
-  ] as const)('the %s feed failing on first load → full ErrorState, never "empty"', async (feed, label) => {
-    const s = wardScenario(Date.now());
-    openSession();
-    mockListWards.mockResolvedValue([...s.wards]);
-    if (feed === 'beds') {
-      mockListInventory.mockRejectedValue(new Error('beds down'));
-      mockListOccupancyFull.mockResolvedValue([...s.occupancy]);
-    } else {
-      mockListInventory.mockResolvedValue([...s.beds]);
-      mockListOccupancyFull.mockRejectedValue(new Error('occupancy down'));
-    }
-    const { container } = render(PAGE);
-    const alert = await screen.findByText(new RegExp(`ไม่สามารถโหลดข้อมูลห้องคลอดจาก HOSxP — ${label}`), undefined, {
-      timeout: 3000,
-    });
-    expect(alert).toHaveTextContent(/ล้มเหลวตั้งแต่/);
-    expect(screen.getByText(/อย่าถือว่าห้องคลอดว่าง/)).toBeInTheDocument();
-    expect(screen.getByText(`${feed} down`)).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /ลองใหม่/ }).length).toBeGreaterThan(0);
-    expectNoEmptyBoard(container);
-  });
+  ] as const)(
+    'the %s feed failing on first load → full ErrorState, never "empty"',
+    async (feed, label) => {
+      const s = wardScenario(Date.now());
+      openSession();
+      mockListWards.mockResolvedValue([...s.wards]);
+      if (feed === 'beds') {
+        mockListInventory.mockRejectedValue(new Error('beds down'));
+        mockListOccupancyFull.mockResolvedValue([...s.occupancy]);
+      } else {
+        mockListInventory.mockResolvedValue([...s.beds]);
+        mockListOccupancyFull.mockRejectedValue(new Error('occupancy down'));
+      }
+      const { container } = render(PAGE);
+      const alert = await screen.findByText(
+        new RegExp(`ไม่สามารถโหลดข้อมูลห้องคลอดจาก HOSxP — ${label}`),
+        undefined,
+        {
+          timeout: 3000,
+        },
+      );
+      expect(alert).toHaveTextContent(/ล้มเหลวตั้งแต่/);
+      expect(screen.getByText(/อย่าถือว่าห้องคลอดว่าง/)).toBeInTheDocument();
+      expect(screen.getByText(`${feed} down`)).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /ลองใหม่/ }).length).toBeGreaterThan(0);
+      expectNoEmptyBoard(container);
+    },
+  );
 
   it('the ward LIST failing on first load: "ลองใหม่" refetches the ward list and recovers', async () => {
     const s = wardScenario(Date.now());
@@ -549,13 +583,19 @@ describe('Hospital maternity ward page — load failures are not an empty ward (
     openSession();
     mockListWards.mockResolvedValue([...s.wards]);
     mockListInventory.mockResolvedValue([...s.beds]);
-    mockListOccupancyFull.mockResolvedValueOnce([...s.occupancy]).mockRejectedValue(new Error('occupancy down'));
+    mockListOccupancyFull
+      .mockResolvedValueOnce([...s.occupancy])
+      .mockRejectedValue(new Error('occupancy down'));
     const { container } = render(PAGE);
     await screen.findByText(/ลัดดา ท\./, undefined, { timeout: 2000 });
     fireEvent.click(screen.getByRole('button', { name: PAGE_COPY.refreshButton }));
-    const banner = await screen.findByText('ดึงข้อมูลเตียงจาก HOSxP ไม่สำเร็จ — แสดงข้อมูลเดิม', undefined, {
-      timeout: 3000,
-    });
+    const banner = await screen.findByText(
+      'ดึงข้อมูลเตียงจาก HOSxP ไม่สำเร็จ — แสดงข้อมูลเดิม',
+      undefined,
+      {
+        timeout: 3000,
+      },
+    );
     const bannerEl = banner.closest<HTMLElement>('[role="alert"]')!;
     expect(bannerEl).toHaveTextContent(/แสดงข้อมูลล่าสุดเมื่อ/);
     expect(within(bannerEl).getByText('ลองใหม่').closest('button')).not.toBeNull();
@@ -567,32 +607,38 @@ describe('Hospital maternity ward page — load failures are not an empty ward (
   it.each([
     ['occupancy', 'beds resolved'],
     ['beds', 'occupancy resolved'],
-  ] as const)('first load: %s still in flight (%s) → LoadingState, no empty-ward copy', async (pending, _settled) => {
-    const s = wardScenario(Date.now());
-    openSession();
-    mockListWards.mockResolvedValue([...s.wards]);
-    const never = () => new Promise(() => {});
-    if (pending === 'occupancy') {
-      mockListInventory.mockResolvedValue([...s.beds]);
-      mockListOccupancyFull.mockImplementation(never);
-    } else {
-      mockListInventory.mockImplementation(never);
-      mockListOccupancyFull.mockResolvedValue([]);
-    }
-    const { container } = render(PAGE);
-    // The ward resolved (masthead + ward picker are up) and the other feed has
-    // settled, so a wrongly rendered empty board would be on screen by now.
-    await screen.findByRole('heading', { level: 1, name: /ห้องคลอด/ }, { timeout: 2000 });
-    await waitFor(() => expect(mockListOccupancyFull).toHaveBeenCalled());
-    await new Promise((r) => setTimeout(r, 50));
-    expect(screen.getByText('กำลังโหลดข้อมูลเตียงจาก HOSxP…')).toBeInTheDocument();
-    expectNoEmptyBoard(container);
-  });
+  ] as const)(
+    'first load: %s still in flight (%s) → LoadingState, no empty-ward copy',
+    async (pending, _settled) => {
+      const s = wardScenario(Date.now());
+      openSession();
+      mockListWards.mockResolvedValue([...s.wards]);
+      const never = () => new Promise(() => {});
+      if (pending === 'occupancy') {
+        mockListInventory.mockResolvedValue([...s.beds]);
+        mockListOccupancyFull.mockImplementation(never);
+      } else {
+        mockListInventory.mockImplementation(never);
+        mockListOccupancyFull.mockResolvedValue([]);
+      }
+      const { container } = render(PAGE);
+      // The ward resolved (masthead + ward picker are up) and the other feed has
+      // settled, so a wrongly rendered empty board would be on screen by now.
+      await screen.findByRole('heading', { level: 1, name: /ห้องคลอด/ }, { timeout: 2000 });
+      await waitFor(() => expect(mockListOccupancyFull).toHaveBeenCalled());
+      await new Promise((r) => setTimeout(r, 50));
+      expect(screen.getByText('กำลังโหลดข้อมูลเตียงจาก HOSxP…')).toBeInTheDocument();
+      expectNoEmptyBoard(container);
+    },
+  );
 
   it('switching ward shows LoadingState until the new ward loads — no stale board, no stale banner', async () => {
     const s = wardScenario(Date.now());
     openSession();
-    mockListWards.mockResolvedValue([...s.wards, { ward: '05', name: 'ห้องคลอดสอง', real_bedcount: 1 }]);
+    mockListWards.mockResolvedValue([
+      ...s.wards,
+      { ward: '05', name: 'ห้องคลอดสอง', real_bedcount: 1 },
+    ]);
     mockListInventory.mockImplementation(async (_c: unknown, ward: string) =>
       ward === '05' ? [makeBed('11', 'LR9', 1)] : [...s.beds],
     );
@@ -602,7 +648,9 @@ describe('Hospital maternity ward page — load failures are not an empty ward (
     const { container } = render(PAGE);
     await screen.findByText(/ลัดดา ท\./, undefined, { timeout: 2000 });
     fireEvent.change(screen.getByDisplayValue('ห้องคลอดทดสอบ (03)'), { target: { value: '05' } });
-    expect(await screen.findByText('กำลังโหลดข้อมูลเตียงจาก HOSxP…', undefined, { timeout: 2000 })).toBeInTheDocument();
+    expect(
+      await screen.findByText('กำลังโหลดข้อมูลเตียงจาก HOSxP…', undefined, { timeout: 2000 }),
+    ).toBeInTheDocument();
     await waitFor(() => expect(mockListInventory).toHaveBeenCalledWith(expect.anything(), '05'));
     await new Promise((r) => setTimeout(r, 50));
     expectNoEmptyBoard(container);

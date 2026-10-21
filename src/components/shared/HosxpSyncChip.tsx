@@ -4,7 +4,12 @@
 'use client';
 
 import { Info } from 'lucide-react';
-import { HOSXP_SYNC_STATUS_TH, hosxpSyncTone, type HosxpSyncStatus, type HosxpSyncTone } from '@/lib/hosxp-sync-status';
+import {
+  HOSXP_SYNC_STATUS_TH,
+  hosxpSyncTone,
+  type HosxpSyncStatus,
+  type HosxpSyncTone,
+} from '@/lib/hosxp-sync-status';
 import { STATUS_TONE } from '@/config/status-tone';
 import { cn } from '@/lib/utils';
 
@@ -13,7 +18,10 @@ import { cn } from '@/lib/utils';
 const HOSXP_CHIP: Record<HosxpSyncTone, { box: string; dot: string }> = {
   danger: { box: STATUS_TONE.danger.chip, dot: STATUS_TONE.danger.dot },
   ok: { box: STATUS_TONE.ok.chip, dot: STATUS_TONE.ok.dot },
-  neutral: { box: `${STATUS_TONE.neutral.border} bg-surface-card ${STATUS_TONE.neutral.text}`, dot: STATUS_TONE.neutral.dot },
+  neutral: {
+    box: `${STATUS_TONE.neutral.border} bg-surface-card ${STATUS_TONE.neutral.text}`,
+    dot: STATUS_TONE.neutral.dot,
+  },
 };
 
 export interface HosxpSyncChipProps {
@@ -32,7 +40,10 @@ export function HosxpSyncChip({ status, detail, onOpen, label = 'HOSxP' }: Hosxp
       type="button"
       onClick={onOpen}
       title={detail}
-      className={cn('inline-flex items-center gap-2 rounded-full border px-3 py-1 text-label', chip.box)}
+      className={cn(
+        'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-label',
+        chip.box,
+      )}
     >
       <span aria-hidden="true" className={cn('h-2.5 w-2.5 rounded-full', chip.dot)} />
       {label}: {HOSXP_SYNC_STATUS_TH[status]}

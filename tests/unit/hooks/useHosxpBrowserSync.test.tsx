@@ -11,8 +11,12 @@ const h = vi.hoisted(() => ({
   sync: null as Record<string, unknown> | null,
 }));
 
-vi.mock('@/hooks/useBrowserPoll', () => ({ useBrowserPoll: () => ({ state: h.poll, runNow: h.runNow }) }));
-vi.mock('@/hooks/useOnboardHosxpWebhook', () => ({ useOnboardHosxpWebhook: () => ({ state: h.webhook }) }));
+vi.mock('@/hooks/useBrowserPoll', () => ({
+  useBrowserPoll: () => ({ state: h.poll, runNow: h.runNow }),
+}));
+vi.mock('@/hooks/useOnboardHosxpWebhook', () => ({
+  useOnboardHosxpWebhook: () => ({ state: h.webhook }),
+}));
 vi.mock('@/hooks/useOnboardHosxpSync', () => ({ useOnboardHosxpSync: () => ({ state: h.sync }) }));
 
 beforeEach(() => {
@@ -74,9 +78,14 @@ describe('sync wiring is shared by `/` and /hospital-maternity-ward', () => {
     'useProvinceDashboard (/)': 'src/hooks/useProvinceDashboard.ts',
     'hospital-maternity-ward page': 'src/app/(hospital)/hospital-maternity-ward/page.tsx',
   };
-  it.each(Object.entries(sources))('%s uses useHosxpBrowserSync, not the raw sync hooks', (_name, file) => {
-    const src = readFileSync(join(root, file), 'utf8');
-    expect(src).toContain("from '@/hooks/useHosxpBrowserSync'");
-    expect(src).not.toMatch(/from '@\/hooks\/(useBrowserPoll|useOnboardHosxpSync|useOnboardHosxpWebhook)'/);
-  });
+  it.each(Object.entries(sources))(
+    '%s uses useHosxpBrowserSync, not the raw sync hooks',
+    (_name, file) => {
+      const src = readFileSync(join(root, file), 'utf8');
+      expect(src).toContain("from '@/hooks/useHosxpBrowserSync'");
+      expect(src).not.toMatch(
+        /from '@\/hooks\/(useBrowserPoll|useOnboardHosxpSync|useOnboardHosxpWebhook)'/,
+      );
+    },
+  );
 });

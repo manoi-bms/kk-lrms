@@ -11,7 +11,11 @@
 import { useBrowserPoll } from '@/hooks/useBrowserPoll';
 import { useOnboardHosxpSync } from '@/hooks/useOnboardHosxpSync';
 import { useOnboardHosxpWebhook } from '@/hooks/useOnboardHosxpWebhook';
-import { deriveHosxpSyncStatus, describeHosxpSyncDetail, describeHosxpSyncHelp } from '@/lib/hosxp-sync-status';
+import {
+  deriveHosxpSyncStatus,
+  describeHosxpSyncDetail,
+  describeHosxpSyncHelp,
+} from '@/lib/hosxp-sync-status';
 
 export function useHosxpBrowserSync() {
   // Auto-provisions HOSxP's webhook_setting row on first onboarding; no-op

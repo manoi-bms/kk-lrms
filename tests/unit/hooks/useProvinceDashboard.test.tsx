@@ -5,12 +5,20 @@ import { SSE_REFRESH_DEBOUNCE_MS } from '@/lib/debounce';
 import { useProvinceDashboard } from '@/hooks/useProvinceDashboard';
 import { makeContinuum, makeHospital, makeSummary } from '../../helpers/dashboard-fixtures';
 
-type SseOpts = { onPatientUpdate?: () => void; onConnectionStatus?: () => void; onSyncComplete?: () => void };
+type SseOpts = {
+  onPatientUpdate?: () => void;
+  onConnectionStatus?: () => void;
+  onSyncComplete?: () => void;
+};
 const h = vi.hoisted(() => ({
   mutate: vi.fn(),
   hrMutate: vi.fn(),
   runNow: vi.fn(async () => null),
-  sse: {} as { onPatientUpdate?: () => void; onConnectionStatus?: () => void; onSyncComplete?: () => void },
+  sse: {} as {
+    onPatientUpdate?: () => void;
+    onConnectionStatus?: () => void;
+    onSyncComplete?: () => void;
+  },
   dash: {} as Record<string, unknown>,
 }));
 
@@ -24,9 +32,15 @@ vi.mock('@/hooks/useSSE', () => ({
     return { connectionState: 'reconnecting' };
   },
 }));
-vi.mock('@/hooks/useBrowserPoll', () => ({ useBrowserPoll: () => ({ state: { isRunning: true }, runNow: h.runNow }) }));
-vi.mock('@/hooks/useOnboardHosxpWebhook', () => ({ useOnboardHosxpWebhook: () => ({ state: { ran: true, error: 'boom' } }) }));
-vi.mock('@/hooks/useOnboardHosxpSync', () => ({ useOnboardHosxpSync: () => ({ state: { ran: false } }) }));
+vi.mock('@/hooks/useBrowserPoll', () => ({
+  useBrowserPoll: () => ({ state: { isRunning: true }, runNow: h.runNow }),
+}));
+vi.mock('@/hooks/useOnboardHosxpWebhook', () => ({
+  useOnboardHosxpWebhook: () => ({ state: { ran: true, error: 'boom' } }),
+}));
+vi.mock('@/hooks/useOnboardHosxpSync', () => ({
+  useOnboardHosxpSync: () => ({ state: { ran: false } }),
+}));
 
 const hoursAgo = (n: number) => new Date(Date.now() - n * 3_600_000).toISOString();
 
@@ -35,9 +49,21 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.dash = {
     hospitals: [
-      makeHospital({ hcode: '10670', connectionStatus: ConnectionStatus.ONLINE, lastSyncAt: hoursAgo(0.1) }),
-      makeHospital({ hcode: '10671', connectionStatus: ConnectionStatus.OFFLINE, lastSyncAt: hoursAgo(3) }),
-      makeHospital({ hcode: '99999', connectionStatus: ConnectionStatus.ONLINE, lastSyncAt: hoursAgo(0) }),
+      makeHospital({
+        hcode: '10670',
+        connectionStatus: ConnectionStatus.ONLINE,
+        lastSyncAt: hoursAgo(0.1),
+      }),
+      makeHospital({
+        hcode: '10671',
+        connectionStatus: ConnectionStatus.OFFLINE,
+        lastSyncAt: hoursAgo(3),
+      }),
+      makeHospital({
+        hcode: '99999',
+        connectionStatus: ConnectionStatus.ONLINE,
+        lastSyncAt: hoursAgo(0),
+      }),
     ],
     summary: makeSummary(),
     stageKPIs: {},

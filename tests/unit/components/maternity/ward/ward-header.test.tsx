@@ -56,18 +56,28 @@ describe('WardHeaderActions', () => {
     ['ok', 'เชื่อมต่อ HOSxP สด', 'ok'],
     ['reconnecting', 'กำลังเชื่อมต่อ HOSxP ใหม่…', 'warn'],
     ['error', 'ขาดการเชื่อมต่อ HOSxP', 'danger'],
-  ] as const)('feed %s → "%s" (%s); the raw error is a tooltip only when unhealthy', (health, label, tone) => {
-    render(<WardHeaderActions {...base} wards={one} health={health} errorMessage="BMS unavailable" />);
-    const chip = screen.getByRole('status');
-    expect(chip).toHaveTextContent(label);
-    expect(chip).toHaveAttribute('data-tone', tone);
-    if (health === 'ok') expect(chip).not.toHaveAttribute('title');
-    else expect(chip).toHaveAttribute('title', 'BMS unavailable');
-  });
+  ] as const)(
+    'feed %s → "%s" (%s); the raw error is a tooltip only when unhealthy',
+    (health, label, tone) => {
+      render(
+        <WardHeaderActions {...base} wards={one} health={health} errorMessage="BMS unavailable" />,
+      );
+      const chip = screen.getByRole('status');
+      expect(chip).toHaveTextContent(label);
+      expect(chip).toHaveAttribute('data-tone', tone);
+      if (health === 'ok') expect(chip).not.toHaveAttribute('title');
+      else expect(chip).toHaveAttribute('title', 'BMS unavailable');
+    },
+  );
 
   it('the live pill carries the ward’s own update time — the page’s single freshness indicator', () => {
     const { rerender } = render(
-      <WardHeaderActions {...base} wards={one} health="ok" lastUpdatedAt="2026-10-12T03:32:00.000Z" />,
+      <WardHeaderActions
+        {...base}
+        wards={one}
+        health="ok"
+        lastUpdatedAt="2026-10-12T03:32:00.000Z"
+      />,
     );
     expect(screen.getByRole('status')).toHaveTextContent(/^เชื่อมต่อ HOSxP สด · อัปเดต 10:32$/);
     // Visible, but not re-announced by screen readers on every refresh.
@@ -90,7 +100,8 @@ describe('WardKpis — capacity + urgent panels', () => {
     prolongedLatent: 1,
     occupancyPct: 44,
   };
-  const value = (id: string) => screen.getByTestId(`ward-kpi-${id}`).querySelector('[data-kpi-value]');
+  const value = (id: string) =>
+    screen.getByTestId(`ward-kpi-${id}`).querySelector('[data-kpi-value]');
 
   afterEach(() => {
     document.body.innerHTML = '';
@@ -114,7 +125,10 @@ describe('WardKpis — capacity + urgent panels', () => {
     const capacity = screen.getByRole('region', { name: 'ความจุเตียง' });
     expect(within(capacity).getByText('ใช้เตียง 44%')).toBeInTheDocument();
     const bar = within(capacity).getByRole('img');
-    expect(bar).toHaveAttribute('aria-label', 'เตียงทั้งหมด 9 เตียง: มีผู้คลอด 4 เตียง, ว่าง 3 เตียง, ปิด 2 เตียง');
+    expect(bar).toHaveAttribute(
+      'aria-label',
+      'เตียงทั้งหมด 9 เตียง: มีผู้คลอด 4 เตียง, ว่าง 3 เตียง, ปิด 2 เตียง',
+    );
     const segs = [...bar.querySelectorAll<HTMLElement>('[data-segment]')];
     expect(segs.map((el) => [el.dataset.segment, Number(el.style.flexGrow)])).toEqual([
       ['occupied', 4],
@@ -150,7 +164,11 @@ describe('WardKpis — capacity + urgent panels', () => {
   });
 
   it('I2/B1: patients can exceed occupied beds — the legend says so, the footer names unplaced/locked/shared', () => {
-    render(<WardKpis summary={{ ...summary, patients: 6, unplaced: 1, sharedBeds: 1, lockedOccupied: 1 }} />);
+    render(
+      <WardKpis
+        summary={{ ...summary, patients: 6, unplaced: 1, sharedBeds: 1, lockedOccupied: 1 }}
+      />,
+    );
     const occupied = screen.getByTestId('ward-kpi-occupied');
     expect(value('occupied')).toHaveTextContent(/^6$/);
     expect(occupied).toHaveTextContent('ใช้ 4 เตียง');
@@ -161,7 +179,18 @@ describe('WardKpis — capacity + urgent panels', () => {
   });
 
   it('an empty ward shows no occupancy percentage and an explanatory bar label', () => {
-    render(<WardKpis summary={{ ...summary, totalBeds: 0, occupied: 0, free: 0, lockedEmpty: 0, occupancyPct: null }} />);
+    render(
+      <WardKpis
+        summary={{
+          ...summary,
+          totalBeds: 0,
+          occupied: 0,
+          free: 0,
+          lockedEmpty: 0,
+          occupancyPct: null,
+        }}
+      />,
+    );
     expect(screen.getByRole('region', { name: 'ความจุเตียง' })).not.toHaveTextContent('%');
     expect(screen.getByRole('img')).toHaveAttribute('aria-label', 'วอร์ดนี้ยังไม่มีเตียงในผัง');
   });

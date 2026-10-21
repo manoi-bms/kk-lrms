@@ -14,13 +14,17 @@ describe('HosxpSyncChip', () => {
   });
 
   it('a page can name the pipeline its own way; tone still follows the status', () => {
-    render(<HosxpSyncChip label="ส่งข้อมูลเข้า KK-LRMS" status="ERROR" detail="x" onOpen={() => {}} />);
+    render(
+      <HosxpSyncChip label="ส่งข้อมูลเข้า KK-LRMS" status="ERROR" detail="x" onOpen={() => {}} />,
+    );
     const chip = screen.getByRole('button', { name: /^ส่งข้อมูลเข้า KK-LRMS: ผิดพลาด$/ });
     expect(chip.className).toContain('bg-danger-tint');
   });
 
   it('neutral statuses keep the card surface', () => {
     render(<HosxpSyncChip status="SKIPPED" detail="NO BMS SESSION" onOpen={() => {}} />);
-    expect(screen.getByRole('button', { name: /ไม่ได้เริ่ม/ }).className).toContain('bg-surface-card');
+    expect(screen.getByRole('button', { name: /ไม่ได้เริ่ม/ }).className).toContain(
+      'bg-surface-card',
+    );
   });
 });
