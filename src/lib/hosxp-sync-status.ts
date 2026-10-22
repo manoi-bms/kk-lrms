@@ -41,10 +41,16 @@ export function describeHosxpSyncDetail(state: OnboardHosxpSyncState | null, sta
   return 'CONNECTING';
 }
 
+/** Error code for a tab launched with a BMS session but no marketplace_token:
+ *  every sync gate refuses it, so this tab sends nothing to the province. */
+export const MISSING_MARKETPLACE_TOKEN = 'missing_marketplace_token';
+
 const HELP_BY_ERROR: Record<string, string> = {
   hospital_not_registered: 'โรงพยาบาลนี้ยังไม่ได้เปิดใช้งานในทะเบียน KK-LRMS',
   missing_bms_session: 'ยังไม่ได้รับ BMS session จาก HOSxP launcher',
   invalid_bms_url: 'BMS URL จาก session ไม่ถูกต้อง',
+  [MISSING_MARKETPLACE_TOKEN]:
+    'เปิด KK-LRMS โดยไม่ได้รับ marketplace token จาก HOSxP จึงยังไม่ส่งข้อมูลเข้าจังหวัด — ปิดหน้านี้แล้วเปิดใหม่จากเมนู KK-LRMS ใน HOSxP',
 };
 const HELP_CHECK_LOG = 'ตรวจสอบรายละเอียดจาก server log หากข้อความด้านล่างยังไม่พอ';
 

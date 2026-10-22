@@ -181,12 +181,27 @@ export interface WebhookPayload {
   activeAns?: string[];
 }
 
+/**
+ * Who is calling the webhook. 'hosxp' = a key KK-LRMS itself wrote into the
+ * hospital's HOSxP webhook_setting (pushed_to_hosxp_at stamped), i.e. HOSxP's
+ * own KKLRMSWebhookUnit; 'external' = an admin-issued key (non-HOSxP vendor).
+ */
+export type WebhookSender = 'hosxp' | 'external';
+
+export interface ProcessWebhookOptions {
+  /** Defaults to 'external' — every delete applies, the legacy behaviour. */
+  sender?: WebhookSender;
+}
+
 export interface WebhookResult {
   patientsProcessed: number;
   newAdmissions: number;
   discharges: number;
   transfers: number;
   deleted: number;
+  /** HOSxP-sent deletes of still-ACTIVE admissions that were NOT applied (A-F10).
+   *  Present only when > 0 — legacy responses stay byte-identical (GC7). */
+  deleteIgnored?: number;
   // Maternal screening ingest counters (Task 7). Present ONLY when
   // isMaternalScreenIngestEnabled() is true AND at least one patient in the
   // batch carried a `maternal_screening` object — legacy responses are
@@ -459,17 +474,62 @@ export function hashApiKey(rawKey: string): string {
   return createHash('sha256').update(rawKey).digest('hex');
 }
 
+export interface WebhookDeleteSummary {
+  payloadType: 'labor' | 'anc_data' | 'partograph' | 'referral' | 'referral_update';
+  count: number;
+  /** Admission numbers (labour / partograph). AN is not PHI; HN/CID never logged. */
+  ans?: string[];
+  observationIds?: string[];
+  referralId?: string;
+}
+
+/**
+ * The deletes a raw webhook body asks for, PHI-free, for one log line per
+ * request. Webhook deletes were invisible (the route logs only failures), so
+ * a patient vanishing from the dashboard could not be traced — 2026-10-22.
+ */
+export function summarizeWebhookDeletes(body: unknown): WebhookDeleteSummary | null {
+  if (!body || typeof body !== 'object') return null;
+  const b = body as Record<string, unknown>;
+  const isDelete = (x: unknown) =>
+    !!x && typeof x === 'object' && (x as Record<string, unknown>).action === 'delete';
+  const str = (x: unknown) => (typeof x === 'string' ? x : '');
+
+  if (b.type === 'referral' || b.type === 'referral_update') {
+    return isDelete(b) ? { payloadType: b.type, count: 1, referralId: str(b.referralId) } : null;
+  }
+  if (b.type === 'partograph') {
+    const dels = (Array.isArray(b.observations) ? b.observations : []).filter(isDelete);
+    if (dels.length === 0) return null;
+    return {
+      payloadType: 'partograph',
+      count: dels.length,
+      ans: dels.map((o) => str((o as Record<string, unknown>).an)),
+      observationIds: dels.map((o) => str((o as Record<string, unknown>).externalObservationId)),
+    };
+  }
+  const dels = (Array.isArray(b.patients) ? b.patients : []).filter(isDelete);
+  if (dels.length === 0) return null;
+  if (b.type === 'anc_data') return { payloadType: 'anc_data', count: dels.length };
+  return {
+    payloadType: 'labor',
+    count: dels.length,
+    ans: dels.map((p) => str((p as Record<string, unknown>).an)),
+  };
+}
+
 export async function validateApiKey(
   db: DatabaseAdapter,
   rawKey: string,
-): Promise<{ hospitalId: string; keyId: string } | null> {
+): Promise<{ hospitalId: string; keyId: string; sender: WebhookSender } | null> {
   const keyHash = hashApiKey(rawKey);
 
   const rows = await db.query<{
     id: string;
     hospital_id: string;
+    pushed_to_hosxp_at: string | null;
   }>(
-    'SELECT id, hospital_id FROM webhook_api_keys WHERE key_hash = ? AND is_active = true AND revoked_at IS NULL',
+    'SELECT id, hospital_id, pushed_to_hosxp_at FROM webhook_api_keys WHERE key_hash = ? AND is_active = true AND revoked_at IS NULL',
     [keyHash],
   );
 
@@ -481,7 +541,11 @@ export async function validateApiKey(
     rows[0].id,
   ]);
 
-  return { hospitalId: rows[0].hospital_id, keyId: rows[0].id };
+  return {
+    hospitalId: rows[0].hospital_id,
+    keyId: rows[0].id,
+    sender: rows[0].pushed_to_hosxp_at !== null ? 'hosxp' : 'external',
+  };
 }
 
 export async function createApiKey(
@@ -1079,7 +1143,9 @@ export async function processWebhookPayload(
   hospitalId: string,
   payload: WebhookPayload,
   sseManager: SseManager,
+  options: ProcessWebhookOptions = {},
 ): Promise<WebhookResult> {
+  const sender = options.sender ?? 'external';
   const encryptionKey = getEncryptionKey();
   // Bounded cooperative yielding (2026-07-17 page-latency incident): this
   // runs on the ONE serving event loop, so every ~25ms of per-patient work
@@ -1106,7 +1172,35 @@ export async function processWebhookPayload(
   // patient-owned tables (cpd_scores, cached_vital_signs,
   // cached_partograph_observations) and the patient row commit or roll back
   // together; a partial delete must never survive a failure.
-  const toDelete = payload.patients.filter((p) => p.action === 'delete');
+  //
+  // HOSxP defect A-F10: HOSxP's IPD admit form sends action:'delete' on EVERY
+  // save, so a HOSxP delete for a still-ACTIVE admission is ignored — the
+  // woman stays on the board and the browser push's activeAns reconciliation
+  // closes her out once HOSxP no longer lists her as in labour. Trade-off: a
+  // genuinely cancelled admission lingers until that reconciliation.
+  const requestedDeletes = payload.patients.filter((p) => p.action === 'delete');
+  const activeAnSet = new Set(existingAns);
+  const ignoredAns =
+    sender === 'hosxp' ? requestedDeletes.filter((p) => activeAnSet.has(p.an)).map((p) => p.an) : [];
+  const ignoredSet = new Set(ignoredAns);
+  const toDelete = requestedDeletes.filter((p) => !ignoredSet.has(p.an));
+  if (ignoredAns.length > 0) {
+    logger.warn('webhook_labor_delete_ignored', {
+      hospitalId,
+      hcode,
+      sender,
+      reason: 'hosxp_delete_of_active_admission',
+      ans: ignoredAns,
+    });
+  }
+  if (toDelete.length > 0) {
+    logger.warn('webhook_labor_delete_applied', {
+      hospitalId,
+      hcode,
+      sender,
+      ans: toDelete.map((p) => p.an),
+    });
+  }
   let deletedCount = 0;
   for (const p of toDelete) {
     await yielder.tick(); // before entering the per-patient transaction
@@ -1503,6 +1597,7 @@ export async function processWebhookPayload(
     discharges: dischargeCount,
     transfers: transfers.length,
     deleted: deletedCount,
+    ...(ignoredAns.length > 0 ? { deleteIgnored: ignoredAns.length } : {}),
     // Screening counters appear ONLY when the ingest flag is on AND at least
     // one patient carried a maternal_screening object — legacy responses stay
     // byte-identical (GC7).

@@ -52,6 +52,12 @@ describe('describeHosxpSyncHelp', () => {
     ['hospital_not_registered', 'โรงพยาบาลนี้ยังไม่ได้เปิดใช้งานในทะเบียน KK-LRMS'],
     ['missing_bms_session', 'ยังไม่ได้รับ BMS session จาก HOSxP launcher'],
     ['invalid_bms_url', 'BMS URL จาก session ไม่ถูกต้อง'],
+    // 2026-10-22 รพ.พล: launched without a marketplace_token → sync silently
+    // never ran while the chip said "กำลังเริ่ม". Now it says what to do.
+    [
+      'missing_marketplace_token',
+      'เปิด KK-LRMS โดยไม่ได้รับ marketplace token จาก HOSxP จึงยังไม่ส่งข้อมูลเข้าจังหวัด — ปิดหน้านี้แล้วเปิดใหม่จากเมนู KK-LRMS ใน HOSxP',
+    ],
     ['other', 'ตรวจสอบรายละเอียดจาก server log หากข้อความด้านล่างยังไม่พอ'],
   ])('error %s → actionable Thai help', (error, help) => {
     expect(describeHosxpSyncHelp(s({ error }), 'ERROR')).toBe(help);
