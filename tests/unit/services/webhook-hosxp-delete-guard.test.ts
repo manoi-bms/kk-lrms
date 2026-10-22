@@ -225,6 +225,80 @@ describe('labour delete log says what really happened', () => {
   });
 });
 
+// 2026-10-22: 10996 showed "ONLINE, last sync 20:08" while it had no browser
+// sync in 24h and zero labour rows — every HOSxP call was a no-op delete.
+// "Last sync" must mean data arrived, so a delete-only call that changed
+// nothing leaves the hospital's freshness alone.
+describe('last_sync_at reflects data that actually arrived', () => {
+  const PAST = '2026-10-01T00:00:00.000Z';
+  async function lastSync(): Promise<string> {
+    const rows = await db.query<{ last_sync_at: string | Date | null }>(
+      'SELECT last_sync_at FROM hospitals WHERE hcode = ?',
+      [HCODE],
+    );
+    const v = rows[0].last_sync_at;
+    return v instanceof Date ? v.toISOString() : String(v);
+  }
+  async function setPast(): Promise<void> {
+    await db.execute('UPDATE hospitals SET last_sync_at = ? WHERE hcode = ?', [PAST, HCODE]);
+  }
+
+  it('a HOSxP delete for an AN not on file does not refresh last_sync_at', async () => {
+    await setPast();
+    await processWebhookPayload(
+      db,
+      await hospitalId(),
+      deleteOf('AN-NOWHERE') as never,
+      SseManager.getInstance(),
+      { sender: 'hosxp' },
+    );
+    expect(await lastSync()).toBe(PAST);
+  });
+
+  it('a HOSxP delete the guard ignored does not refresh last_sync_at', async () => {
+    await admit('AN-K');
+    await setPast();
+    await processWebhookPayload(
+      db,
+      await hospitalId(),
+      deleteOf('AN-K') as never,
+      SseManager.getInstance(),
+      { sender: 'hosxp' },
+    );
+    expect(await lastSync()).toBe(PAST);
+  });
+
+  it('a delete that really removed a record refreshes last_sync_at', async () => {
+    await admit('AN-R');
+    await setPast();
+    await processWebhookPayload(
+      db,
+      await hospitalId(),
+      deleteOf('AN-R') as never,
+      SseManager.getInstance(),
+      { sender: 'external' },
+    );
+    expect(await lastSync()).not.toBe(PAST);
+  });
+
+  it('an upsert refreshes last_sync_at (unchanged behaviour)', async () => {
+    await setPast();
+    await admit('AN-U');
+    expect(await lastSync()).not.toBe(PAST);
+  });
+
+  it('a reconcile-only push (activeAns) refreshes last_sync_at (unchanged behaviour)', async () => {
+    await setPast();
+    await processWebhookPayload(
+      db,
+      await hospitalId(),
+      { hospitalCode: HCODE, patients: [], activeAns: [] } as never,
+      SseManager.getInstance(),
+    );
+    expect(await lastSync()).not.toBe(PAST);
+  });
+});
+
 describe('validateApiKey reports who is sending', () => {
   it("a key confirmed as written into HOSxP's webhook_setting → sender 'hosxp'", async () => {
     const { id, rawKey } = await createApiKey(

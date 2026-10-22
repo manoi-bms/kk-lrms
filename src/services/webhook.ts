@@ -1203,9 +1203,9 @@ export async function processWebhookPayload(
       statuses: Object.fromEntries(ignoredAns.map((an) => [an, statusByAn.get(an)])),
     });
   }
+  // `removed` vs `notFoundAns` tells real data loss from a no-op delete.
+  const removedAns = toDelete.map((p) => p.an).filter((an) => statusByAn.has(an));
   if (toDelete.length > 0) {
-    // `removed` vs `notFoundAns` tells real data loss from a no-op delete.
-    const removedAns = toDelete.map((p) => p.an).filter((an) => statusByAn.has(an));
     logger.warn('webhook_labor_delete_applied', {
       hospitalId,
       hcode,
@@ -1600,11 +1600,16 @@ export async function processWebhookPayload(
     timestamp: new Date().toISOString(),
   });
 
-  // Update hospital status
-  await db.execute(
-    "UPDATE hospitals SET connection_status = 'ONLINE', last_sync_at = ? WHERE id = ?",
-    [new Date().toISOString(), hospitalId],
-  );
+  // Update hospital status — only when data actually arrived. HOSxP's
+  // admit-form saves send delete-only calls that change nothing (AN not on
+  // file, or protected by the A-F10 guard); counting those as a sync made
+  // hospitals with no data feed look ONLINE and fresh.
+  if (patients.length > 0 || authoritativeActiveAns !== null || removedAns.length > 0) {
+    await db.execute(
+      "UPDATE hospitals SET connection_status = 'ONLINE', last_sync_at = ? WHERE id = ?",
+      [new Date().toISOString(), hospitalId],
+    );
+  }
 
   return {
     patientsProcessed: patients.length,
