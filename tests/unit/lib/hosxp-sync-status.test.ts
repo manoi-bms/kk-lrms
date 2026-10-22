@@ -68,7 +68,9 @@ describe('describeHosxpSyncHelp', () => {
     );
   });
   it('running and starting', () => {
-    expect(describeHosxpSyncHelp(s({ started: true }), 'RUNNING')).toBe('ระบบกำลังดึงข้อมูลจาก HOSxP เป็นรอบอัตโนมัติ');
+    expect(describeHosxpSyncHelp(s({ started: true }), 'RUNNING')).toBe(
+      'ระบบกำลังดึงข้อมูลจาก HOSxP เป็นรอบอัตโนมัติ',
+    );
     expect(describeHosxpSyncHelp(null, 'STARTING')).toBe('ระบบกำลังเริ่มการเชื่อมต่อ HOSxP');
   });
 });
@@ -101,7 +103,14 @@ describe('formatting and report', () => {
     const state = s({
       error: 'boom',
       lastSteps: [
-        { at: '2026-10-11T03:00:00Z', cycle: 3, name: 'fetch_ipt', status: 'success', message: 'ok', counts: { rows: 4 } },
+        {
+          at: '2026-10-11T03:00:00Z',
+          cycle: 3,
+          name: 'fetch_ipt',
+          status: 'success',
+          message: 'ok',
+          counts: { rows: 4 },
+        },
       ],
     });
     const report = buildHosxpSyncReport(state, 'ERROR', 'help');

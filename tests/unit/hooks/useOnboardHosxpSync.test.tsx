@@ -11,7 +11,11 @@ const h = vi.hoisted(() => ({
 vi.mock('next-auth/react', () => ({ useSession: () => ({ data: h.session }) }));
 vi.mock('@/contexts/BmsSessionContext', () => ({ useBmsSession: () => h.bms }));
 
-const fetchMock = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ started: true }) }));
+const fetchMock = vi.fn(async () => ({
+  ok: true,
+  status: 200,
+  json: async () => ({ started: true }),
+}));
 global.fetch = fetchMock as unknown as typeof fetch;
 
 const READY = {
@@ -41,7 +45,10 @@ describe('useOnboardHosxpSync', () => {
     h.bms = { ...READY, marketplaceToken: 'MT' };
     const { result } = renderHook(() => useOnboardHosxpSync());
     await waitFor(() => expect(result.current.state?.started).toBe(true));
-    expect(fetchMock).toHaveBeenCalledWith('/api/onboarding/hosxp-sync', expect.objectContaining({ method: 'POST' }));
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/onboarding/hosxp-sync',
+      expect.objectContaining({ method: 'POST' }),
+    );
   });
 
   it('a token that arrives later still starts onboarding (the missing-token state is not a latch)', async () => {

@@ -108,7 +108,12 @@ describe('HOSxP labour delete guard (A-F10)', () => {
 
   it('no sender given keeps the legacy behaviour (delete applies)', async () => {
     await admit('AN-3');
-    await processWebhookPayload(db, await hospitalId(), deleteOf('AN-3') as never, SseManager.getInstance());
+    await processWebhookPayload(
+      db,
+      await hospitalId(),
+      deleteOf('AN-3') as never,
+      SseManager.getInstance(),
+    );
     expect(await statusOf('AN-3')).toBeNull();
   });
 
@@ -126,7 +131,11 @@ describe('HOSxP labour delete guard (A-F10)', () => {
 
 describe('validateApiKey reports who is sending', () => {
   it("a key confirmed as written into HOSxP's webhook_setting → sender 'hosxp'", async () => {
-    const { id, rawKey } = await createApiKey(db, await hospitalId(), 'HOSxP webhook_setting auto-provision');
+    const { id, rawKey } = await createApiKey(
+      db,
+      await hospitalId(),
+      'HOSxP webhook_setting auto-provision',
+    );
     await db.execute('UPDATE webhook_api_keys SET pushed_to_hosxp_at = ? WHERE id = ?', [
       new Date().toISOString(),
       id,
@@ -173,7 +182,9 @@ describe('summarizeWebhookDeletes — every webhook delete is logged', () => {
   });
 
   it('referral / referral_update: the referral id', () => {
-    expect(summarizeWebhookDeletes({ type: 'referral', referralId: 'R-1', action: 'delete' })).toEqual({
+    expect(
+      summarizeWebhookDeletes({ type: 'referral', referralId: 'R-1', action: 'delete' }),
+    ).toEqual({
       payloadType: 'referral',
       count: 1,
       referralId: 'R-1',

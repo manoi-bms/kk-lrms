@@ -91,7 +91,12 @@ describe('POST /api/webhooks/patient-data — labour deletes from HOSxP', () => 
 
     expect(warn).toHaveBeenCalledWith(
       'webhook_delete_received',
-      expect.objectContaining({ sender: 'hosxp', payloadType: 'labor', count: 1, ans: ['AN-AF10'] }),
+      expect.objectContaining({
+        sender: 'hosxp',
+        payloadType: 'labor',
+        count: 1,
+        ans: ['AN-AF10'],
+      }),
     );
     expect(warn).toHaveBeenCalledWith(
       'webhook_labor_delete_ignored',
