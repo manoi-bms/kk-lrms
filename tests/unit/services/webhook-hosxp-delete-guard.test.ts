@@ -6,7 +6,8 @@
 // admission is therefore ignored; the browser push's activeAns
 // reconciliation closes genuinely finished admissions instead. Deletes from
 // non-HOSxP senders (admin-issued keys) keep their error-correction meaning.
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { logger } from '@/lib/logger';
 import { createTestDb } from '../../helpers/testDb';
 import { SeedOrchestrator } from '@/db/seeds/index';
 import type { DatabaseAdapter } from '@/db/adapter';
@@ -30,7 +31,7 @@ async function hospitalId(): Promise<string> {
   return rows[0].id;
 }
 
-async function admit(an: string): Promise<void> {
+async function admit(an: string, laborStatus: 'ACTIVE' | 'DELIVERED' = 'ACTIVE'): Promise<void> {
   await processWebhookPayload(
     db,
     await hospitalId(),
@@ -44,7 +45,8 @@ async function admit(an: string): Promise<void> {
           name: 'นางทดสอบ ลบ',
           age: 28,
           admit_date: '2026-10-21T18:15:00Z',
-          labor_status: 'ACTIVE',
+          labor_status: laborStatus,
+          ...(laborStatus === 'DELIVERED' ? { delivered_at: '2026-10-22T01:00:00Z' } : {}),
         },
       ],
     } as never,
@@ -117,7 +119,7 @@ describe('HOSxP labour delete guard (A-F10)', () => {
     expect(await statusOf('AN-3')).toBeNull();
   });
 
-  it('a HOSxP delete for an AN that is not ACTIVE here still applies (nothing live to protect)', async () => {
+  it('a HOSxP delete for an AN not on file is not "ignored" (nothing to protect)', async () => {
     const r = await processWebhookPayload(
       db,
       await hospitalId(),
@@ -126,6 +128,100 @@ describe('HOSxP labour delete guard (A-F10)', () => {
       { sender: 'hosxp' },
     );
     expect(r.deleteIgnored).toBeUndefined(); // absent when nothing ignored (GC7)
+  });
+
+  // 2026-10-22 09:04 BKK, 11001 AN 690005256: the first logged HOSxP delete
+  // hit a finished (non-ACTIVE) record and was applied — delivery counts lose
+  // a birth on every admit-form save. Finished records are protected too.
+  it('a HOSxP-sent delete for a DELIVERED record is ignored — the birth stays counted', async () => {
+    await admit('AN-D', 'DELIVERED');
+    const r = await processWebhookPayload(
+      db,
+      await hospitalId(),
+      deleteOf('AN-D') as never,
+      SseManager.getInstance(),
+      { sender: 'hosxp' },
+    );
+    expect(await statusOf('AN-D')).toBe('DELIVERED');
+    expect(r.deleteIgnored).toBe(1);
+  });
+
+  it('a non-HOSxP delete still removes a DELIVERED record (error correction)', async () => {
+    await admit('AN-E', 'DELIVERED');
+    await processWebhookPayload(
+      db,
+      await hospitalId(),
+      deleteOf('AN-E') as never,
+      SseManager.getInstance(),
+      { sender: 'external' },
+    );
+    expect(await statusOf('AN-E')).toBeNull();
+  });
+});
+
+describe('labour delete log says what really happened', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('ignored deletes name each AN with the status that was protected', async () => {
+    await admit('AN-A');
+    await admit('AN-B', 'DELIVERED');
+    const warn = vi.spyOn(logger, 'warn');
+    await processWebhookPayload(
+      db,
+      await hospitalId(),
+      {
+        hospitalCode: HCODE,
+        patients: [...deleteOf('AN-A').patients, ...deleteOf('AN-B').patients],
+      } as never,
+      SseManager.getInstance(),
+      { sender: 'hosxp' },
+    );
+    expect(warn).toHaveBeenCalledWith(
+      'webhook_labor_delete_ignored',
+      expect.objectContaining({
+        ans: ['AN-A', 'AN-B'],
+        statuses: { 'AN-A': 'ACTIVE', 'AN-B': 'DELIVERED' },
+      }),
+    );
+  });
+
+  it('an applied delete records which ANs were removed and which were not on file', async () => {
+    await admit('AN-X');
+    const warn = vi.spyOn(logger, 'warn');
+    await processWebhookPayload(
+      db,
+      await hospitalId(),
+      {
+        hospitalCode: HCODE,
+        patients: [...deleteOf('AN-X').patients, ...deleteOf('AN-NONE').patients],
+      } as never,
+      SseManager.getInstance(),
+      { sender: 'external' },
+    );
+    expect(warn).toHaveBeenCalledWith(
+      'webhook_labor_delete_applied',
+      expect.objectContaining({
+        ans: ['AN-X', 'AN-NONE'],
+        removed: 1,
+        removedAns: ['AN-X'],
+        notFoundAns: ['AN-NONE'],
+      }),
+    );
+  });
+
+  it('a HOSxP delete for an AN not on file logs removed: 0 (a no-op, not data loss)', async () => {
+    const warn = vi.spyOn(logger, 'warn');
+    await processWebhookPayload(
+      db,
+      await hospitalId(),
+      deleteOf('AN-GONE') as never,
+      SseManager.getInstance(),
+      { sender: 'hosxp' },
+    );
+    expect(warn).toHaveBeenCalledWith(
+      'webhook_labor_delete_applied',
+      expect.objectContaining({ removed: 0, removedAns: [], notFoundAns: ['AN-GONE'] }),
+    );
   });
 });
 

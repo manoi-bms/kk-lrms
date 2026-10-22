@@ -1174,14 +1174,23 @@ export async function processWebhookPayload(
   // together; a partial delete must never survive a failure.
   //
   // HOSxP defect A-F10: HOSxP's IPD admit form sends action:'delete' on EVERY
-  // save, so a HOSxP delete for a still-ACTIVE admission is ignored — the
-  // woman stays on the board and the browser push's activeAns reconciliation
-  // closes her out once HOSxP no longer lists her as in labour. Trade-off: a
-  // genuinely cancelled admission lingers until that reconciliation.
+  // save, so a HOSxP delete for any admission already on file — in labour or
+  // finished — is ignored. An ACTIVE woman stays on the board until the
+  // browser push's activeAns reconciliation closes her out; a DELIVERED
+  // record keeps its birth in the delivery counts. Trade-off: a genuinely
+  // cancelled admission lingers (and still counts) — only a non-HOSxP key or
+  // an admin can remove it.
   const requestedDeletes = payload.patients.filter((p) => p.action === 'delete');
-  const activeAnSet = new Set(existingAns);
-  const ignoredAns =
-    sender === 'hosxp' ? requestedDeletes.filter((p) => activeAnSet.has(p.an)).map((p) => p.an) : [];
+  const requestedAns = requestedDeletes.map((p) => p.an);
+  const onFile =
+    requestedAns.length === 0
+      ? []
+      : await db.query<{ an: string; labor_status: string }>(
+          `SELECT an, labor_status FROM cached_patients WHERE hospital_id = ? AND an IN (${requestedAns.map(() => '?').join(', ')})`,
+          [hospitalId, ...requestedAns],
+        );
+  const statusByAn = new Map(onFile.map((r) => [r.an, r.labor_status]));
+  const ignoredAns = sender === 'hosxp' ? requestedAns.filter((an) => statusByAn.has(an)) : [];
   const ignoredSet = new Set(ignoredAns);
   const toDelete = requestedDeletes.filter((p) => !ignoredSet.has(p.an));
   if (ignoredAns.length > 0) {
@@ -1189,16 +1198,22 @@ export async function processWebhookPayload(
       hospitalId,
       hcode,
       sender,
-      reason: 'hosxp_delete_of_active_admission',
+      reason: 'hosxp_delete_of_cached_admission',
       ans: ignoredAns,
+      statuses: Object.fromEntries(ignoredAns.map((an) => [an, statusByAn.get(an)])),
     });
   }
   if (toDelete.length > 0) {
+    // `removed` vs `notFoundAns` tells real data loss from a no-op delete.
+    const removedAns = toDelete.map((p) => p.an).filter((an) => statusByAn.has(an));
     logger.warn('webhook_labor_delete_applied', {
       hospitalId,
       hcode,
       sender,
       ans: toDelete.map((p) => p.an),
+      removed: removedAns.length,
+      removedAns,
+      notFoundAns: toDelete.map((p) => p.an).filter((an) => !statusByAn.has(an)),
     });
   }
   let deletedCount = 0;
@@ -2522,7 +2537,10 @@ export async function processReferralCreate(
 export class WebhookReferralError extends Error {
   constructor(
     public readonly code:
-      'REFERRAL_NOT_FOUND' | 'REFERRAL_DESTINATION_NOT_FOUND' | 'INVALID_REFERRAL_STATUS' | 'INVALID_REFERRAL_ACTION',
+      | 'REFERRAL_NOT_FOUND'
+      | 'REFERRAL_DESTINATION_NOT_FOUND'
+      | 'INVALID_REFERRAL_STATUS'
+      | 'INVALID_REFERRAL_ACTION',
     message: string,
   ) {
     super(message);
