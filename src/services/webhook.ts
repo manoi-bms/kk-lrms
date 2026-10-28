@@ -1696,6 +1696,7 @@ export async function reconcileAncActiveCids(
   db: DatabaseAdapter,
   hospitalId: string,
   activeCids: unknown,
+  pushedCids: readonly string[] = [],
 ): Promise<AncReconcileResult> {
   if (!Array.isArray(activeCids)) {
     return { ok: false, error: '"activeCids" must be an array of 13-digit CIDs' };
@@ -1703,6 +1704,16 @@ export async function reconcileAncActiveCids(
   const bad = activeCids.findIndex((c) => typeof c !== 'string' || !/^\d{13}$/.test(c));
   if (bad !== -1) {
     return { ok: false, error: `activeCids[${bad}] is not a 13-digit CID` };
+  }
+  // The gateway derives activeCids from the same rows as the pushed patients,
+  // so a pushed CID missing from it proves the list is not the full active set.
+  const listedSet = new Set(activeCids as string[]);
+  const missing = pushedCids.filter((c) => !listedSet.has(c)).length;
+  if (missing > 0) {
+    return {
+      ok: false,
+      error: `activeCids omits ${missing} patient(s) in this push — not a complete active set`,
+    };
   }
   const hashes = (activeCids as string[]).map((c) => createHash('sha256').update(c).digest('hex'));
   const closed = await closeAbsentAncJourneys(db, { hospitalId, activeCidHashes: hashes });

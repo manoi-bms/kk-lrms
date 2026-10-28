@@ -156,6 +156,22 @@ describe('POST /api/sync/browser-push — ANC absent-pregnancy reconciliation', 
     expect((await stage(gone)).care_stage).toBe(CareStage.PREGNANCY);
   });
 
+  it('rejects an active set that omits a woman the same push is upserting', async () => {
+    // The gateway builds activeCids from the same rows as patients, so a
+    // patient missing from it means the list is not the complete active set.
+    const gone = await staleJourney(GONE_CID, 'HN-GONE');
+
+    const res = await POST(
+      jsonRequest({
+        anc: { patients: [patient(LISTED_CID, 'HN-LISTED')], activeCids: [] },
+      }) as never,
+    );
+    expect(res.status).toBe(200);
+    expect((await stage(gone)).care_stage).toBe(CareStage.PREGNANCY);
+    const run = await getLatestSyncRun(await hospitalId());
+    expect(run?.steps.find((s) => s.name === 'reconcile_anc')?.status).toBe('error');
+  });
+
   it('rejects a malformed active set rather than closing against it', async () => {
     const gone = await staleJourney(GONE_CID, 'HN-GONE');
 

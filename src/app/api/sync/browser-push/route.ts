@@ -451,7 +451,12 @@ export async function POST(request: NextRequest) {
     // persist, which may have left listed women un-refreshed.
     if (body.anc?.activeCids !== undefined && !ancPersistFailed) {
       try {
-        const r = await reconcileAncActiveCids(db, hospitalId, body.anc.activeCids);
+        const r = await reconcileAncActiveCids(
+          db,
+          hospitalId,
+          body.anc.activeCids,
+          ancValidation?.payload?.patients.map((p) => p.cid) ?? [],
+        );
         if (r.ok) {
           result.ancReconcile = { closed: r.closed };
           await appendSyncStep(hospitalId, runId, {
