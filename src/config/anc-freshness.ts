@@ -32,6 +32,22 @@ export const ANC_EDC_MAX_PAST_DAYS = 14;
  */
 export const ANC_LAST_VISIT_MAX_AGE_DAYS = 60;
 
+/**
+ * How many days a PREGNANCY journey may go unrefreshed by any sync while
+ * absent from her hospital's HOSxP active-ANC list before reconciliation
+ * closes it (closeAbsentAncJourneys). Absence from a complete list is already
+ * proof she left the ANC registry; the grace only rides out a transient edit
+ * in HOSxP that drops her from one cycle.
+ */
+export const ANC_ABSENT_CLOSE_GRACE_DAYS = 7;
+
+/**
+ * maternal_journeys.closed_reason for a journey closed because HOSxP stopped
+ * listing her — NOT a recorded delivery, so delivery KPIs exclude it and a
+ * later HOSxP listing reopens it (reopenReconciledJourney).
+ */
+export const ANC_ABSENT_CLOSED_REASON = 'hosxp_anc_absent';
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**

@@ -808,6 +808,7 @@ export async function getStageKPIs(db: DatabaseAdapter): Promise<DashboardStageK
   const deliveredJourneyRows = await db.query<{ total: number }>(
     `SELECT COUNT(*) as total FROM maternal_journeys mj
      WHERE mj.care_stage = 'DELIVERED'
+       AND mj.closed_reason IS NULL
        AND mj.stage_changed_at >= ?
        AND (mj.hospital_id IN ${ACTIVE_HOSPITAL_IDS_SQL}
             OR mj.current_hospital_id IN ${ACTIVE_HOSPITAL_IDS_SQL})`,

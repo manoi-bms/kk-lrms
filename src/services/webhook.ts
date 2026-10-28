@@ -19,6 +19,8 @@ import {
   getJourneyByHn,
   createJourney,
   transitionToDelivered,
+  closeAbsentAncJourneys,
+  reopenReconciledJourney,
 } from '@/services/journey';
 import { AncRiskLevel, ReferralStatus } from '@/types/domain';
 import { classifyAncItems } from '@/config/anc-classifying-canon';
@@ -1680,6 +1682,33 @@ async function recordAncRiskScreening(
   });
 }
 
+export type AncReconcileResult =
+  { ok: true; closed: number; listed: number } | { ok: false; error: string };
+
+/**
+ * Close this hospital's PREGNANCY journeys absent from the gateway's
+ * authoritative active-ANC CID list (see closeAbsentAncJourneys). The list
+ * crosses the trust boundary, so it is validated whole: one malformed entry
+ * rejects it, because closing against a corrupted list would discharge women
+ * HOSxP still follows.
+ */
+export async function reconcileAncActiveCids(
+  db: DatabaseAdapter,
+  hospitalId: string,
+  activeCids: unknown,
+): Promise<AncReconcileResult> {
+  if (!Array.isArray(activeCids)) {
+    return { ok: false, error: '"activeCids" must be an array of 13-digit CIDs' };
+  }
+  const bad = activeCids.findIndex((c) => typeof c !== 'string' || !/^\d{13}$/.test(c));
+  if (bad !== -1) {
+    return { ok: false, error: `activeCids[${bad}] is not a 13-digit CID` };
+  }
+  const hashes = (activeCids as string[]).map((c) => createHash('sha256').update(c).digest('hex'));
+  const closed = await closeAbsentAncJourneys(db, { hospitalId, activeCidHashes: hashes });
+  return { ok: true, closed, listed: new Set(hashes).size };
+}
+
 export async function processAncWebhook(
   db: DatabaseAdapter,
   hospitalId: string,
@@ -1921,6 +1950,9 @@ export async function processAncWebhook(
     const journeyId = await db.transaction(async (tx) => {
       let id: string;
       if (!shouldCreateNew && existing) {
+        // HOSxP lists her again: undo an ANC-reconciliation close (no-op for
+        // every other journey, including a recorded delivery).
+        await reopenReconciledJourney(tx, existing.id);
         // Update existing journey with latest data (same pregnancy)
         const now = new Date().toISOString();
         await tx.execute(
