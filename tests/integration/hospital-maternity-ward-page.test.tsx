@@ -57,7 +57,8 @@ import {
   listWardBedsInventory,
   listWardBedsOccupancyFull,
 } from '@/services/maternity-ward';
-import { makeBed, wardScenario } from '../helpers/ward-fixtures';
+import { makeBed, makeOccupant, wardScenario } from '../helpers/ward-fixtures';
+import { newbornsInWardNotice } from '@/config/ward-display';
 const mockListWards = listMaternityWards as unknown as ReturnType<typeof vi.fn>;
 const mockListInventory = listWardBedsInventory as unknown as ReturnType<typeof vi.fn>;
 const mockListOccupancyFull = listWardBedsOccupancyFull as unknown as ReturnType<typeof vi.fn>;
@@ -351,6 +352,40 @@ describe('Hospital maternity ward page — characterization', () => {
       expect(within(region).getByText(num(n))).toBeInTheDocument();
     }
     expect(within(region).getByText(/44%/)).toBeInTheDocument(); // 4 of 9 beds
+  });
+
+  it('newborns admitted onto labour-ward beds are not counted, and staff are told to fix the bed', async () => {
+    // HOSxP admit type 4 (แรกเกิด): one baby on her mother's bed (01), one on
+    // an otherwise free bed (03). Neither is a labouring patient.
+    const s = wardScenario(Date.now());
+    const baby = (an: string, bedno: string) =>
+      makeOccupant({
+        an,
+        bedno,
+        roomno: 'LR1',
+        pname: 'ด.ญ.',
+        fname: `ทารก${bedno}`,
+        ipt_admit_type_id: 4,
+      });
+    openSession();
+    mockListWards.mockResolvedValue([...s.wards]);
+    mockListInventory.mockResolvedValue([...s.beds]);
+    mockListOccupancyFull.mockResolvedValue([
+      ...s.occupancy,
+      baby('AN-NB1', '01'),
+      baby('AN-NB2', '03'),
+    ]);
+    render(PAGE);
+    await screen.findByText(/ลัดดา ท\./, undefined, { timeout: 2000 });
+
+    const region = PAGE_COPY.kpiRegion();
+    const e = s.expected;
+    for (const n of [e.totalBeds, e.occupied, e.free, e.locked, e.prolongedLatent]) {
+      expect(within(region).getByText(num(n))).toBeInTheDocument();
+    }
+    expect(screen.queryByText(/เตียงซ้อน/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ทารก01/)).not.toBeInTheDocument();
+    expect(screen.getByText(newbornsInWardNotice(['01', '03']))).toBeInTheDocument();
   });
 
   it('one freshness indicator: the ward update time rides in the live pill, not under the title', async () => {

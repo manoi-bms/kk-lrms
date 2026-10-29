@@ -15,7 +15,10 @@ import {
 } from '@/services/ward-board';
 import { LABOUR_PHASE_LABEL_TH } from '@/config/obstetric-display';
 
-export const WARD_FEED_STATUS: Record<WardFeedHealth, { labelTh: string; tone: StatusTone; pulse: boolean }> = {
+export const WARD_FEED_STATUS: Record<
+  WardFeedHealth,
+  { labelTh: string; tone: StatusTone; pulse: boolean }
+> = {
   ok: { labelTh: 'เชื่อมต่อ HOSxP สด', tone: 'ok', pulse: false },
   reconnecting: { labelTh: 'กำลังเชื่อมต่อ HOSxP ใหม่…', tone: 'warn', pulse: true },
   error: { labelTh: 'ขาดการเชื่อมต่อ HOSxP', tone: 'danger', pulse: true },
@@ -61,7 +64,10 @@ const { minHours, cervixBelowCm } = PROLONGED_LATENT_RULE;
 const { activeFrom, transitionFrom } = LABOUR_STAGE_CM;
 
 /** Stage pill on each bed tile (spec D4: today's colour mapping, as tokens). */
-export const LABOUR_STAGE_DISPLAY: Record<LabourStageKind, { labelTh: string; className: string; hint: string }> = {
+export const LABOUR_STAGE_DISPLAY: Record<
+  LabourStageKind,
+  { labelTh: string; className: string; hint: string }
+> = {
   prolongedLatent: {
     labelTh: 'ระยะแฝงนาน · ประเมินด่วน',
     className: 'bg-danger text-white',
@@ -98,7 +104,9 @@ export function labourStageDisplay(
   stage: LabourStageKind,
   cervixCm: number | null,
 ): (typeof LABOUR_STAGE_DISPLAY)[LabourStageKind] {
-  return stage === 'prolongedLatent' && cervixCm === null ? PROLONGED_LATENT_NO_CERVIX : LABOUR_STAGE_DISPLAY[stage];
+  return stage === 'prolongedLatent' && cervixCm === null
+    ? PROLONGED_LATENT_NO_CERVIX
+    : LABOUR_STAGE_DISPLAY[stage];
 }
 
 /** Allergy pill. A missing count is "unknown" — never "no allergy history". */
@@ -114,7 +122,8 @@ export function allergyStatus(count: number | null | undefined): {
       titleTh: 'HOSxP ไม่ส่งข้อมูลการแพ้ยา — ซักประวัติและตรวจใน HOSxP ก่อนให้ยา',
     };
   }
-  if (count > 0) return { kind: 'allergy', labelTh: 'แพ้ยา', titleTh: `มีประวัติแพ้ยา ${count} รายการ` };
+  if (count > 0)
+    return { kind: 'allergy', labelTh: 'แพ้ยา', titleTh: `มีประวัติแพ้ยา ${count} รายการ` };
   return { kind: 'none', labelTh: 'ไม่มีประวัติแพ้ยา', titleTh: 'ไม่มีประวัติแพ้ยาในระบบ' };
 }
 
@@ -137,6 +146,17 @@ export const UNPLACED_SECTION = {
 /** Tile head for an unplaced patient (replaces "เตียง {bedno}"). */
 export function unplacedBedLabel(u: { reason: UnplacedReason; bedno: string | null }): string {
   return u.reason === 'noBed' ? 'ยังไม่ได้จัดเตียง' : `เตียง ${u.bedno} · ไม่อยู่ในผังวอร์ดนี้`;
+}
+
+/** Notice for newborn admissions (HOSxP admit type แรกเกิด) on this ward's beds.
+ *  They are left out of every count on the board — say so, and how to fix it. */
+export function newbornsInWardNotice(bednos: string[]): string {
+  const beds = bednos.map((b) => b.trim()).filter((b) => b !== '');
+  const where = beds.length > 0 ? ` (เตียง ${beds.join(', ')})` : '';
+  return (
+    `ทารกแรกเกิด ${bednos.length} ราย ถูก admit อยู่ในเตียงของวอร์ดนี้${where} — ` +
+    'ไม่นับเป็นผู้คลอดหรือเตียงที่ใช้ในหน้านี้ · หากไม่ใช่เตียงของทารก ให้แก้เตียง/วอร์ดของทารกใน HOSxP'
+  );
 }
 
 /** Conflict notice above a bed HOSxP has given to more than one admission. */
@@ -199,7 +219,15 @@ export const BED_TILE_SECTION_FIELDS = {
     'last_bsa',
     'prediag',
   ],
-  vitals: ['last_bp_sys', 'last_bp_dia', 'last_temp', 'last_pulse', 'last_rr', 'last_spo2', 'last_spo2_o2'],
+  vitals: [
+    'last_bp_sys',
+    'last_bp_dia',
+    'last_temp',
+    'last_pulse',
+    'last_rr',
+    'last_spo2',
+    'last_spo2_o2',
+  ],
   progress: ['last_cervix_cm', 'last_station', 'last_amniotic', 'last_pain'],
   contractionFhr: ['last_contr_freq', 'last_contr_duration', 'last_contr_strength', 'last_fhr'],
   fluids: ['last_iv_fluids', 'last_oxytocin_uml', 'last_oxytocin_drops'],

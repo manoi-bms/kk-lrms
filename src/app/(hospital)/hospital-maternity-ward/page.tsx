@@ -31,7 +31,8 @@ import { LoadingState } from '@/components/shared/LoadingState';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { getBedMoveReasons, movePatientBed } from '@/services/maternity-ward';
 import { findOccupantByAn, summarizeBeds } from '@/services/ward-board';
-import { BED_MOVE_ALERTS } from '@/config/ward-display';
+import { BED_MOVE_ALERTS, newbornsInWardNotice } from '@/config/ward-display';
+import { InlineNotice } from '@/components/shared/InlineNotice';
 import {
   describeBmsSessionError,
   describeWardFeedError,
@@ -53,7 +54,10 @@ function BoardLoading() {
   return (
     <>
       <LoadingState message="กำลังโหลดข้อมูลเตียงจาก HOSxP…" />
-      <div aria-hidden="true" className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
+      <div
+        aria-hidden="true"
+        className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4"
+      >
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="h-72 animate-pulse rounded-2xl bg-surface-muted" />
         ))}
@@ -75,9 +79,8 @@ export default function HospitalMaternityWardPage() {
   // failed/slow fetch here degrades `byAn` to an empty map (see the hook),
   // so every bed tile renders exactly as it does today; it can never block
   // or error the ward board.
-  const { byAn: maternalScreenSummaries, mutate: mutateScreenSummaries } = useMaternalScreenSummaries(
-    userInfo?.hospcode ?? null,
-  );
+  const { byAn: maternalScreenSummaries, mutate: mutateScreenSummaries } =
+    useMaternalScreenSummaries(userInfo?.hospcode ?? null);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
   const {
@@ -87,6 +90,7 @@ export default function HospitalMaternityWardPage() {
     setSelectedWard,
     beds,
     occupancy,
+    newborns,
     bedsLoaded,
     occupancyLoaded,
     isLoading,
@@ -228,7 +232,10 @@ export default function HospitalMaternityWardPage() {
       // identity, so we cannot tell from here whether iptadm already changed.
       // Warn that the move may have applied without a complete audit record and
       // resnap the board to server truth so the tile reflects reality.
-      setWriteAlert({ ...BED_MOVE_ALERTS.writeFailed, detail: e instanceof Error ? e.message : String(e) });
+      setWriteAlert({
+        ...BED_MOVE_ALERTS.writeFailed,
+        detail: e instanceof Error ? e.message : String(e),
+      });
       void mutateOccupancy();
     }
   };
@@ -279,7 +286,15 @@ export default function HospitalMaternityWardPage() {
           }
         />
         {sync.onboardingError && !onboardingDismissed && (
-          <OnboardingWebhookAlert error={sync.onboardingError} onDismiss={() => setOnboardingDismissed(true)} />
+          <OnboardingWebhookAlert
+            error={sync.onboardingError}
+            onDismiss={() => setOnboardingDismissed(true)}
+          />
+        )}
+        {newborns.length > 0 && (
+          <InlineNotice tone="info">
+            {newbornsInWardNotice(newborns.map((n) => n.bedno ?? ''))}
+          </InlineNotice>
         )}
         {writeAlert && (
           <DismissibleAlert
@@ -292,7 +307,10 @@ export default function HospitalMaternityWardPage() {
         )}
         {firstLoadFailure ? (
           <ErrorState
-            {...describeWardFeedError(firstLoadFailure.error, { feed: firstLoadFailure.feed, since: failingSince })}
+            {...describeWardFeedError(firstLoadFailure.error, {
+              feed: firstLoadFailure.feed,
+              since: failingSince,
+            })}
             onRetry={refresh}
           />
         ) : !boardLoaded ? (
@@ -331,7 +349,11 @@ export default function HospitalMaternityWardPage() {
           </>
         )}
       </PageFrame>
-      <PatientDrawer open={selectedAn !== null} occupant={selectedOccupant} onClose={() => setSelectedAn(null)} />
+      <PatientDrawer
+        open={selectedAn !== null}
+        occupant={selectedOccupant}
+        onClose={() => setSelectedAn(null)}
+      />
       <HosxpSyncDialog
         open={hosxpOpen}
         onOpenChange={setHosxpOpen}

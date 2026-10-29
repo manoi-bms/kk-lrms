@@ -12,6 +12,7 @@ import {
   listWardBedsOccupancyFull,
 } from '@/services/maternity-ward';
 import type { MaternityWard, BedSlot, BedOccupancyFull } from '@/types/maternity-ward';
+import { splitWardOccupants } from '@/services/ward-board';
 import type { WardFeed } from '@/lib/actionable-errors';
 
 /**
@@ -34,6 +35,9 @@ export interface MaternityWardStateFull {
   beds: BedSlot[];
   /** Admitted patients of `ward`. Empty until loaded — check `occupancyLoaded` before reading "nobody admitted". */
   occupancy: BedOccupancyFull[];
+  /** Newborn admissions (HOSxP admit type แรกเกิด) on this ward's beds —
+   *  excluded from `occupancy` and every count; listed for a staff notice. */
+  newborns: BedOccupancyFull[];
   /** True once the bed layout of the current ward has been fetched at least once (data !== undefined). */
   bedsLoaded: boolean;
   /** True once the patient list of the current ward has been fetched at least once (data !== undefined). */
@@ -71,7 +75,9 @@ export function useMaternityWardStateFull(): MaternityWardStateFull {
   // that feed succeeds again, so the error can say "since when".
   const [failures, setFailures] = useState<FeedFailures>({});
   const markFailed = (feed: WardFeed, key: string) =>
-    setFailures((f) => (f[feed]?.key === key ? f : { ...f, [feed]: { key, at: new Date().toISOString() } }));
+    setFailures((f) =>
+      f[feed]?.key === key ? f : { ...f, [feed]: { key, at: new Date().toISOString() } },
+    );
   const markOk = (feed: WardFeed) =>
     setFailures((f) => {
       if (!f[feed]) return f;
@@ -80,7 +86,11 @@ export function useMaternityWardStateFull(): MaternityWardStateFull {
       return next;
     });
 
-  const { data: wards, error: wardsErr, mutate: mutateWards } = useSWR(
+  const {
+    data: wards,
+    error: wardsErr,
+    mutate: mutateWards,
+  } = useSWR(
     config ? ['maternity-wards', config.apiUrl] : null,
     () => listMaternityWards(config!),
     {
@@ -125,14 +135,20 @@ export function useMaternityWardStateFull(): MaternityWardStateFull {
     isValidating: occupancyValidating,
   } = useSWR(
     config && ward ? ['ward-beds-occupancy-full', config.apiUrl, ward] : null,
-    async () => ({ rows: await listWardBedsOccupancyFull(config!, ward!), fetchedAt: new Date().toISOString() }),
+    async () => ({
+      rows: await listWardBedsOccupancyFull(config!, ward!),
+      fetchedAt: new Date().toISOString(),
+    }),
     {
       refreshInterval: WARD_OCCUPANCY_REFRESH_MS,
       onSuccess: () => markOk('occupancy'),
       onError: () => markFailed('occupancy', ward!),
     },
   );
-  const occupancy = occupancySnapshot?.rows;
+  // Newborn admissions on this ward's beds are not labouring patients — split
+  // them off before anything counts (see splitWardOccupants).
+  const split = occupancySnapshot ? splitWardOccupants(occupancySnapshot.rows) : undefined;
+  const occupancy = split?.patients;
 
   const wardsError: Error | null = wardsErr ?? null;
   const bedsError: Error | null = bedsErr ?? null;
@@ -166,6 +182,7 @@ export function useMaternityWardStateFull(): MaternityWardStateFull {
     setSelectedWard: setPickedWard,
     beds: beds ?? [],
     occupancy: occupancy ?? [],
+    newborns: split?.newborns ?? [],
     bedsLoaded: beds !== undefined,
     occupancyLoaded: occupancy !== undefined,
     isLoading,

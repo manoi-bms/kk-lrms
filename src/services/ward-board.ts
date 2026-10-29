@@ -6,6 +6,24 @@
 // The values are the ones the board has always used. Any clinical change
 // needs the clinical owner's sign-off, not a UI edit.
 import type { BedOccupancyFull, BedSlot } from '@/types/maternity-ward';
+import { isNewbornAdmitType } from '@/config/hosxp-admit-types';
+
+/**
+ * Split the ward's HOSxP admissions into the patients this board counts and
+ * newborns (admit type แรกเกิด) that staff placed on a labour-ward bed. A baby
+ * is not a labouring patient: counting her inflated every KPI and turned the
+ * mother's bed into a shared-bed conflict. Newborns are returned, not dropped,
+ * so the board can tell staff to fix the bed in HOSxP. Only a positive newborn
+ * marker removes a row — an adult with no admit type recorded stays a patient.
+ */
+export function splitWardOccupants<T extends Pick<BedOccupancyFull, 'ipt_admit_type_id'>>(
+  rows: T[],
+): { patients: T[]; newborns: T[] } {
+  const patients: T[] = [];
+  const newborns: T[] = [];
+  for (const r of rows) (isNewbornAdmitType(r.ipt_admit_type_id) ? newborns : patients).push(r);
+  return { patients, newborns };
+}
 
 /** Prolonged latent phase on the board: admitted at least `minHours` ago
  *  with the cervix still below `cervixBelowCm` cm, or never recorded. */
