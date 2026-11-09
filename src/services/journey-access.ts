@@ -12,7 +12,10 @@
  * make any director an ADMIN, and those hcodes are not care providers.
  */
 import type { DatabaseAdapter } from '@/db/adapter';
+import { ANC_SEROLOGY_RISK_KEYS } from '@/config/anc-risk-rules';
 import { listJourneyLabResults, type JourneyLabResult } from '@/services/anc-lab-results';
+import { getJourneyDetail } from '@/services/journey-list';
+import type { JourneyDetailResponse } from '@/types/api';
 import { ReferralStatus } from '@/types/domain';
 
 export type JourneyLabTier = 'full' | 'own_results';
@@ -70,6 +73,44 @@ async function hospitalLink(
   return rows[0];
 }
 
+function hasFullAccess(link: LinkRow | undefined): boolean {
+  return Boolean(link?.is_registering || link?.is_referral_destination);
+}
+
+/** Removes every statement of HIV or syphilis status from a journey detail. */
+function withholdSerology(detail: JourneyDetailResponse): JourneyDetailResponse {
+  return {
+    ...detail,
+    journey: { ...detail.journey, hivResult: null, vdrlResult: null },
+    latestRisk: detail.latestRisk && {
+      ...detail.latestRisk,
+      triggeredRules: detail.latestRisk.triggeredRules.filter(
+        (rule) => !ANC_SEROLOGY_RISK_KEYS.has(rule),
+      ),
+    },
+  };
+}
+
+export type JourneyDetailRead = JourneyDetailResponse & { serologyWithheld: boolean };
+
+/**
+ * The only way the detail route reads a journey. The page stays province-wide,
+ * but HIV and syphilis status follow the labs route's full tier. Own-records
+ * hospitals are excluded too: these columns can come from any hospital.
+ */
+export async function readJourneyDetailForHospital(
+  db: DatabaseAdapter,
+  journeyId: string,
+  hospitalCode: string | null | undefined,
+): Promise<JourneyDetailRead | null> {
+  const detail = await getJourneyDetail(db, journeyId);
+  if (detail === null) return null;
+  const link = hospitalCode ? await hospitalLink(db, journeyId, hospitalCode) : undefined;
+  return hasFullAccess(link)
+    ? { ...detail, serologyWithheld: false }
+    : { ...withholdSerology(detail), serologyWithheld: true };
+}
+
 /** The only way the labs route reads results, so tier and filter cannot drift. */
 export async function readJourneyLabsForHospital(
   db: DatabaseAdapter,
@@ -84,10 +125,11 @@ export async function readJourneyLabsForHospital(
   if (!hospitalCode) return { status: 'denied' };
 
   const link = await hospitalLink(db, journeyId, hospitalCode);
-  if (link?.is_registering || link?.is_referral_destination) {
+  if (hasFullAccess(link)) {
     return { status: 'ok', tier: 'full', results: await listJourneyLabResults(db, journeyId) };
   }
   if (link?.has_own_records) {
+    // Only this hospital's rows: see the module note on what a link proves.
     const results = await listJourneyLabResults(db, journeyId, {
       onlyHospitalId: link.hospital_id,
     });

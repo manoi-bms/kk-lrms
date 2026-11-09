@@ -26,7 +26,8 @@ import { IncompleteAssessmentMarker } from '@/components/shared/IncompleteAssess
 import { STATUS_META, URGENCY_META } from '@/components/referrals/chips';
 import { Sparkline } from '@/components/charts/Sparkline';
 import { LabTile } from '@/components/patient/LabTile';
-import { codedTileStatus, serologyTextTileStatus } from '@/services/anc-lab-presentation';
+import { codedTileStatus, serologyTile } from '@/services/anc-lab-presentation';
+import { ANC_LAB_SEROLOGY_WITHHELD_NOTE } from '@/config/anc-lab-display';
 import { JourneyLabPanel } from '@/components/patient/JourneyLabPanel';
 import {
   BP_SYS_HIGH,
@@ -209,6 +210,7 @@ interface VaccineRecord {
 }
 
 interface JourneyDetailResponse {
+  serologyWithheld?: boolean;
   journey: Journey;
   ancVisits: AncVisit[];
   latestRisk: LatestRisk | null;
@@ -1010,7 +1012,8 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
     );
   }
 
-  const { journey, ancVisits, latestRisk, ancAssessment, referrals, newborns } = data;
+  const { journey, ancVisits, latestRisk, ancAssessment, referrals, newborns, serologyWithheld } =
+    data;
   const riskColor = ANC_RISK_COLOR[journey.ancRiskLevel ?? ''] ?? 'var(--ink-navy-muted)';
   const riskLabel = journey.ancRiskLevel
     ? (ANC_RISK_LABEL_TH[journey.ancRiskLevel] ?? journey.ancRiskLevel)
@@ -1784,13 +1787,11 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
                 />
                 <LabTile
                   label="VDRL"
-                  value={journey.vdrlResult}
-                  status={serologyTextTileStatus(journey.vdrlResult, 'VDRL_RPR')}
+                  {...serologyTile(journey.vdrlResult, 'VDRL_RPR', serologyWithheld)}
                 />
                 <LabTile
                   label="HIV"
-                  value={journey.hivResult}
-                  status={serologyTextTileStatus(journey.hivResult, 'HIV')}
+                  {...serologyTile(journey.hivResult, 'HIV', serologyWithheld)}
                 />
                 <LabTile
                   label="OGTT"
@@ -2343,9 +2344,17 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
                         ))}
                       </ul>
                     </div>
-                  ) : (
+                  ) : serologyWithheld ? null : (
                     <div className="mt-2 font-mono text-caption text-[var(--ink-navy-muted)]">
                       ไม่มีปัจจัยเสี่ยง
+                    </div>
+                  )}
+                  {serologyWithheld && (
+                    <div
+                      data-testid="serology-withheld-note"
+                      className="mt-2 text-caption leading-snug text-[var(--ink-navy-muted)]"
+                    >
+                      {ANC_LAB_SEROLOGY_WITHHELD_NOTE}
                     </div>
                   )}
                 </>

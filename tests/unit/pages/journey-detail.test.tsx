@@ -1,7 +1,8 @@
 // Journey detail page — behavior tests for the 2026-07-09 redesign:
 // HOSxP sync freshness stamp, labor-admission cross-link, Thai risk-rule
 // labels (instead of raw rule IDs), and the high-risk history panel.
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { ANC_LAB_SEROLOGY_WITHHELD_NOTE } from '@/config/anc-lab-display';
 import { render, screen, within, act } from '@testing-library/react';
 import { Suspense } from 'react';
 import { SWRConfig } from 'swr';
@@ -398,6 +399,40 @@ describe('JourneyDetailPage — sub-project 4 chrome', () => {
 describe('JourneyDetailPage — serology tiles', () => {
   const tileStatus = (label: string) =>
     screen.getByText(label).closest('[data-status]')?.getAttribute('data-status');
+
+  describe('when the server withholds serology', () => {
+    const shared = fixture as unknown as Record<string, unknown>;
+    const risk = fixture.latestRisk as unknown as { triggeredRules: string[] };
+    const rulesBefore = risk.triggeredRules;
+
+    beforeEach(() => {
+      shared.serologyWithheld = true;
+      risk.triggeredRules = [];
+    });
+
+    afterEach(() => {
+      delete shared.serologyWithheld;
+      risk.triggeredRules = rulesBefore;
+    });
+
+    it.each([['VDRL'], ['HIV']])('marks the %s tile restricted, not missing', async (label) => {
+      await renderPage();
+      expect(tileStatus(label)).toBe('concealed');
+    });
+
+    it('does not claim there are no risk factors, and says why some are hidden', async () => {
+      await renderPage();
+      expect(screen.queryByText('ไม่มีปัจจัยเสี่ยง')).toBeNull();
+      expect(screen.getByTestId('serology-withheld-note').textContent).toBe(
+        ANC_LAB_SEROLOGY_WITHHELD_NOTE,
+      );
+    });
+  });
+
+  it('shows no restriction note when serology is visible', async () => {
+    await renderPage();
+    expect(screen.queryByTestId('serology-withheld-note')).toBeNull();
+  });
 
   it.each([
     ['hbsagResult', 'HBsAg'],

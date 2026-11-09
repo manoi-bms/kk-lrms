@@ -51,7 +51,7 @@ import type {
   AncRiskEntry,
 } from '@/types/api';
 import { ArrowLeft, ChevronRight, ExternalLink } from 'lucide-react';
-import { serologyTextTileStatus } from '@/services/anc-lab-presentation';
+import { serologyTile } from '@/services/anc-lab-presentation';
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
@@ -1021,13 +1021,11 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
           <LabCell label="HBSAG" value={journey.hbsagResult} alarmIfMatches={['POS']} />
           <LabCell
             label="VDRL"
-            value={journey.vdrlResult}
-            alarm={serologyTextTileStatus(journey.vdrlResult, 'VDRL_RPR') === 'abnormal'}
+            {...serologyCell(journey.vdrlResult, 'VDRL_RPR', data.serologyWithheld)}
           />
           <LabCell
             label="HIV"
-            value={journey.hivResult}
-            alarm={serologyTextTileStatus(journey.hivResult, 'HIV') === 'abnormal'}
+            {...serologyCell(journey.hivResult, 'HIV', data.serologyWithheld)}
           />
           <LabCell label="OGTT" value={journey.ogttResult} alarmIfMatches={['ABNORMAL', 'POS']} />
           <LabCell label="DCIP" value={journey.dcipResult} alarmIfMatches={['POS']} />
@@ -1037,6 +1035,11 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
       </div>
     </div>
   );
+}
+
+function serologyCell(...args: Parameters<typeof serologyTile>) {
+  const tile = serologyTile(...args);
+  return { value: tile.value ?? tile.statusLabel, alarm: tile.status === 'abnormal' };
 }
 
 function LabCell({

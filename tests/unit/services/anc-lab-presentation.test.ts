@@ -6,6 +6,7 @@ import { ANC_LAB_TESTS, type AncLabTest } from '@/config/anc-lab-canon';
 import {
   ANC_LAB_PANEL_GROUPS,
   ANC_LAB_RH_FORM_NOTE,
+  ANC_LAB_SEROLOGY_WITHHELD_LABEL,
   ANC_LAB_TEST_LABEL,
 } from '@/config/anc-lab-display';
 import {
@@ -13,6 +14,7 @@ import {
   codedTileStatus,
   presentLabResult,
   serologyTextTileStatus,
+  serologyTile,
 } from '@/services/anc-lab-presentation';
 
 let seq = 0;
@@ -438,6 +440,26 @@ describe('core tests with a result that failed the shape check', () => {
       interpretation: 'unknown',
     });
     expect(missingIds([ferritin])).toContain('hbsag');
+  });
+});
+
+describe('serologyTile', () => {
+  it('shows a withheld result as restricted, never as not yet recorded', () => {
+    expect(serologyTile('Positive', 'HIV', true)).toEqual({
+      value: null,
+      status: 'concealed',
+      statusLabel: ANC_LAB_SEROLOGY_WITHHELD_LABEL,
+    });
+    expect(serologyTile(null, 'HIV', true).status).toBe('concealed');
+  });
+
+  it('reads a visible result as before', () => {
+    expect(serologyTile('Positive', 'HIV', false)).toEqual({
+      value: 'Positive',
+      status: 'abnormal',
+      statusLabel: null,
+    });
+    expect(serologyTile(null, 'VDRL_RPR', undefined).status).toBe('missing');
   });
 });
 

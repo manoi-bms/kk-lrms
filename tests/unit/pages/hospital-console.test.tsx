@@ -3,6 +3,7 @@
 // re-chrome) + redesign assertions. KPIs must come from server aggregates
 // (pagination.total / counts / incoming count), rows must navigate, and a
 // failing feed must show its banner without hiding the other registry.
+import { ANC_LAB_SEROLOGY_WITHHELD_LABEL } from '@/config/anc-lab-display';
 import { describe, it, expect, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { Suspense } from 'react';
@@ -320,7 +321,10 @@ describe('HospitalConsolePage — nurse-facing labels are Thai', () => {
 });
 
 describe('HospitalConsolePage: ANC preview lab cells', () => {
-  async function previewLabs(journey: Record<string, unknown>) {
+  async function previewLabs(
+    journey: Record<string, unknown>,
+    detail: Record<string, unknown> = {},
+  ) {
     const j = anc().journeys[1];
     await renderConsole({
       journeyDetail: {
@@ -329,6 +333,7 @@ describe('HospitalConsolePage: ANC preview lab cells', () => {
         ancRisks: [],
         referrals: [],
         newborns: [],
+        ...detail,
       },
     });
     fireEvent.click(await screen.findByRole('button', { name: /ทะเบียนฝากครรภ์/ }));
@@ -337,6 +342,12 @@ describe('HospitalConsolePage: ANC preview lab cells', () => {
   }
   const cell = (label: string) => screen.getByText(label).nextElementSibling as HTMLElement;
   const RED = 'rgb(161, 39, 27)';
+
+  it.each([['VDRL'], ['HIV']])('marks a withheld %s cell restricted, not blank', async (label) => {
+    await previewLabs({ vdrlResult: null, hivResult: null }, { serologyWithheld: true });
+    expect(cell(label).textContent).toBe(ANC_LAB_SEROLOGY_WITHHELD_LABEL);
+    expect(cell(label).style.color).not.toBe(RED);
+  });
 
   it.each([
     ['HBSAG', { hbsagResult: 'POS' }],

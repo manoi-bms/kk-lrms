@@ -116,6 +116,13 @@ export const ANC_LAB_NEGATIVE_IS_NOTABLE: readonly AncLabTest[] = ['RH'];
 export const ANC_LAB_RH_FORM_NOTE =
   'ข้อความนี้มาจากแบบบันทึก ANC บางโรงพยาบาลบันทึก negative หมายถึงไม่พบความผิดปกติ ไม่ใช่ Rh ลบ กรุณายืนยันจากผลห้องแล็บ';
 
+/** On an HIV or syphilis tile the viewer's hospital may not read. Never "no result". */
+export const ANC_LAB_SEROLOGY_WITHHELD_LABEL = 'จำกัดสิทธิ์';
+
+/** Shown to every restricted viewer, so its presence does not hint at a result. */
+export const ANC_LAB_SEROLOGY_WITHHELD_NOTE =
+  'ผล HIV และซิฟิลิส รวมถึงปัจจัยเสี่ยงที่เกี่ยวข้อง แสดงเฉพาะโรงพยาบาลที่ผู้ป่วยฝากครรภ์และโรงพยาบาลที่ได้รับการส่งต่อ หากจำเป็นต้องทราบผล กรุณาติดต่อโรงพยาบาลที่ผู้ป่วยฝากครรภ์';
+
 /** Grey covers numbers the panel does not assess and text it could not interpret. */
 export const ANC_LAB_GREY_LEGEND =
   'สีเทาหมายถึงระบบไม่ได้ประเมินหรือแปลผลนี้ไม่ได้ กรุณาอ่านจากข้อความผลตรวจ ไม่ได้หมายความว่าผลปกติ';

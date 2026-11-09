@@ -13,6 +13,7 @@ import {
   ANC_LAB_NEGATIVE_IS_NOTABLE,
   ANC_LAB_PANEL_GROUPS,
   ANC_LAB_RH_FORM_NOTE,
+  ANC_LAB_SEROLOGY_WITHHELD_LABEL,
   ANC_LAB_TEST_LABEL,
   ANC_LAB_TREND_TESTS,
 } from '@/config/anc-lab-display';
@@ -92,6 +93,26 @@ export function serologyTextTileStatus(
   const { interpretation } = interpretStoredResult(test, value);
   if (interpretation === 'positive' || interpretation === 'abnormal') return 'abnormal';
   return interpretation === 'negative' ? 'normal' : 'neutral';
+}
+
+/** Everything a journey tile needs for HIV or VDRL, whether or not it is withheld. */
+export function serologyTile(
+  value: string | null | undefined,
+  test: AncLabTest,
+  withheld: boolean | undefined,
+): {
+  value: string | null;
+  status: 'missing' | 'normal' | 'abnormal' | 'neutral' | 'concealed';
+  statusLabel: string | null;
+} {
+  if (withheld) {
+    return { value: null, status: 'concealed', statusLabel: ANC_LAB_SEROLOGY_WITHHELD_LABEL };
+  }
+  return {
+    value: value ?? null,
+    status: serologyTextTileStatus(value, test),
+    statusLabel: null,
+  };
 }
 
 function isMissing(r: JourneyLabResult): boolean {

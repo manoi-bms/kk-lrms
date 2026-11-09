@@ -68,7 +68,10 @@ export interface AncRiskLevelConfig {
   action: string;
 }
 
-import { ANC_CLASSIFYING_CANON } from '@/config/anc-classifying-canon';
+import {
+  ANC_CLASSIFYING_CANON,
+  ancClassifyingFallbackLabel,
+} from '@/config/anc-classifying-canon';
 
 // Mapping from HOSxP anc_risk_id to lab boolean flags
 // These IDs correspond to entries in the HOSxP anc_risk lookup table
@@ -91,6 +94,19 @@ export const HOSXP_RISK_TO_LAB_FLAGS: Record<
   25: 'thalassemiaDisease',
   26: 'niptHighRisk',
 };
+
+/**
+ * Entries in cached_anc_risks.triggered_rules that state HIV or syphilis status.
+ * The polling path stores rule ids; the webhook path stores labels, and an item
+ * outside the canon gets a placeholder label carrying its code.
+ */
+export const ANC_SEROLOGY_RISK_KEYS: ReadonlySet<string> = new Set([
+  'hr2_syphilis',
+  'hr2_hiv',
+  ...Object.entries(HOSXP_RISK_TO_LAB_FLAGS)
+    .filter(([, flag]) => flag === 'syphilisPositive' || flag === 'hivPositive')
+    .map(([id]) => ancClassifyingFallbackLabel(Number(id))),
+]);
 
 export const ANC_RISK_LEVEL_ORDER: Record<AncRiskLevel, number> = {
   [AncRiskLevel.LOW]: 0,
