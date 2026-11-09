@@ -110,14 +110,17 @@ function outcomeOf(row: LabResultRow, raw: string | null, failed: boolean) {
 export async function listJourneyLabResults(
   db: DatabaseAdapter,
   journeyId: string,
+  options: { onlyHospitalId?: string } = {},
 ): Promise<JourneyLabResult[]> {
+  const { onlyHospitalId } = options;
   const rows = await db.query<LabResultRow>(
     `SELECT r.*, h.name AS hospital_name, h.hcode
        FROM cached_anc_lab_results r
        INNER JOIN hospitals h ON h.id = r.hospital_id
       WHERE r.journey_id = ?
+        ${onlyHospitalId ? 'AND r.hospital_id = ?' : ''}
       ORDER BY r.result_date DESC NULLS LAST, r.source_key`,
-    [journeyId],
+    onlyHospitalId ? [journeyId, onlyHospitalId] : [journeyId],
   );
   if (rows.length === 0) return [];
 

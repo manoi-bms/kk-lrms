@@ -22,12 +22,13 @@ describe('useJourneyLabs', () => {
     const { result } = renderHook(() => useJourneyLabs('j-1'), {
       wrapper: wrapperFor((key) => {
         keys.push(key);
-        return Promise.resolve({ results: [lab] });
+        return Promise.resolve({ results: [lab], tier: 'own_results' });
       }),
     });
     expect(result.current.isLoading).toBe(true);
     await waitFor(() => expect(result.current.results).toEqual([lab]));
     expect(keys[0]).toBe('/api/journeys/j-1/labs');
+    expect(result.current.tier).toBe('own_results');
     expect(result.current.isForbidden).toBe(false);
   });
 

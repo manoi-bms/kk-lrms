@@ -93,6 +93,16 @@ describe('listJourneyLabResults', () => {
     expect(labs.find((l) => l.canonicalTest === 'CD4')?.numericValue).toBe(320);
   });
 
+  it('limits the rows to one hospital in the query when asked', async () => {
+    await seed([row('1', {})]);
+    expect(await listJourneyLabResults(db, journeyId, { onlyHospitalId: HOSPITAL_ID })).toHaveLength(1);
+    expect(
+      await listJourneyLabResults(db, journeyId, {
+        onlyHospitalId: '00000000-0000-4000-8000-0000000000ff',
+      }),
+    ).toEqual([]);
+  });
+
   it('returns unclassified results by their original names', async () => {
     await seed([row('1', { labItemsName: 'Ferritin', ancLabName: 'Ferritin', result: '30' })]);
     expect((await listJourneyLabResults(db, journeyId))[0]).toMatchObject({

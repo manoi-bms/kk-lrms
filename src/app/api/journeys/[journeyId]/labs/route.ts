@@ -1,5 +1,5 @@
 // GET /api/journeys/[journeyId]/labs: every ANC lab result for a pregnancy.
-// Includes decrypted HIV and syphilis results; see checkJourneyLabAccess.
+// Includes decrypted HIV and syphilis results; see readJourneyLabsForHospital.
 import { NextResponse, type NextRequest } from 'next/server';
 import { getDatabase } from '@/db/connection';
 import { tryLogAccess } from '@/services/audit';
@@ -7,8 +7,8 @@ import { auditActorFromSession } from '@/lib/audit-actor';
 import { ensureInit } from '@/lib/ensure-init';
 import { logger } from '@/lib/logger';
 import { requireSession } from '@/lib/session-guard';
-import { listJourneyLabResults } from '@/services/anc-lab-results';
-import { checkJourneyLabAccess } from '@/services/journey-access';
+import { readJourneyLabsForHospital } from '@/services/journey-access';
+import { ANC_LAB_ACCESS_DENIED } from '@/config/anc-lab-display';
 
 const NO_STORE = { 'Cache-Control': 'private, no-store' };
 
@@ -27,27 +27,27 @@ export async function GET(
 
     const { journeyId } = await params;
     const db = await getDatabase();
-    const access = await checkJourneyLabAccess(db, journeyId, session.user.hospitalCode);
-    if (access === 'not_found') {
+    const read = await readJourneyLabsForHospital(db, journeyId, session.user.hospitalCode);
+    if (read.status === 'not_found') {
       return errorResponse(404, 'NOT_FOUND', 'ไม่พบข้อมูลการตั้งครรภ์');
     }
-    if (access === 'denied') {
+    if (read.status === 'denied') {
       logger.warn('journey_labs_access_denied', { journeyId });
       return errorResponse(
         403,
         'FORBIDDEN',
-        'ไม่มีสิทธิ์ดูผลตรวจของหญิงตั้งครรภ์รายนี้ เนื่องจากโรงพยาบาลของท่านไม่ได้ร่วมดูแลการตั้งครรภ์นี้ หากต้องดูแลผู้ป่วย กรุณาดำเนินการส่งต่อหรือติดต่อโรงพยาบาลที่ดูแล',
+        `${ANC_LAB_ACCESS_DENIED.message} ${ANC_LAB_ACCESS_DENIED.remedy}`,
       );
     }
 
-    const results = await listJourneyLabResults(db, journeyId);
     await tryLogAccess(db, {
       ...auditActorFromSession(session),
       action: 'VIEW_JOURNEY_LABS',
       resourceType: 'JOURNEY',
       resourceId: journeyId,
+      metadata: { tier: read.tier },
     });
-    return NextResponse.json({ results }, { headers: NO_STORE });
+    return NextResponse.json({ results: read.results, tier: read.tier }, { headers: NO_STORE });
   } catch (error) {
     // Name only: a database error message can quote the values it failed on.
     logger.error('journey_labs_api_failed', {

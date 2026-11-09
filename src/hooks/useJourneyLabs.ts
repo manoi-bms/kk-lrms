@@ -2,11 +2,13 @@
 
 import useSWR from 'swr';
 import type { JourneyLabResult } from '@/services/anc-lab-results';
+import type { JourneyLabTier } from '@/services/journey-access';
 
 const REFRESH_INTERVAL_MS = 60_000;
 
 interface JourneyLabsResponse {
   results: JourneyLabResult[];
+  tier: JourneyLabTier;
 }
 
 /** SWR's global fetcher attaches the HTTP status to the errors it throws. */
@@ -25,6 +27,7 @@ export function useJourneyLabs(journeyId: string | null) {
   );
   return {
     results: data?.results ?? null,
+    tier: data?.tier ?? null,
     error: error as Error | undefined,
     isForbidden: statusOf(error) === 403,
     isLoading,

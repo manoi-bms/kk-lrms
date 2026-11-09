@@ -7,9 +7,14 @@ import { Sparkline } from '@/components/charts/Sparkline';
 import { LabTile, type LabTileStatus } from '@/components/patient/LabTile';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ErrorState } from '@/components/shared/ErrorState';
+import { InlineNotice } from '@/components/shared/InlineNotice';
 import { LoadingState } from '@/components/shared/LoadingState';
 import { SectionCard } from '@/components/shared/SectionCard';
-import { ANC_LAB_SOURCE_LABEL } from '@/config/anc-lab-display';
+import {
+  ANC_LAB_ACCESS_DENIED,
+  ANC_LAB_OWN_RESULTS_NOTICE,
+  ANC_LAB_SOURCE_LABEL,
+} from '@/config/anc-lab-display';
 import { useJourneyLabs } from '@/hooks/useJourneyLabs';
 import { formatBangkokDate, formatBangkokStamp } from '@/lib/bangkok-time';
 import type { JourneyLabResult } from '@/services/anc-lab-results';
@@ -168,7 +173,14 @@ function Provenance({ sources }: { sources: JourneyLabPanelModel['sources'] }) {
   );
 }
 
-function PanelBody({ panel }: { panel: JourneyLabPanelModel }) {
+function PanelBody({
+  panel,
+  showMissing,
+}: {
+  panel: JourneyLabPanelModel;
+  /** Off when only part of the record is visible: absent here may exist elsewhere. */
+  showMissing: boolean;
+}) {
   return (
     <>
       <Provenance sources={panel.sources} />
@@ -209,21 +221,22 @@ function PanelBody({ panel }: { panel: JourneyLabPanelModel }) {
           </div>
         </div>
       )}
-      <MissingTests items={panel.missing} />
+      {showMissing && <MissingTests items={panel.missing} />}
     </>
   );
 }
 
 export function JourneyLabPanel({ journeyId }: { journeyId: string }) {
-  const { results, error, isForbidden, isLoading, mutate } = useJourneyLabs(journeyId);
+  const { results, tier, error, isForbidden, isLoading, mutate } = useJourneyLabs(journeyId);
+  const ownResultsOnly = tier === 'own_results';
 
   let body: ReactNode;
   if (isForbidden) {
     body = (
       <ErrorState
         variant="banner"
-        message="ไม่มีสิทธิ์ดูผลตรวจของหญิงตั้งครรภ์รายนี้"
-        remedy="โรงพยาบาลของท่านไม่ได้ร่วมดูแลการตั้งครรภ์นี้ หากต้องดูแลผู้ป่วย กรุณาดำเนินการส่งต่อหรือติดต่อโรงพยาบาลที่ดูแล"
+        message={ANC_LAB_ACCESS_DENIED.message}
+        remedy={ANC_LAB_ACCESS_DENIED.remedy}
       />
     );
   } else if (results === null && isLoading) {
@@ -248,16 +261,21 @@ export function JourneyLabPanel({ journeyId }: { journeyId: string }) {
             onRetry={() => void mutate()}
           />
         )}
+        {ownResultsOnly && (
+          <InlineNotice tone="info" className="mb-2">
+            {ANC_LAB_OWN_RESULTS_NOTICE}
+          </InlineNotice>
+        )}
         {results.length === 0 ? (
           <>
             <EmptyState
-              title="ยังไม่มีผลตรวจในระบบ"
+              title={ownResultsOnly ? 'โรงพยาบาลนี้ยังไม่มีผลตรวจของผู้ป่วยรายนี้' : 'ยังไม่มีผลตรวจในระบบ'}
               description="ผลตรวจจะแสดงเมื่อ HOSxP ของโรงพยาบาลซิงก์ข้อมูลเข้ามา"
             />
-            <MissingTests items={panel.missing} />
+            {!ownResultsOnly && <MissingTests items={panel.missing} />}
           </>
         ) : (
-          <PanelBody panel={panel} />
+          <PanelBody panel={panel} showMissing={!ownResultsOnly} />
         )}
       </>
     );

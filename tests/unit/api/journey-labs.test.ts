@@ -5,7 +5,8 @@ import { NextRequest } from 'next/server';
 import { createTestDb } from '../../helpers/testDb';
 import { testSessionUser } from '../../helpers/session';
 import type { DatabaseAdapter } from '@/db/adapter';
-import { generateKey } from '@/lib/encryption';
+import { v4 as uuidv4 } from 'uuid';
+import { encrypt, generateKey, getEncryptionKey } from '@/lib/encryption';
 import { logger } from '@/lib/logger';
 import { processAncWebhook, type WebhookAncPayload } from '@/services/webhook';
 import type { SseManager } from '@/lib/sse';
@@ -41,8 +42,8 @@ function signInAt(hcode: string, extra: Record<string, unknown> = {}) {
 }
 
 async function auditRows() {
-  return db.query<{ action: string; resource_type: string; resource_id: string }>(
-    'SELECT action, resource_type, resource_id FROM audit_logs',
+  return db.query<{ action: string; resource_type: string; resource_id: string; metadata: unknown }>(
+    'SELECT action, resource_type, resource_id, metadata FROM audit_logs',
   );
 }
 
@@ -147,35 +148,161 @@ describe('GET /api/journeys/[journeyId]/labs', () => {
     expect(body.results[0]).toMatchObject({ canonicalTest: 'HIV', interpretation: 'positive' });
   });
 
-  it('allows a hospital the woman was referred to or from', async () => {
+  async function addReferral(from: string, to: string, status: string) {
     const now = new Date().toISOString();
     await db.execute(
       `INSERT INTO cached_referrals
          (id, journey_id, from_hospital_id, to_hospital_id, status, urgency_level, reason, initiated_at, created_at, updated_at)
-       VALUES ('00000000-0000-4000-8000-0000000000e1', ?, ?, ?, 'INITIATED', 'ROUTINE', 'x', ?, ?, ?)`,
-      [journeyId, REGISTERING.id, REFERRED_TO.id, now, now, now],
+       VALUES (?, ?, ?, ?, ?, 'ROUTINE', 'x', ?, ?, ?)`,
+      [uuidv4(), journeyId, from, to, status, now, now, now],
     );
-    signInAt(REFERRED_TO.hcode);
-    expect((await call(journeyId)).status).toBe(200);
-  });
+  }
 
-  it('allows a hospital that holds an ANC visit on the journey', async () => {
+  async function addVisit(hospitalId: string) {
     const now = new Date().toISOString();
     await db.execute(
       `INSERT INTO cached_anc_visits (id, journey_id, hospital_id, visit_date, visit_number, synced_at, created_at)
-       VALUES ('00000000-0000-4000-8000-0000000000e2', ?, ?, ?, 2, ?, ?)`,
-      [journeyId, VISITED.id, now, now, now],
+       VALUES (?, ?, ?, ?, 2, ?, ?)`,
+      [uuidv4(), journeyId, hospitalId, now, now, now],
     );
-    signInAt(VISITED.hcode);
-    expect((await call(journeyId)).status).toBe(200);
+  }
+
+  async function addLab(hospitalId: string, result: string) {
+    const now = new Date().toISOString();
+    await db.execute(
+      `INSERT INTO cached_anc_lab_results
+         (id, journey_id, hospital_id, source, source_key, result_date, canonical_test, raw_result, concealed, content_hash, synced_at, created_at)
+       VALUES (?, ?, ?, 'anc_lab', ?, '2026-04-01', 'HIV', ?, false, 'h', ?, ?)`,
+      [uuidv4(), journeyId, hospitalId, uuidv4(), encrypt(result, getEncryptionKey()), now, now],
+    );
+  }
+
+  async function addAdmission(hospitalId: string) {
+    const now = new Date().toISOString();
+    await db.execute(
+      `INSERT INTO cached_patients (id, hospital_id, hn, an, name, age, admit_date, labor_status, journey_id, synced_at, created_at, updated_at)
+       VALUES (?, ?, 'HN-W', 'AN-W', 'x', 30, ?, 'ACTIVE', ?, ?, ?, ?)`,
+      [uuidv4(), hospitalId, now, journeyId, now, now, now],
+    );
+  }
+
+  async function read(hcode: string) {
+    signInAt(hcode);
+    const res = await call(journeyId);
+    if (res.status !== 200) return { status: res.status, tier: null, hospitals: [] as string[] };
+    const body = (await res.json()) as { tier: string; results: Array<{ hcode: string }> };
+    return { status: 200, tier: body.tier, hospitals: body.results.map((r) => r.hcode) };
+  }
+
+  describe('full access', () => {
+    it('gives the registering hospital every hospital\'s results', async () => {
+      await addLab(VISITED.id, 'Negative');
+      const seen = await read(REGISTERING.hcode);
+      expect(seen.tier).toBe('full');
+      expect(seen.hospitals.sort()).toEqual([REGISTERING.hcode, VISITED.hcode].sort());
+    });
+
+    it.each(['INITIATED', 'ACCEPTED', 'IN_TRANSIT', 'ARRIVED'])(
+      'gives the destination of a %s referral full access',
+      async (status) => {
+        await addReferral(REGISTERING.id, REFERRED_TO.id, status);
+        expect(await read(REFERRED_TO.hcode)).toEqual({
+          status: 200,
+          tier: 'full',
+          hospitals: [REGISTERING.hcode],
+        });
+      },
+    );
+
+    it('unlocks a destination as soon as the referral record exists', async () => {
+      expect((await read(REFERRED_TO.hcode)).status).toBe(403);
+      await addReferral(REGISTERING.id, REFERRED_TO.id, 'INITIATED');
+      expect((await read(REFERRED_TO.hcode)).tier).toBe('full');
+    });
+
+    it.each(['REJECTED', 'EXPIRED'])('gives a %s referral destination nothing', async (status) => {
+      await addReferral(REGISTERING.id, REFERRED_TO.id, status);
+      expect((await read(REFERRED_TO.hcode)).status).toBe(403);
+    });
   });
 
-  it('writes one audit row for a successful read', async () => {
-    signInAt(REGISTERING.hcode);
+  describe('own results only', () => {
+    it('shows a hospital with only a pushed visit none of the other hospital\'s rows', async () => {
+      await addVisit(VISITED.id);
+      expect(await read(VISITED.hcode)).toEqual({ status: 200, tier: 'own_results', hospitals: [] });
+    });
+
+    it('returns that hospital\'s own rows and no others', async () => {
+      await addLab(VISITED.id, 'Negative');
+      expect(await read(VISITED.hcode)).toEqual({
+        status: 200,
+        tier: 'own_results',
+        hospitals: [VISITED.hcode],
+      });
+    });
+
+    it('gives a walk-in labor admission its own rows only, once the admission syncs', async () => {
+      expect((await read(VISITED.hcode)).status).toBe(403);
+      await addAdmission(VISITED.id);
+      expect(await read(VISITED.hcode)).toEqual({ status: 200, tier: 'own_results', hospitals: [] });
+    });
+
+    it('does not widen when a rejected referral sits beside its own visit', async () => {
+      await addVisit(REFERRED_TO.id);
+      await addReferral(REGISTERING.id, REFERRED_TO.id, 'REJECTED');
+      expect(await read(REFERRED_TO.hcode)).toEqual({
+        status: 200,
+        tier: 'own_results',
+        hospitals: [],
+      });
+    });
+  });
+
+  describe('links a hospital can create alone', () => {
+    it('ignores a referral a hospital created to itself', async () => {
+      await addReferral(UNRELATED.id, UNRELATED.id, 'ACCEPTED');
+      expect((await read(UNRELATED.hcode)).status).toBe(403);
+    });
+
+    it('ignores a referral the hospital sent elsewhere', async () => {
+      await addReferral(UNRELATED.id, REFERRED_TO.id, 'ACCEPTED');
+      expect((await read(UNRELATED.hcode)).status).toBe(403);
+    });
+
+    it('keeps a sender with its own visit to its own rows', async () => {
+      await addVisit(UNRELATED.id);
+      await addReferral(UNRELATED.id, REFERRED_TO.id, 'ACCEPTED');
+      expect(await read(UNRELATED.hcode)).toEqual({
+        status: 200,
+        tier: 'own_results',
+        hospitals: [],
+      });
+    });
+
+    it('ignores a self-set current hospital', async () => {
+      await db.execute('UPDATE maternal_journeys SET current_hospital_id = ? WHERE id = ?', [
+        UNRELATED.id,
+        journeyId,
+      ]);
+      expect((await read(UNRELATED.hcode)).status).toBe(403);
+    });
+  });
+
+  it.each([
+    ['full', () => REGISTERING.hcode],
+    ['own_results', () => VISITED.hcode],
+  ])('writes one audit row for a successful read, with tier %s', async (tier, hcode) => {
+    await addVisit(VISITED.id);
+    signInAt(hcode());
     await call(journeyId);
-    expect(await auditRows()).toEqual([
-      { action: 'VIEW_JOURNEY_LABS', resource_type: 'JOURNEY', resource_id: journeyId },
-    ]);
+    const rows = await auditRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      action: 'VIEW_JOURNEY_LABS',
+      resource_type: 'JOURNEY',
+      resource_id: journeyId,
+    });
+    expect(rows[0].metadata).toEqual({ tier });
   });
 
   it('keeps results out of the log when a read is denied or fails', async () => {

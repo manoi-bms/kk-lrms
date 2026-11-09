@@ -5,6 +5,7 @@ import type { JourneyLabResult } from '@/services/anc-lab-results';
 
 type HookResult = {
   results: JourneyLabResult[] | null;
+  tier: 'full' | 'own_results' | null;
   error: Error | undefined;
   isForbidden: boolean;
   isLoading: boolean;
@@ -48,7 +49,7 @@ function lab(over: Partial<JourneyLabResult> = {}): JourneyLabResult {
 }
 
 function show(results: JourneyLabResult[] | null, over: Partial<HookResult> = {}) {
-  hook = { results, error: undefined, isForbidden: false, isLoading: false, mutate: () => {}, ...over };
+  hook = { results, tier: results ? 'full' : null, error: undefined, isForbidden: false, isLoading: false, mutate: () => {}, ...over };
   return render(<JourneyLabPanel journeyId="j-1" />);
 }
 const tile = (label: string) => screen.getByTestId(`lab-tile-${label}`);
@@ -69,10 +70,38 @@ describe('JourneyLabPanel', () => {
     expect(screen.getByRole('button', { name: /ลองใหม่/ })).toBeTruthy();
   });
 
-  it('explains a permission denial and offers no retry', () => {
+  it('explains a permission denial, says who to contact and offers no retry', () => {
     show(null, { error: new Error('x'), isForbidden: true });
     expect(screen.getByText(/ไม่มีสิทธิ์ดูผลตรวจ/)).toBeTruthy();
+    expect(screen.getByText(/ติดต่อโรงพยาบาลที่ผู้ป่วยฝากครรภ์/)).toBeTruthy();
     expect(screen.queryByRole('button', { name: /ลองใหม่/ })).toBeNull();
+  });
+
+  describe('own results only', () => {
+    const notice = /แสดงเฉพาะผลตรวจของโรงพยาบาลนี้/;
+    const viaReferral = /โรงพยาบาลอื่น.*การส่งต่อ/;
+
+    it('says the list is partial and how to see the rest', () => {
+      show([lab()], { tier: 'own_results' });
+      expect(screen.getByText(notice).textContent).toMatch(viaReferral);
+    });
+
+    it('never reads as no results existing when this hospital has none', () => {
+      show([], { tier: 'own_results' });
+      expect(screen.getByText(notice)).toBeTruthy();
+      expect(screen.queryByText('ยังไม่มีผลตรวจในระบบ')).toBeNull();
+      expect(screen.getByText('โรงพยาบาลนี้ยังไม่มีผลตรวจของผู้ป่วยรายนี้')).toBeTruthy();
+    });
+
+    it('hides the missing-tests list, which cannot be known from partial data', () => {
+      show([lab()], { tier: 'own_results' });
+      expect(screen.queryByTestId('lab-missing-list')).toBeNull();
+    });
+
+    it('shows no notice with full access', () => {
+      show([lab()]);
+      expect(screen.queryByText(notice)).toBeNull();
+    });
   });
 
   it('shows an empty state with the core list', () => {
