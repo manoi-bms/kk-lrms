@@ -8,13 +8,14 @@
  */
 import {
   ANC_LAB_ABNORMAL_FLAG_VALUE,
+  ANC_LAB_EARLIER_POSITIVE_STATE,
   ANC_LAB_CORE_ITEMS,
   ANC_LAB_NEGATIVE_IS_NOTABLE,
   ANC_LAB_PANEL_GROUPS,
   ANC_LAB_TEST_LABEL,
   ANC_LAB_TREND_TESTS,
 } from '@/config/anc-lab-display';
-import type { AncLabTest } from '@/config/anc-lab-canon';
+import { ANC_LAB_STICKY_POSITIVE_TESTS, type AncLabTest } from '@/config/anc-lab-canon';
 import type { JourneyLabResult } from '@/services/anc-lab-results';
 
 export type LabTone = 'abnormal' | 'normal' | 'neutral' | 'concealed' | 'unreadable' | 'none';
@@ -33,6 +34,8 @@ export interface LabTestSummary {
   labelTh: string;
   latest: JourneyLabResult;
   older: JourneyLabResult[];
+  /** Most recent positive before a non-positive latest. Awaiting obstetric sign-off. */
+  earlierPositive: JourneyLabResult | null;
 }
 
 export interface LabTrend {
@@ -90,7 +93,10 @@ function valueOf(r: JourneyLabResult): string | null {
   return r.normalizedValue ?? r.rawResult;
 }
 
-export function presentLabResult(r: JourneyLabResult): LabPresentation {
+export function presentLabResult(
+  r: JourneyLabResult,
+  options: { earlierPositive?: boolean } = {},
+): LabPresentation {
   const hosxpFlagged = r.abnormalFlag?.trim().toUpperCase() === ANC_LAB_ABNORMAL_FLAG_VALUE;
   const base = { contextUnreadable: r.contextUnreadable, hosxpFlagged };
   if (r.concealed) return { ...base, tone: 'concealed', value: null, stateLabel: 'ปกปิดผล' };
@@ -111,13 +117,21 @@ export function presentLabResult(r: JourneyLabResult): LabPresentation {
   if (r.contextUnreadable) {
     return { ...base, tone: 'unreadable', value, stateLabel: UNREADABLE_LABEL };
   }
+  // Awaiting obstetric sign-off: see ANC_LAB_STICKY_POSITIVE_TESTS.
+  if (options.earlierPositive) {
+    return { ...base, tone: 'neutral', value, stateLabel: ANC_LAB_EARLIER_POSITIVE_STATE };
+  }
   return { ...base, tone: statesNormal(r) ? 'normal' : 'neutral', value, stateLabel: null };
 }
 
 function summariseTest(test: AncLabTest, rows: JourneyLabResult[]): LabTestSummary {
   const onFile = rows.filter((r) => !isMissing(r));
   const [latest, ...older] = onFile.length > 0 ? onFile : rows.slice(0, 1);
-  return { test, labelTh: ANC_LAB_TEST_LABEL[test], latest, older };
+  const earlierPositive =
+    ANC_LAB_STICKY_POSITIVE_TESTS.includes(test) && latest.interpretation !== 'positive'
+      ? (older.find((r) => r.interpretation === 'positive') ?? null)
+      : null;
+  return { test, labelTh: ANC_LAB_TEST_LABEL[test], latest, older, earlierPositive };
 }
 
 function trendOf(test: AncLabTest, rows: JourneyLabResult[]): LabTrend | null {

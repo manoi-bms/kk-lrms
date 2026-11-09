@@ -559,6 +559,38 @@ describe('processAncWebhook — ANC lab ingest', () => {
       });
     });
 
+    describe('an earlier positive in this pregnancy', () => {
+      const at = (sourceId: string, labItemsName: string, result: string, resultDate: string) =>
+        hct({ sourceId, labItemsName, result, resultDate });
+
+      it.each([['Negative'], ['ผิดปกติ'], ['ดูผลในใบรายงาน']])(
+        'keeps HBsAg POS when a later result is %s',
+        async (later) => {
+          await push(
+            patient({
+              labResults: [
+                at('1', 'HBs Ag', 'Positive', '2026-02-01'),
+                at('2', 'HBs Ag', later, '2026-05-01'),
+              ],
+            }),
+          );
+          expect((await journey()).hbsag_result).toBe('POS');
+        },
+      );
+
+      it('does not apply to DCIP, which follows the newest result', async () => {
+        await push(
+          patient({
+            labResults: [
+              at('1', 'DCIP', 'Positive', '2026-02-01'),
+              at('2', 'DCIP', 'Negative', '2026-05-01'),
+            ],
+          }),
+        );
+        expect((await journey()).dcip_result).toBe('NEG');
+      });
+    });
+
     describe('Rh sign carried on the blood group', () => {
       const group = (sourceId: string, result: string, resultDate = '2026-03-01') =>
         hct({ sourceId, labItemsName: 'ABO Grouping', result, resultDate });

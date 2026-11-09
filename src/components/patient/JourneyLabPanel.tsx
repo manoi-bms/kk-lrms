@@ -12,6 +12,7 @@ import { LoadingState } from '@/components/shared/LoadingState';
 import { SectionCard } from '@/components/shared/SectionCard';
 import {
   ANC_LAB_ACCESS_DENIED,
+  ANC_LAB_EARLIER_POSITIVE_NOTE,
   ANC_LAB_GREY_LEGEND,
   ANC_LAB_OWN_RESULTS_NOTICE,
   ANC_LAB_SOURCE_LABEL,
@@ -99,12 +100,14 @@ function ResultTile({
   label,
   r,
   older = [],
+  earlierPositive = null,
 }: {
   label: string;
   r: JourneyLabResult;
   older?: JourneyLabResult[];
+  earlierPositive?: JourneyLabResult | null;
 }) {
-  const p = presentLabResult(r);
+  const p = presentLabResult(r, { earlierPositive: earlierPositive !== null });
   return (
     <LabTile
       testId={`lab-tile-${label}`}
@@ -114,6 +117,18 @@ function ResultTile({
       status={STATUS_FOR_TONE[p.tone]}
       statusLabel={p.stateLabel}
     >
+      {earlierPositive && (
+        <div
+          data-testid="lab-earlier-positive"
+          className="text-caption font-semibold"
+          style={{ color: 'var(--risk-high-text)' }}
+        >
+          {ANC_LAB_EARLIER_POSITIVE_NOTE}{' '}
+          {earlierPositive.resultDate
+            ? formatBangkokDate(new Date(earlierPositive.resultDate))
+            : 'ไม่ระบุวันที่'}
+        </div>
+      )}
       <ResultNotes r={r} />
       <OlderResults rows={older} />
     </LabTile>
@@ -204,7 +219,13 @@ function PanelBody({
           <SubHeading>{group.titleTh}</SubHeading>
           <div className={GRID} style={GRID_COLUMNS}>
             {group.tests.map((t) => (
-              <ResultTile key={t.test} label={t.labelTh} r={t.latest} older={t.older} />
+              <ResultTile
+                key={t.test}
+                label={t.labelTh}
+                r={t.latest}
+                older={t.older}
+                earlierPositive={t.earlierPositive}
+              />
             ))}
           </div>
         </div>

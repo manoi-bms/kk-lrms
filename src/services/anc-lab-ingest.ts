@@ -8,7 +8,12 @@
 import { createHmac } from 'node:crypto';
 import { v4 as uuidv4 } from 'uuid';
 import type { DatabaseAdapter } from '@/db/adapter';
-import { ANC_LAB_TESTS, type AncLabSource, type AncLabTest } from '@/config/anc-lab-canon';
+import {
+  ANC_LAB_STICKY_POSITIVE_TESTS,
+  ANC_LAB_TESTS,
+  type AncLabSource,
+  type AncLabTest,
+} from '@/config/anc-lab-canon';
 import { ReferralStatus } from '@/types/domain';
 import { encrypt } from '@/lib/encryption';
 import { toIsoDate } from '@/lib/dates';
@@ -436,6 +441,13 @@ export async function refreshJourneyLabColumns(
     return undefined;
   };
   const newestResult = (test: JourneyLabTest) => {
+    // Awaiting obstetric sign-off: see ANC_LAB_STICKY_POSITIVE_TESTS.
+    if (
+      ANC_LAB_STICKY_POSITIVE_TESTS.includes(test) &&
+      rows.some((r) => r.canonical_test === test && r.interpretation === 'positive')
+    ) {
+      return 'POS' as const;
+    }
     const newest = rows.find(
       (r) =>
         r.canonical_test === test &&

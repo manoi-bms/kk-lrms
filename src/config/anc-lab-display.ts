@@ -94,6 +94,10 @@ export const ANC_LAB_NEGATIVE_IS_NOTABLE: readonly AncLabTest[] = ['RH'];
 export const ANC_LAB_GREY_LEGEND =
   'สีเทาหมายถึงระบบไม่ได้ประเมินหรือแปลผลนี้ไม่ได้ กรุณาอ่านจากข้อความผลตรวจ ไม่ได้หมายความว่าผลปกติ';
 
+/** Followed by the date. See ANC_LAB_STICKY_POSITIVE_TESTS: awaiting obstetric sign-off. */
+export const ANC_LAB_EARLIER_POSITIVE_NOTE = 'พบผลบวกก่อนหน้านี้ในครรภ์นี้ เมื่อ';
+export const ANC_LAB_EARLIER_POSITIVE_STATE = 'มีผลบวกก่อนหน้า';
+
 /** lab_order.abnormal_result: HOSxP writes Y for abnormal; N or empty is not a flag. */
 export const ANC_LAB_ABNORMAL_FLAG_VALUE = 'Y';
 

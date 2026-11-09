@@ -15,7 +15,8 @@ let hook: HookResult;
 vi.mock('@/hooks/useJourneyLabs', () => ({ useJourneyLabs: () => hook }));
 
 import { JourneyLabPanel } from '@/components/patient/JourneyLabPanel';
-import { ANC_LAB_GREY_LEGEND } from '@/config/anc-lab-display';
+import { ANC_LAB_EARLIER_POSITIVE_NOTE, ANC_LAB_GREY_LEGEND } from '@/config/anc-lab-display';
+import { formatBangkokDate } from '@/lib/bangkok-time';
 
 let seq = 0;
 function lab(over: Partial<JourneyLabResult> = {}): JourneyLabResult {
@@ -231,5 +232,44 @@ describe('JourneyLabPanel — grey legend', () => {
     expect(screen.getByText(ANC_LAB_GREY_LEGEND)).toBeTruthy();
     expect(ANC_LAB_GREY_LEGEND).toContain('แปลผล');
     expect(ANC_LAB_GREY_LEGEND).toContain('ไม่ได้หมายความว่าผลปกติ');
+  });
+});
+
+describe('JourneyLabPanel — a positive earlier in this pregnancy', () => {
+  it('shows the latest value, is not green, and names the date of the positive', () => {
+    const hiv = {
+      canonicalTest: 'HIV' as const,
+      labItemsName: 'Anti HIV',
+      unit: null,
+      numericValue: null,
+    };
+    hook = {
+      results: [
+        lab({
+          ...hiv,
+          rawResult: 'Negative',
+          interpretation: 'negative',
+          resultDate: '2026-05-01',
+        }),
+        lab({
+          ...hiv,
+          rawResult: 'Positive',
+          interpretation: 'positive',
+          resultDate: '2026-02-01',
+        }),
+      ],
+      tier: 'full',
+      error: undefined,
+      isForbidden: false,
+      isLoading: false,
+      mutate: () => {},
+    };
+    render(<JourneyLabPanel journeyId="j1" />);
+    const tile = screen.getByTestId('lab-tile-Anti-HIV');
+    expect(tile.getAttribute('data-status')).not.toBe('normal');
+    expect(within(tile).getByText('Negative')).toBeTruthy();
+    const note = within(tile).getByTestId('lab-earlier-positive');
+    expect(note.textContent).toContain(ANC_LAB_EARLIER_POSITIVE_NOTE);
+    expect(note.textContent).toContain(formatBangkokDate(new Date('2026-02-01')));
   });
 });

@@ -285,3 +285,62 @@ describe('codedTileStatus', () => {
     expect(codedTileStatus('ปกติ', 'POS', 'NEG')).toBe('neutral');
   });
 });
+
+describe('a positive earlier in this pregnancy', () => {
+  const NEG = {
+    rawResult: 'Negative',
+    interpretation: 'negative' as const,
+    resultDate: '2026-05-01',
+  };
+  const POS = {
+    rawResult: 'Positive',
+    interpretation: 'positive' as const,
+    resultDate: '2026-02-01',
+  };
+  const summary = (rows: JourneyLabResult[]) => buildJourneyLabPanel(rows).groups[0].tests[0];
+
+  it.each<[AncLabTest]>([
+    ['HBSAG'],
+    ['HIV'],
+    ['VDRL_RPR'],
+    ['TREPONEMAL'],
+    ['SYPHILIS_UNSPECIFIED'],
+  ])('marks a later negative %s and never shows it as normal', (canonicalTest) => {
+    const s = summary([lab({ canonicalTest, ...NEG }), lab({ canonicalTest, ...POS })]);
+    expect(s.earlierPositive?.resultDate).toBe('2026-02-01');
+    expect(s.latest.interpretation).toBe('negative');
+    const p = presentLabResult(s.latest, { earlierPositive: true });
+    expect(p.tone).not.toBe('normal');
+    expect(p.value).toBe('Negative');
+    expect(p.stateLabel).toBeTruthy();
+  });
+
+  it('uses the most recent earlier positive', () => {
+    const s = summary([lab(NEG), lab({ ...POS, resultDate: '2026-04-01' }), lab(POS)]);
+    expect(s.earlierPositive?.resultDate).toBe('2026-04-01');
+  });
+
+  it('adds nothing when the latest result is itself positive', () => {
+    const s = summary([lab({ ...POS, resultDate: '2026-05-01' }), lab(POS)]);
+    expect(s.earlierPositive).toBeNull();
+  });
+
+  it('adds nothing when no earlier result was positive', () => {
+    expect(
+      summary([lab(NEG), lab({ ...NEG, resultDate: '2026-02-01' })]).earlierPositive,
+    ).toBeNull();
+  });
+
+  it('does not apply to DCIP', () => {
+    const s = summary([
+      lab({ canonicalTest: 'DCIP', ...NEG }),
+      lab({ canonicalTest: 'DCIP', ...POS }),
+    ]);
+    expect(s.earlierPositive).toBeNull();
+  });
+
+  it('keeps an abnormal latest result red', () => {
+    const r = lab({ rawResult: 'ผิดปกติ', interpretation: 'abnormal' });
+    expect(presentLabResult(r, { earlierPositive: true }).tone).toBe('abnormal');
+  });
+});

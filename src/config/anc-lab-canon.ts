@@ -175,6 +175,21 @@ export const ANC_THALASSEMIA_FIELDS: readonly { column: string; label: string }[
   { column: 'husban_thalassaemia_result_id', label: 'Thalassemia: รหัสผลตรวจ (สามี)' },
 ];
 
+/**
+ * AWAITING OBSTETRIC SIGN-OFF. Interim conservative rule: for these infections
+ * a positive earlier in the pregnancy is not overridden by a later negative,
+ * because a repeat negative may be a false negative and the rule for resolving
+ * discordant results has not been agreed. Used for display only; it must not
+ * reach risk levels, alerts or LINE notifications.
+ */
+export const ANC_LAB_STICKY_POSITIVE_TESTS: readonly AncLabTest[] = [
+  'HBSAG',
+  'HIV',
+  'VDRL_RPR',
+  'TREPONEMAL',
+  'SYPHILIS_UNSPECIFIED',
+];
+
 /** Exact (trimmed) text meaning no result was recorded. */
 export const MISSING_RESULT_FORMS: readonly RegExp[] = [/^$/, /^null$/i];
 
