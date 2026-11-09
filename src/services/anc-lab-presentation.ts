@@ -16,7 +16,11 @@ import {
   ANC_LAB_TEST_LABEL,
   ANC_LAB_TREND_TESTS,
 } from '@/config/anc-lab-display';
-import { ANC_LAB_STICKY_POSITIVE_TESTS, type AncLabTest } from '@/config/anc-lab-canon';
+import {
+  ANC_LAB_RH_FORM_WORD_NOTE,
+  ANC_LAB_STICKY_POSITIVE_TESTS,
+  type AncLabTest,
+} from '@/config/anc-lab-canon';
 import { interpretStoredResult, testNamedBy } from '@/services/anc-lab-classifier';
 import type { JourneyLabResult } from '@/services/anc-lab-results';
 
@@ -119,15 +123,10 @@ export function presentLabResult(
   options: { earlierPositive?: boolean } = {},
 ): LabPresentation {
   const hosxpFlagged = r.abnormalFlag?.trim().toUpperCase() === ANC_LAB_ABNORMAL_FLAG_VALUE;
-  const unreadRhOnAncForm =
-    r.canonicalTest === 'RH' &&
-    r.source === 'anc_lab' &&
-    r.interpretation === 'unknown' &&
-    r.rawResult !== null;
   const base = {
     contextUnreadable: r.contextUnreadable,
     hosxpFlagged,
-    note: unreadRhOnAncForm ? ANC_LAB_RH_FORM_NOTE : null,
+    note: r.classificationNote === ANC_LAB_RH_FORM_WORD_NOTE ? ANC_LAB_RH_FORM_NOTE : null,
   };
   if (r.concealed) return { ...base, tone: 'concealed', value: null, stateLabel: 'ปกปิดผล' };
   if (r.rawResultUnreadable) {

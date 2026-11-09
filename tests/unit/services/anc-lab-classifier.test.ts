@@ -196,6 +196,32 @@ describe('classifyAncLab — traps', () => {
       expect(c.interpretation).toBe('unknown');
     });
 
+    it.each([
+      ['ALPHA1'],
+      ['THAL_RESULT'],
+      ['PARTNER_OF'],
+      ['PARTNER_DCIP'],
+      ['PARTNER_HB_TYPING'],
+      ['PARTNER_ALPHA1'],
+      ['PARTNER_THAL_RESULT'],
+    ] as const)('keeps the %s outcome out of plaintext columns', (test) => {
+      expect(ANC_LAB_TESTS[test].sensitive).toBe(true);
+    });
+
+    it('re-reads a stored partner result to the same decoded word', () => {
+      expect(interpretStoredResult('PARTNER_DCIP', 'N')).toMatchObject({
+        interpretation: 'abnormal',
+        normalizedValue: 'ผิดปกติ',
+      });
+    });
+
+    it('gives no sensitive test a per-source reading, which re-reads cannot see', () => {
+      const offending = Object.entries(ANC_LAB_TESTS).filter(
+        ([, definition]) => definition.sensitive && definition.sourceShapes,
+      );
+      expect(offending).toEqual([]);
+    });
+
     it('applies the Y/N coding only to registered fields, not to a lab result', () => {
       expect(labOrder('OF', 'N').interpretation).toBe('negative');
       expect(labOrder('OF', 'Y').interpretation).toBe('unknown');
@@ -396,9 +422,15 @@ describe('classifyAncLab — result forms', () => {
         const c = ancLab('Rh .(D) typing ( slide method)', result);
         expect(c.canonicalTest).toBe('RH');
         expect(c.interpretation).toBe('unknown');
+        expect(c.classificationNote).toBe('rh_word_on_form');
         expect(c.rawResult).toBe(result);
       },
     );
+
+    it('marks only the bare negative word, not any other unreadable Rh', () => {
+      expect(ancLab('Rh Typing', '-').classificationNote).toBeNull();
+      expect(ancLab('Rh Typing', 'ปกติ').classificationNote).toBeNull();
+    });
 
     it.each([['Rh neg'], ['Rh Negative']])(
       'reads an ANC form that names the factor, %s, as negative',

@@ -51,10 +51,15 @@ export type AncLabInterpretation =
 
 export interface QualitativeResultForm {
   pattern: RegExp;
-  interpretation: Extract<AncLabInterpretation, 'negative' | 'positive' | 'abnormal'>;
+  interpretation: Extract<AncLabInterpretation, 'negative' | 'positive' | 'abnormal' | 'unknown'>;
   /** Shown instead of the raw text, which would mean nothing to a reader. */
   display?: string;
+  /** Recorded on the row so a later step can recognise this exact form. */
+  note?: typeof ANC_LAB_RH_FORM_WORD_NOTE;
 }
+
+/** A bare "negative" in the ANC form's Rh field, which is not a reliable sign. */
+export const ANC_LAB_RH_FORM_WORD_NOTE = 'rh_word_on_form';
 
 export type AncLabResultShape =
   | { kind: 'numeric'; min: number; max: number }
@@ -69,7 +74,10 @@ export interface AncLabTestDefinition {
   shape: AncLabResultShape;
   /** Overrides `shape` for rows from a source that writes this test differently. */
   sourceShapes?: Partial<Record<AncLabSource, AncLabResultShape>>;
-  /** Outcome never stored in a plaintext column; see cached_anc_lab_results. */
+  /**
+   * Outcome never stored in a plaintext column; see cached_anc_lab_results.
+   * Cannot combine with sourceShapes: a stored result is re-read by test alone.
+   */
   sensitive?: boolean;
 }
 
@@ -97,6 +105,7 @@ const RH_RESULT_FORMS: readonly QualitativeResultForm[] = [
  */
 const RH_ANC_FORM_RESULT_FORMS: readonly QualitativeResultForm[] = [
   { pattern: /^rh\s*(neg|negative)$/i, interpretation: 'negative' },
+  { pattern: /^(neg|negative)$/i, interpretation: 'unknown', note: ANC_LAB_RH_FORM_WORD_NOTE },
   RH_POSITIVE,
 ];
 
@@ -141,13 +150,14 @@ export const ANC_LAB_TESTS: Record<AncLabTest, AncLabTestDefinition> = {
   DCIP: { shape: QUALITATIVE, sourceShapes: { person_anc: THAL_FLAG } },
   OF: { shape: QUALITATIVE, sourceShapes: { person_anc: THAL_FLAG } },
   HB_TYPING: { shape: { kind: 'text' }, sourceShapes: { person_anc: THAL_FLAG } },
-  ALPHA1: { shape: THAL_FLAG },
-  THAL_RESULT: { shape: THAL_RESULT_ID },
-  PARTNER_OF: { shape: THAL_FLAG },
-  PARTNER_DCIP: { shape: THAL_FLAG },
-  PARTNER_HB_TYPING: { shape: THAL_FLAG },
-  PARTNER_ALPHA1: { shape: THAL_FLAG },
-  PARTNER_THAL_RESULT: { shape: THAL_RESULT_ID },
+  // Genetic results, and the partner is a third party who is not the patient.
+  ALPHA1: { shape: THAL_FLAG, sensitive: true },
+  THAL_RESULT: { shape: THAL_RESULT_ID, sensitive: true },
+  PARTNER_OF: { shape: THAL_FLAG, sensitive: true },
+  PARTNER_DCIP: { shape: THAL_FLAG, sensitive: true },
+  PARTNER_HB_TYPING: { shape: THAL_FLAG, sensitive: true },
+  PARTNER_ALPHA1: { shape: THAL_FLAG, sensitive: true },
+  PARTNER_THAL_RESULT: { shape: THAL_RESULT_ID, sensitive: true },
   MCV: { shape: { kind: 'numeric', min: 40, max: 140 } },
   MCH: { shape: { kind: 'numeric', min: 10, max: 50 } },
   BLOOD_GROUP: { shape: { kind: 'blood_group' } },

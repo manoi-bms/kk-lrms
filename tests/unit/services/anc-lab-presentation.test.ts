@@ -163,14 +163,14 @@ describe('an Rh word on the ANC form that cannot be trusted', () => {
     lab({ canonicalTest: 'RH', rawResult: 'NEGATIVE', interpretation: 'unknown', ...over });
 
   it('stays grey, keeps the text and warns to check the lab result', () => {
-    const p = presentLabResult(rh({ source: 'anc_lab' }));
+    const p = presentLabResult(rh({ classificationNote: 'rh_word_on_form' }));
     expect(p.tone).toBe('neutral');
     expect(p.value).toBe('NEGATIVE');
     expect(p.note).toBe(ANC_LAB_RH_FORM_NOTE);
   });
 
-  it('adds no warning to an unreadable lab order', () => {
-    expect(presentLabResult(rh({ source: 'lab_order', rawResult: 'see' })).note).toBeNull();
+  it('adds no warning to other unreadable Rh text', () => {
+    expect(presentLabResult(rh({ rawResult: '-' })).note).toBeNull();
   });
 
   it('adds no warning to a result it could read', () => {

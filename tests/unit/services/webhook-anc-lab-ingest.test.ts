@@ -654,6 +654,13 @@ describe('processAncWebhook — ANC lab ingest', () => {
         expect((await journey()).rh_factor).toBeNull();
       });
 
+      it('keeps a stored Rh-negative when the unreadable text is not that word', async () => {
+        await push(patient());
+        await db.execute(`UPDATE maternal_journeys SET rh_factor = 'NEG'`);
+        await push(patient({ labResults: [named('1', 'Rh Typing', '-')] }));
+        expect((await journey()).rh_factor).toBe('NEG');
+      });
+
       it('leaves a stored Rh-positive alone when only an unreadable word arrives', async () => {
         await pushOverStoredRh('POS');
         expect((await journey()).rh_factor).toBe('POS');
@@ -665,6 +672,27 @@ describe('processAncWebhook — ANC lab ingest', () => {
         );
         expect((await journey()).rh_factor).toBe('POS');
       });
+    });
+
+    it('stores a partner result only inside the encrypted field', async () => {
+      await push(
+        patient({
+          labResults: [
+            {
+              source: 'person_anc',
+              sourceId: '1:thalasseima_husband_dcip_result',
+              ancLabName: 'Thalassemia: DCIP (สามี)',
+              labItemsName: null,
+              result: 'N',
+            },
+          ],
+        }),
+      );
+      const [row] = await labs();
+      expect(row.canonical_test).toBe('PARTNER_DCIP');
+      expect(row.interpretation).toBeNull();
+      expect(row.normalized_value).toBeNull();
+      expect(row.raw_result).not.toBe('N');
     });
 
     it('does not fill the DCIP column from an undated register flag', async () => {
@@ -847,6 +875,17 @@ describe('processAncWebhook — ANC lab ingest', () => {
           await respond(OTHER_HOSPITAL, '99904', '99904', 'ACCEPTED');
           await otherPushesPositive();
           expect((await journey()).hbsag_result).toBe('NEG');
+        });
+
+        it('does not let a receiving hospital’s form word clear a stored Rh-negative', async () => {
+          await seedNegative();
+          await db.execute(`UPDATE maternal_journeys SET rh_factor = 'NEG'`);
+          await refer(HOSPITAL_ID, '99903', '99904');
+          await respond(OTHER_HOSPITAL, '99904', '99903', 'ACCEPTED');
+          await pushFromOther([
+            hct({ sourceId: '9', labItemsName: 'Rh Typing', result: 'neg' }),
+          ]);
+          expect((await journey()).rh_factor).toBe('NEG');
         });
 
         it.each([['ACCEPTED'], ['ARRIVED']])(

@@ -9,6 +9,7 @@ import { createHmac } from 'node:crypto';
 import { v4 as uuidv4 } from 'uuid';
 import type { DatabaseAdapter } from '@/db/adapter';
 import {
+  ANC_LAB_RH_FORM_WORD_NOTE,
   ANC_LAB_STICKY_POSITIVE_TESTS,
   ANC_LAB_TESTS,
   type AncLabSource,
@@ -378,6 +379,9 @@ interface JourneyLabRow {
   interpretation: string | null;
   numeric_value: number | string | null;
   normalized_value: string | null;
+  classification_note: string | null;
+  hospital_id: string;
+  journey_hospital_id: string;
   current_rh_factor: string | null;
 }
 
@@ -413,6 +417,7 @@ export async function refreshJourneyLabColumns(
 ): Promise<void> {
   const rows = await db.query<JourneyLabRow>(
     `SELECT r.canonical_test, r.interpretation, r.numeric_value, r.normalized_value,
+            r.classification_note, r.hospital_id, j.hospital_id AS journey_hospital_id,
             j.rh_factor AS current_rh_factor
        FROM cached_anc_lab_results r
        INNER JOIN maternal_journeys j ON j.id = r.journey_id
@@ -472,12 +477,18 @@ export async function refreshJourneyLabColumns(
   };
 
   /**
-   * Rh-negative changes care, so it must rest on a readable result. A stored NEG
-   * is cleared when the only Rh on file is unreadable; a POS is left alone.
+   * Undoes a NEG this code derived from the ANC form's bare word before that
+   * word stopped counting. Losing a true Rh-negative is the worse error, so it
+   * needs that exact word from the registering hospital. Another hospital's
+   * row, or a webhook-supplied NEG with no such row, leaves the value alone.
    */
-  const unsupportedRhNegative = (): null | undefined =>
+  const rhNegativeFromFormWord = (): null | undefined =>
     rows[0]?.current_rh_factor === 'NEG' &&
-    rows.some((r) => r.canonical_test === 'RH' && r.interpretation === 'unknown')
+    rows.some(
+      (r) =>
+        r.classification_note === ANC_LAB_RH_FORM_WORD_NOTE &&
+        r.hospital_id === r.journey_hospital_id,
+    )
       ? null
       : undefined;
 
@@ -488,7 +499,7 @@ export async function refreshJourneyLabColumns(
       'rh_factor',
       latest('RH', (r) => posNeg(r.interpretation)) ??
         rhFromBloodGroup() ??
-        unsupportedRhNegative(),
+        rhNegativeFromFormWord(),
     ],
     ['hbsag_result', newestResult('HBSAG')],
     ['mcv_fl', latest('MCV', (r) => (r.numeric_value === null ? null : Number(r.numeric_value)))],

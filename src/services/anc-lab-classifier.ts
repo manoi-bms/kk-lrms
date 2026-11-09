@@ -11,6 +11,7 @@
 import {
   AMBIGUOUS_RESULT_FORMS,
   ANC_LAB_NAME_RULES,
+  ANC_LAB_RH_FORM_WORD_NOTE,
   ANC_LAB_TESTS,
   ANC_THALASSEMIA_FIELDS,
   CONCEALED_RESULT_FORMS,
@@ -48,7 +49,11 @@ export interface AncLabPayloadRow {
   ancResultNormalRaw?: string | null;
 }
 
-export type AncLabClassificationNote = 'no_rule' | 'excluded_by_rule' | 'value_shape_mismatch';
+export type AncLabClassificationNote =
+  | 'no_rule'
+  | 'excluded_by_rule'
+  | 'value_shape_mismatch'
+  | typeof ANC_LAB_RH_FORM_WORD_NOTE;
 
 export interface AncLabClassification {
   canonicalTest: AncLabTest | null;
@@ -64,7 +69,7 @@ export interface AncLabClassification {
 export type AncLabResultReading = Pick<
   AncLabClassification,
   'numericValue' | 'normalizedValue' | 'interpretation'
->;
+> & { classificationNote?: AncLabClassificationNote };
 
 const BARE_NUMBER = /^\d+(?:[.,]\d+)?\s*%?$/;
 // 1,200 is one thousand two hundred, while a decimal comma (36,5) is one digit.
@@ -117,6 +122,7 @@ function readForms(value: string, forms: readonly QualitativeResultForm[]): AncL
     numericValue: null,
     normalizedValue: form?.display ?? null,
     interpretation: form?.interpretation ?? 'unknown',
+    ...(form?.note ? { classificationNote: form.note } : {}),
   };
 }
 
@@ -190,7 +196,12 @@ export function classifyAncLab(input: AncLabClassifierInput): AncLabClassificati
       interpretation: 'unknown',
     };
   }
-  return { ...base, ...reading, canonicalTest: test, classificationNote: null };
+  return {
+    ...base,
+    ...reading,
+    canonicalTest: test,
+    classificationNote: reading.classificationNote ?? null,
+  };
 }
 
 /** The test a row's name points to, whatever its value turned out to be. */
