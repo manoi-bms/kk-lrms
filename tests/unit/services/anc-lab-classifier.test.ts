@@ -259,6 +259,18 @@ describe('classifyAncLab — result forms', () => {
     expect(ancLab('Hct', '36,5').numericValue).toBe(36.5);
   });
 
+  it.each([
+    ['CD4 Absolute', '1,200'],
+    ['CD4 Absolute', '12,345'],
+    ['Hct', '1,200'],
+  ])('does not read the thousands separator in %s %s as a decimal point', (name, result) => {
+    const c = ancLab(name, result);
+    expect(c.numericValue).toBeNull();
+    expect(c.canonicalTest).toBeNull();
+    expect(c.classificationNote).toBe('value_shape_mismatch');
+    expect(c.rawResult).toBe(result);
+  });
+
   it('keeps the original text as the raw result', () => {
     expect(ancLab('HIV-Ab', ' NONREACT  <0.030 ').rawResult).toBe('NONREACT  <0.030');
   });

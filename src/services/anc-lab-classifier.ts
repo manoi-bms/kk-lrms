@@ -64,6 +64,8 @@ export type AncLabResultReading = Pick<
 >;
 
 const BARE_NUMBER = /^\d+(?:[.,]\d+)?\s*%?$/;
+// 1,200 is one thousand two hundred, while a decimal comma (36,5) is one digit.
+const THOUSANDS_SEPARATED = /^\d{1,3},\d{3}$/;
 const BLOOD_GROUP = /^(?:group\s+)?(ab|a|b|o)\s*(?:rh)?\s*[+-]?$/i;
 
 function normaliseName(name: string | null): string {
@@ -99,7 +101,7 @@ function matchNameRule(
 }
 
 function parseNumber(value: string): number | null {
-  if (!BARE_NUMBER.test(value)) return null;
+  if (!BARE_NUMBER.test(value) || THOUSANDS_SEPARATED.test(value)) return null;
   const n = Number(value.replace('%', '').replace(',', '.').trim());
   return Number.isFinite(n) ? n : null;
 }
