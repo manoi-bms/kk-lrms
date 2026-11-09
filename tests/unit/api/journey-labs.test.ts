@@ -179,11 +179,7 @@ describe('GET /api/journeys/[journeyId]/labs', () => {
   });
 
   it('keeps results out of the log when a read is denied or fails', async () => {
-    const spies = [
-      vi.spyOn(logger, 'warn'),
-      vi.spyOn(logger, 'error'),
-      vi.spyOn(logger, 'info'),
-    ];
+    const spies = [vi.spyOn(logger, 'warn'), vi.spyOn(logger, 'error'), vi.spyOn(logger, 'info')];
     signInAt(UNRELATED.hcode);
     await call(journeyId);
     signInAt(REGISTERING.hcode);
@@ -191,8 +187,9 @@ describe('GET /api/journeys/[journeyId]/labs', () => {
     const res = await call(journeyId);
     expect(res.status).toBe(500);
     expect(JSON.stringify(await res.json())).not.toContain(SECRET);
-    const logged = JSON.stringify(spies.flatMap((s) => s.mock.calls), (_k, v: unknown) =>
-      v instanceof Error ? v.message : v,
+    const logged = JSON.stringify(
+      spies.flatMap((s) => s.mock.calls),
+      (_k, v: unknown) => (v instanceof Error ? v.message : v),
     );
     expect(logged).not.toContain(SECRET);
     expect(logged).not.toContain('ทดสอบ');
