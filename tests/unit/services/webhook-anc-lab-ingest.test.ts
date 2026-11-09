@@ -559,6 +559,42 @@ describe('processAncWebhook — ANC lab ingest', () => {
       });
     });
 
+    describe('Rh sign carried on the blood group', () => {
+      const group = (sourceId: string, result: string, resultDate = '2026-03-01') =>
+        hct({ sourceId, labItemsName: 'ABO Grouping', result, resultDate });
+      const rh = (sourceId: string, result: string) =>
+        hct({ sourceId, labItemsName: 'Rh Typing', result });
+
+      it.each([
+        ['A-', 'A', 'NEG'],
+        ['AB+', 'AB', 'POS'],
+      ])('splits %s into blood group %s and Rh %s', async (result, abo, sign) => {
+        await push(patient({ labResults: [group('1', result)] }));
+        const j = await journey();
+        expect(j.blood_group).toBe(abo);
+        expect(j.rh_factor).toBe(sign);
+      });
+
+      it('writes no Rh from a blood group with no sign', async () => {
+        await push(patient({ labResults: [group('1', 'O')] }));
+        expect((await journey()).rh_factor).toBeNull();
+      });
+
+      it('prefers a dedicated Rh result over the sign', async () => {
+        await push(patient({ labResults: [group('1', 'A-'), rh('2', 'Positive')] }));
+        expect((await journey()).rh_factor).toBe('POS');
+      });
+
+      it('writes no Rh when blood group results disagree', async () => {
+        await push(
+          patient({
+            labResults: [group('1', 'A+', '2026-02-01'), group('2', 'A-', '2026-05-01')],
+          }),
+        );
+        expect((await journey()).rh_factor).toBeNull();
+      });
+    });
+
     it('does not record Rh-negative from a result that only says normal', async () => {
       await push(patient({ labResults: [named('1', 'Rh Typing', 'ปกติ')] }));
       expect((await journey()).rh_factor).toBeNull();

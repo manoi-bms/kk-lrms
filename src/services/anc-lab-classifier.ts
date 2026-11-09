@@ -67,7 +67,7 @@ export type AncLabResultReading = Pick<
 const BARE_NUMBER = /^\d+(?:[.,]\d+)?\s*%?$/;
 // 1,200 is one thousand two hundred, while a decimal comma (36,5) is one digit.
 const THOUSANDS_SEPARATED = /^\d{1,3},\d{3}$/;
-const BLOOD_GROUP = /^(?:group\s+)?(ab|a|b|o)\s*(?:rh)?\s*[+-]?$/i;
+const BLOOD_GROUP = /^(?:group\s+)?(ab|a|b|o)\s*(?:rh)?\s*([+-])?$/i;
 
 function normaliseName(name: string | null): string {
   if (!name) return '';
@@ -137,7 +137,11 @@ function readValue(shape: AncLabResultShape, value: string): AncLabResultReading
     case 'blood_group': {
       const match = BLOOD_GROUP.exec(value);
       if (!match) return null;
-      return { numericValue: null, normalizedValue: match[1].toUpperCase(), interpretation: null };
+      return {
+        numericValue: null,
+        normalizedValue: `${match[1].toUpperCase()}${match[2] ?? ''}`,
+        interpretation: null,
+      };
     }
     case 'text':
       return { ...none, interpretation: 'unknown' };

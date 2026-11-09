@@ -445,9 +445,22 @@ export async function refreshJourneyLabColumns(
     return newest ? posNeg(newest.interpretation) : undefined;
   };
 
+  /** A blood group's sign counts only when no signed results disagree. */
+  const rhFromBloodGroup = (): 'POS' | 'NEG' | undefined => {
+    const signs = new Set(
+      rows
+        .filter((r) => r.canonical_test === 'BLOOD_GROUP')
+        .map((r) => r.normalized_value?.match(/[+-]$/)?.[0])
+        .filter((sign) => sign !== undefined),
+    );
+    if (signs.size !== 1) return undefined;
+    return signs.has('-') ? 'NEG' : 'POS';
+  };
+
   const columns: [string, string | number | null | undefined][] = [
-    ['blood_group', latest('BLOOD_GROUP', (r) => r.normalized_value)],
-    ['rh_factor', latest('RH', (r) => posNeg(r.interpretation))],
+    // The ABO letter only: rh_factor carries the sign, and screens print both.
+    ['blood_group', latest('BLOOD_GROUP', (r) => r.normalized_value?.replace(/[+-]$/, '') ?? null)],
+    ['rh_factor', latest('RH', (r) => posNeg(r.interpretation)) ?? rhFromBloodGroup()],
     ['hbsag_result', newestResult('HBSAG')],
     ['mcv_fl', latest('MCV', (r) => (r.numeric_value === null ? null : Number(r.numeric_value)))],
     ['dcip_result', newestResult('DCIP')],

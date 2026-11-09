@@ -83,6 +83,16 @@ describe('classifyAncLab — names', () => {
     },
   );
 
+  it.each([
+    ['A-', 'A-'],
+    ['AB+', 'AB+'],
+    ['b+', 'B+'],
+    ['O Rh-', 'O-'],
+    ['O', 'O'],
+  ])('keeps the Rh sign of blood group %s as %s', (result, expected) => {
+    expect(ancLab('ABO Grouping', result).normalizedValue).toBe(expected);
+  });
+
   it.each([['01.Hb typing'], ['Hb typing']])('classifies %s as Hb typing, not Hb', (name) => {
     expect(ancLab(name, 'A2A').canonicalTest).toBe('HB_TYPING');
   });
