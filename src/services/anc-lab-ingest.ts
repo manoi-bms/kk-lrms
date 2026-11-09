@@ -9,6 +9,7 @@ import { createHmac } from 'node:crypto';
 import { v4 as uuidv4 } from 'uuid';
 import type { DatabaseAdapter } from '@/db/adapter';
 import { ANC_LAB_TESTS, type AncLabSource, type AncLabTest } from '@/config/anc-lab-canon';
+import { ReferralStatus } from '@/types/domain';
 import { encrypt } from '@/lib/encryption';
 import { toIsoDate } from '@/lib/dates';
 import { isPlausibleEventDate, normalizeHosxpDate } from '@/lib/hosxp-date';
@@ -365,6 +366,7 @@ const JOURNEY_LAB_TESTS = [
   'MCV',
 ] as const satisfies readonly AncLabTest[];
 type JourneyLabTest = (typeof JOURNEY_LAB_TESTS)[number];
+const JOURNEY_LAB_REFERRAL_STATUSES = [ReferralStatus.ACCEPTED, ReferralStatus.ARRIVED] as const;
 
 interface JourneyLabRow {
   canonical_test: JourneyLabTest;
@@ -382,7 +384,11 @@ function posNeg(interpretation: string | null): 'POS' | 'NEG' | null {
 /**
  * The newest usable result per test, from the hospitals linked to the journey.
  * Any hospital can push labs for a shared CID, and those stay visible in the
- * lab list, but only a registering or current hospital may set these columns.
+ * lab list, but only the registering hospital, or one the journey was referred
+ * to and that accepted, may set these columns. current_hospital_id is no proof:
+ * creating a referral sets it to the sender. The two hospitals must differ
+ * because only the destination is checked when a referral is accepted, so a
+ * hospital could otherwise refer a woman to itself and accept.
  * Undated rows are passed over because their date failed validation. Unknown,
  * abnormal, missing and concealed readings are passed over so they neither
  * blank a known value nor get recorded as a POS/NEG they are not.
@@ -401,11 +407,20 @@ export async function refreshJourneyLabColumns(
        FROM cached_anc_lab_results r
        INNER JOIN maternal_journeys j ON j.id = r.journey_id
       WHERE r.journey_id = ?
-        AND r.hospital_id IN (j.hospital_id, j.current_hospital_id)
+        AND (
+          r.hospital_id = j.hospital_id
+          OR EXISTS (
+            SELECT 1 FROM cached_referrals cr
+             WHERE cr.journey_id = r.journey_id
+               AND cr.to_hospital_id = r.hospital_id
+               AND cr.from_hospital_id <> cr.to_hospital_id
+               AND cr.status IN (${JOURNEY_LAB_REFERRAL_STATUSES.map(() => '?').join(', ')})
+          )
+        )
         AND r.result_date IS NOT NULL
         AND r.canonical_test IN (${JOURNEY_LAB_TESTS.map(() => '?').join(', ')})
       ORDER BY r.result_date DESC, r.synced_at DESC, r.source_key`,
-    [journeyId, ...JOURNEY_LAB_TESTS],
+    [journeyId, ...JOURNEY_LAB_REFERRAL_STATUSES, ...JOURNEY_LAB_TESTS],
   );
 
   const latest = (test: JourneyLabTest, read: (r: JourneyLabRow) => string | number | null) => {

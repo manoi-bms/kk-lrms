@@ -7,6 +7,8 @@ import { decrypt, generateKey, getEncryptionKey } from '@/lib/encryption';
 import { logger } from '@/lib/logger';
 import {
   processAncWebhook,
+  processReferralCreate,
+  processReferralUpdate,
   validateAncPayload,
   type WebhookAncPatient,
   type WebhookAncPayload,
@@ -567,11 +569,123 @@ describe('processAncWebhook — ANC lab ingest', () => {
         expect(await labs()).toHaveLength(2);
       });
 
-      it('lets the hospital she was referred to update the column', async () => {
-        await push(patient({ labResults: [hbs('1', 'Negative', '2026-03-01')] }));
-        await db.execute('UPDATE maternal_journeys SET current_hospital_id = ?', [OTHER_HOSPITAL]);
-        await pushFromOther([hbs('9', 'Positive', '2026-05-01')]);
-        expect((await journey()).hbsag_result).toBe('POS');
+      describe('referrals', () => {
+        const refer = (fromId: string, fromCode: string, toCode: string, referralId = 'R1') =>
+          processReferralCreate(
+            db,
+            fromId,
+            {
+              type: 'referral',
+              hospitalCode: fromCode,
+              referralId,
+              hn: 'HN-L1',
+              cid: CID,
+              name: 'นาง ทดสอบ ผลแล็บ',
+              toHospitalCode: toCode,
+              reason: 'ส่งต่อ',
+            },
+            sse,
+          );
+        const respond = (byId: string, byCode: string, fromCode: string, status: string) =>
+          processReferralUpdate(
+            db,
+            byId,
+            {
+              type: 'referral_update',
+              hospitalCode: byCode,
+              referralId: 'R1',
+              fromHospitalCode: fromCode,
+              status,
+            },
+            sse,
+          );
+        const seedNegative = () =>
+          push(patient({ labResults: [hbs('1', 'Negative', '2026-03-01')] }));
+        const otherPushesPositive = () => pushFromOther([hbs('9', 'Positive', '2026-05-01')]);
+
+        it('does not trust a current hospital set just by creating a referral', async () => {
+          await seedNegative();
+          await refer(OTHER_HOSPITAL, '99904', '99903');
+          // The attack path is live: the sender did become the current hospital.
+          expect((await journey()).current_hospital_id).toBe(OTHER_HOSPITAL);
+          await otherPushesPositive();
+          expect((await journey()).hbsag_result).toBe('NEG');
+        });
+
+        it('does not count a hospital that referred her to itself and accepted', async () => {
+          await seedNegative();
+          await refer(OTHER_HOSPITAL, '99904', '99904');
+          await respond(OTHER_HOSPITAL, '99904', '99904', 'ACCEPTED');
+          await otherPushesPositive();
+          expect((await journey()).hbsag_result).toBe('NEG');
+        });
+
+        it.each([['ACCEPTED'], ['ARRIVED']])(
+          'lets the receiving hospital update the column once %s',
+          async (status) => {
+            await seedNegative();
+            await refer(HOSPITAL_ID, '99903', '99904');
+            await respond(OTHER_HOSPITAL, '99904', '99903', status);
+            await otherPushesPositive();
+            expect((await journey()).hbsag_result).toBe('POS');
+          },
+        );
+
+        it('does not count a referral that is only initiated', async () => {
+          await seedNegative();
+          await refer(HOSPITAL_ID, '99903', '99904');
+          await otherPushesPositive();
+          expect((await journey()).hbsag_result).toBe('NEG');
+        });
+
+        it.each([['REJECTED'], ['IN_TRANSIT']])(
+          'does not count a referral in status %s',
+          async (status) => {
+            await seedNegative();
+            await refer(HOSPITAL_ID, '99903', '99904');
+            await respond(OTHER_HOSPITAL, '99904', '99903', status);
+            await otherPushesPositive();
+            expect((await journey()).hbsag_result).toBe('NEG');
+          },
+        );
+
+        it('does not count an accepted referral for a different pregnancy', async () => {
+          await seedNegative();
+          await push(patient({ hn: 'HN-L2', cid: '1007000100034' }));
+          const ids = await db.query<{ id: string; hn: string }>(
+            'SELECT id, hn FROM maternal_journeys',
+          );
+          const otherJourney = ids.find((j) => j.hn === 'HN-L2')?.id;
+          const now = new Date().toISOString();
+          await db.execute(
+            `INSERT INTO cached_referrals
+               (id, journey_id, refer_number, from_hospital_id, to_hospital_id, status, reason, initiated_at, created_at, updated_at)
+             VALUES (?, ?, 'R2', ?, ?, 'ACCEPTED', 'ส่งต่อ', ?, ?, ?)`,
+            [
+              '00000000-0000-4000-8000-0000000000d1',
+              otherJourney,
+              HOSPITAL_ID,
+              OTHER_HOSPITAL,
+              now,
+              now,
+              now,
+            ],
+          );
+          await otherPushesPositive();
+          const rows = await db.query<{ hbsag_result: string | null }>(
+            `SELECT hbsag_result FROM maternal_journeys WHERE hn = 'HN-L1'`,
+          );
+          expect(rows[0].hbsag_result).toBe('NEG');
+        });
+
+        it('always counts the registering hospital, even after she moves', async () => {
+          await seedNegative();
+          await db.execute('UPDATE maternal_journeys SET current_hospital_id = ?', [
+            OTHER_HOSPITAL,
+          ]);
+          await push(patient({ labResults: [hbs('2', 'Positive', '2026-06-01')] }));
+          expect((await journey()).hbsag_result).toBe('POS');
+        });
       });
     });
 
