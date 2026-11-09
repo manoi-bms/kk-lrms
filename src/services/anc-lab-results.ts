@@ -48,6 +48,8 @@ export interface JourneyLabResult {
   /** HOSxP's person_anc_lab.lab_result_normal, verbatim; meaning unconfirmed. */
   ancResultNormalRaw: string | null;
   concealed: boolean;
+  /** One of the three fields above could not be decrypted and reads as null. */
+  contextUnreadable: boolean;
   syncedAt: string;
 }
 
@@ -123,7 +125,12 @@ export async function listJourneyLabResults(
   let decryptFailures = 0;
   const results = rows.map((row): JourneyLabResult => {
     const { value: rawResult, failed } = decryptRaw(row.raw_result, key);
-    if (failed) decryptFailures++;
+    const normalReference = decryptRaw(row.normal_reference, key);
+    const abnormalFlag = decryptRaw(row.abnormal_flag, key);
+    const ancResultNormalRaw = decryptRaw(row.anc_result_normal_raw, key);
+    const contextUnreadable =
+      normalReference.failed || abnormalFlag.failed || ancResultNormalRaw.failed;
+    if (failed || contextUnreadable) decryptFailures++;
     return {
       id: row.id,
       hospitalId: row.hospital_id,
@@ -141,10 +148,11 @@ export async function listJourneyLabResults(
       rawResultUnreadable: failed,
       ...outcomeOf(row, rawResult, failed),
       unit: row.unit,
-      normalReference: row.normal_reference,
-      abnormalFlag: row.abnormal_flag,
-      ancResultNormalRaw: row.anc_result_normal_raw,
+      normalReference: normalReference.value,
+      abnormalFlag: abnormalFlag.value,
+      ancResultNormalRaw: ancResultNormalRaw.value,
       concealed: row.concealed,
+      contextUnreadable,
       syncedAt: toIsoString(row.synced_at) ?? '',
     };
   });

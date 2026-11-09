@@ -2086,22 +2086,40 @@ export async function processAncWebhook(
       if (labRows.length > 0) {
         existingLabHashes ??= await loadExistingLabHashes(db, hospitalId);
         const hashes = existingLabHashes;
-        const outcome = await db.transaction(async (tx) => {
-          const stats = await upsertJourneyLabResults(tx, {
+        let upsertedForPatient = 0;
+        // Its own top-level transaction, so a failure rolls back only this
+        // patient's labs and returns a clean connection: the journey above has
+        // committed and the visits below still run. The message is not logged
+        // because Postgres quotes the offending value in it.
+        try {
+          const outcome = await db.transaction(async (tx) => {
+            const stats = await upsertJourneyLabResults(tx, {
+              hospitalId,
+              journeyId,
+              rows: labRows,
+              existingHashes: hashes,
+              encryptionKey,
+            });
+            if (stats.upserted > 0) await refreshJourneyLabColumns(tx, journeyId);
+            return stats;
+          });
+          for (const [key, hash] of outcome.writtenHashes) hashes.set(key, hash);
+          upsertedForPatient = outcome.upserted;
+          labStats.upserted += outcome.upserted;
+          labStats.unchanged += outcome.unchanged;
+          labStats.unclassified += outcome.unclassified;
+          labStats.concealed += outcome.concealed;
+        } catch (err) {
+          labStats.skipped += labRows.length;
+          const code = (err as { code?: unknown } | null)?.code;
+          logger.error('anc_lab_upsert_failed', {
             hospitalId,
             journeyId,
-            rows: labRows,
-            existingHashes: hashes,
-            encryptionKey,
+            rows: labRows.length,
+            code: typeof code === 'string' ? code : 'unknown',
           });
-          if (stats.upserted > 0) await refreshJourneyLabColumns(tx, journeyId);
-          return stats;
-        });
-        labStats.upserted += outcome.upserted;
-        labStats.unchanged += outcome.unchanged;
-        labStats.unclassified += outcome.unclassified;
-        labStats.concealed += outcome.concealed;
-        if (outcome.upserted > 0 && visitLabValues) {
+        }
+        if (upsertedForPatient > 0 && visitLabValues) {
           await refreshVisitLabValues(db, hospitalId, journeyId, visitLabValues);
         }
       }

@@ -63,6 +63,23 @@ function patient(over: Partial<WebhookAncPatient> = {}): WebhookAncPatient {
 const payload = (p: WebhookAncPatient, extra: Partial<WebhookAncPayload> = {}): WebhookAncPayload =>
   ({ type: 'anc_data', hospitalCode: '99903', patients: [p], ...extra }) as WebhookAncPayload;
 
+// What a site might put beside an HIV or syphilis result.
+const outcomeHints = {
+  normalReference: 'Reactive',
+  abnormalFlag: 'Y',
+  ancResultNormalRaw: 'N',
+};
+
+function expectNoPlainHints(row: {
+  normal_reference: string | null;
+  abnormal_flag: string | null;
+  anc_result_normal_raw: string | null;
+}): void {
+  expect(row.normal_reference).not.toBe('Reactive');
+  expect(row.abnormal_flag).not.toBe('Y');
+  expect(row.anc_result_normal_raw).not.toBe('N');
+}
+
 interface LabRow {
   source_key: string;
   canonical_test: string | null;
@@ -126,7 +143,6 @@ describe('processAncWebhook — ANC lab ingest', () => {
         canonical_test: 'HCT',
         ga_weeks: 12,
         unit: '%',
-        anc_result_normal_raw: 'Y',
         anc_lab_name: 'Hct',
         lab_items_name: 'Hematocrit (HCT)',
       });
@@ -135,11 +151,10 @@ describe('processAncWebhook — ANC lab ingest', () => {
 
     it('stores a lab-order result with its reference and flag', async () => {
       await push(patient({ labResults: [hb()] }));
-      expect((await labs())[0]).toMatchObject({
-        canonical_test: 'HB',
-        normal_reference: '12-16',
-        abnormal_flag: 'N',
-      });
+      const [row] = await labs();
+      expect(row.canonical_test).toBe('HB');
+      expect(decrypt(row.normal_reference as string, getEncryptionKey())).toBe('12-16');
+      expect(decrypt(row.abnormal_flag as string, getEncryptionKey())).toBe('N');
     });
 
     it('encrypts every raw result at rest', async () => {
@@ -171,9 +186,19 @@ describe('processAncWebhook — ANC lab ingest', () => {
       await push(
         patient({
           labResults: [
-            hct({ sourceId: '21', labItemsName: 'Anti HIV (ANC)', result: 'Positive' }),
-            hct({ sourceId: '22', labItemsName: 'CD4 Absolute', result: '320' }),
-            hct({ sourceId: '23', labItemsName: 'VDRL ( RPR )', result: 'Positive' }),
+            hct({
+              sourceId: '21',
+              labItemsName: 'Anti HIV (ANC)',
+              result: 'Positive',
+              ...outcomeHints,
+            }),
+            hct({ sourceId: '22', labItemsName: 'CD4 Absolute', result: '320', ...outcomeHints }),
+            hct({
+              sourceId: '23',
+              labItemsName: 'VDRL ( RPR )',
+              result: 'Positive',
+              ...outcomeHints,
+            }),
           ],
         }),
       );
@@ -181,7 +206,31 @@ describe('processAncWebhook — ANC lab ingest', () => {
         expect(row.interpretation).toBeNull();
         expect(row.numeric_value).toBeNull();
         expect(row.normalized_value).toBeNull();
+        expectNoPlainHints(row);
       }
+    });
+
+    it('protects a row named HIV even when its value failed the shape check', async () => {
+      await push(
+        patient({
+          labResults: [hct({ labItemsName: 'Anti HIV', result: '36', ...outcomeHints })],
+        }),
+      );
+      const [row] = await labs();
+      expect(row.classification_note).toBe('value_shape_mismatch');
+      expectNoPlainHints(row);
+    });
+
+    it('stores none of the context of a concealed result', async () => {
+      await push(
+        patient({
+          labResults: [hct({ labItemsName: 'Anti HIV (ANC)', result: 'ปกปิด', ...outcomeHints })],
+        }),
+      );
+      const [row] = await labs();
+      expect(row.normal_reference).toBeNull();
+      expect(row.abnormal_flag).toBeNull();
+      expect(row.anc_result_normal_raw).toBeNull();
     });
 
     it('does not derive the change hash from the result alone', async () => {
@@ -200,6 +249,40 @@ describe('processAncWebhook — ANC lab ingest', () => {
         'SELECT result_date FROM cached_anc_lab_results',
       );
       expect(rows[0].result_date).toBeNull();
+    });
+  });
+
+  describe('result dates', () => {
+    const storedDate = async (): Promise<string | null> => {
+      const rows = await db.query<{ d: string | null }>(
+        `SELECT to_char(result_date, 'YYYY-MM-DD') AS d FROM cached_anc_lab_results`,
+      );
+      return rows[0].d;
+    };
+
+    it.each([
+      ['1'],
+      ['March 7'],
+      ['2026-02-31'],
+      ['2026-13-01'],
+      ['2026-03-01 garbage'],
+      ['0000-00-00'],
+      ['2026-03-01T25:00:00'],
+      ['2099-01-01'],
+    ])('keeps the row but not the date for %j', async (resultDate) => {
+      const result = await push(patient({ labResults: [hct({ resultDate })] }));
+      expect(result.labs?.upserted).toBe(1);
+      expect(await storedDate()).toBeNull();
+    });
+
+    it.each([
+      ['2026-03-01', '2026-03-01'],
+      ['2026-03-01 08:30:00', '2026-03-01'],
+      ['2026-03-01T08:30:00', '2026-03-01'],
+      ['2569-03-01', '2026-03-01'],
+    ])('accepts %j', async (resultDate, expected) => {
+      await push(patient({ labResults: [hct({ resultDate })] }));
+      expect(await storedDate()).toBe(expected);
     });
   });
 
@@ -270,6 +353,18 @@ describe('processAncWebhook — ANC lab ingest', () => {
       expect(await labs()).toHaveLength(1);
       expect(result.labs?.skipped).toBe(5);
       expect(await db.query('SELECT id FROM maternal_journeys')).toHaveLength(1);
+    });
+
+    it.each([
+      ['result', { result: 'a\u0000b' }],
+      ['sourceId', { sourceId: 'a\u0000b' }],
+      ['name', { labItemsName: 'H\u0000ct' }],
+    ])('skips a row with a NUL byte in its %s', async (_field, over) => {
+      const result = await push(
+        patient({ labResults: [hct({ sourceId: 'good' }), hct({ sourceId: 'bad', ...over })] }),
+      );
+      expect(await labs()).toHaveLength(1);
+      expect(result.labs?.skipped).toBe(1);
     });
 
     it('ignores a labResults value that is not an array', async () => {
@@ -423,6 +518,61 @@ describe('processAncWebhook — ANC lab ingest', () => {
     it('leaves ogtt_result empty rather than implying a normal result', async () => {
       await push(patient({ labResults: [named('1', 'OGTT 1 hr.', '220')] }));
       expect((await journey()).ogtt_result).toBeNull();
+    });
+
+    describe('a result from a doubtful date or hospital', () => {
+      const OTHER_HOSPITAL = '00000000-0000-4000-8000-0000000000a2';
+      const hbs = (sourceId: string, result: string, resultDate: string) =>
+        hct({ sourceId, labItemsName: 'HBs Ag', result, resultDate });
+
+      beforeEach(async () => {
+        const now = new Date().toISOString();
+        await db.execute(
+          `INSERT INTO hospitals (id, hcode, name, level, is_active, connection_status, created_at, updated_at)
+           VALUES (?, '99904', 'รพ.อื่น', 'F1', true, 'ONLINE', ?, ?)`,
+          [OTHER_HOSPITAL, now, now],
+        );
+      });
+
+      const pushFromOther = (rows: AncLabPayloadRow[]) =>
+        processAncWebhook(
+          db,
+          OTHER_HOSPITAL,
+          {
+            type: 'anc_data',
+            hospitalCode: '99904',
+            patients: [patient({ hn: 'HN-L1', labResults: rows })],
+          } as WebhookAncPayload,
+          sse,
+        );
+
+      it('ignores a far-future date when choosing the latest result', async () => {
+        await push(
+          patient({
+            labResults: [hbs('1', 'Negative', '2026-03-01'), hbs('2', 'Positive', '2099-01-01')],
+          }),
+        );
+        expect((await journey()).hbsag_result).toBe('NEG');
+      });
+
+      it('does not let an unlinked hospital change a journey column', async () => {
+        await push(patient({ labResults: [hbs('1', 'Negative', '2026-03-01')] }));
+        await pushFromOther([hbs('9', 'Positive', '2026-05-01')]);
+        expect((await journey()).hbsag_result).toBe('NEG');
+      });
+
+      it('still shows the unlinked hospital its own stored result', async () => {
+        await push(patient({ labResults: [hbs('1', 'Negative', '2026-03-01')] }));
+        await pushFromOther([hbs('9', 'Positive', '2026-05-01')]);
+        expect(await labs()).toHaveLength(2);
+      });
+
+      it('lets the hospital she was referred to update the column', async () => {
+        await push(patient({ labResults: [hbs('1', 'Negative', '2026-03-01')] }));
+        await db.execute('UPDATE maternal_journeys SET current_hospital_id = ?', [OTHER_HOSPITAL]);
+        await pushFromOther([hbs('9', 'Positive', '2026-05-01')]);
+        expect((await journey()).hbsag_result).toBe('POS');
+      });
     });
 
     it('leaves HIV and VDRL columns to their existing source', async () => {

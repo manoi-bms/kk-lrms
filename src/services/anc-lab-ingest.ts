@@ -11,7 +11,7 @@ import type { DatabaseAdapter } from '@/db/adapter';
 import { ANC_LAB_TESTS, type AncLabSource, type AncLabTest } from '@/config/anc-lab-canon';
 import { encrypt } from '@/lib/encryption';
 import { toIsoDate } from '@/lib/dates';
-import { normalizeHosxpDate } from '@/lib/hosxp-date';
+import { isPlausibleEventDate, normalizeHosxpDate } from '@/lib/hosxp-date';
 import {
   classifyAncLab,
   type AncLabClassification,
@@ -53,11 +53,14 @@ const TEXT_FIELDS = [
   'ancResultNormalRaw',
 ] as const;
 
+// Postgres text cannot hold a NUL byte and rejects the statement if one arrives.
+const hasNul = (value: string): boolean => value.includes('\u0000');
+
 function isValidText(value: unknown): boolean {
   return (
     value === undefined ||
     value === null ||
-    (typeof value === 'string' && value.length <= MAX_TEXT_LENGTH)
+    (typeof value === 'string' && value.length <= MAX_TEXT_LENGTH && !hasNul(value))
   );
 }
 
@@ -66,7 +69,7 @@ function isValidRow(row: unknown): row is AncLabPayloadRow {
   const r = row as Record<string, unknown>;
   if (!SOURCES.includes(r.source as AncLabSource)) return false;
   if (typeof r.sourceId !== 'string' || r.sourceId.length === 0) return false;
-  if (r.sourceId.length > MAX_SOURCE_ID_LENGTH) return false;
+  if (r.sourceId.length > MAX_SOURCE_ID_LENGTH || hasNul(r.sourceId)) return false;
   return TEXT_FIELDS.every((field) => isValidText(r[field]));
 }
 
@@ -82,10 +85,29 @@ export function sanitizeAncLabRows(value: unknown): {
   return { rows, skipped: value.length - rows.length };
 }
 
+const RESULT_DATE =
+  /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-](?:0\d|1[0-4]):[0-5]\d)?)?$/;
+
+/**
+ * Strict because Date.parse accepts strings Postgres rejects ("1", "March 7",
+ * "2026-02-31"), and a future date would outrank every real result. A row with
+ * a bad date is kept, undated, rather than lost.
+ */
 function parseResultDate(value: string | null | undefined): string | null {
-  const normalized = normalizeHosxpDate(value);
-  if (!normalized || /^0{4}-0{2}-0{2}/.test(normalized)) return null;
-  return Number.isNaN(Date.parse(normalized)) ? null : normalized;
+  const match = RESULT_DATE.exec(normalizeHosxpDate(value) ?? '');
+  if (!match) return null;
+  const [, y, m, d, hh, mi, ss = '00', zone = ''] = match;
+  const calendar = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d)));
+  if (
+    calendar.getUTCFullYear() !== Number(y) ||
+    calendar.getUTCMonth() !== Number(m) - 1 ||
+    calendar.getUTCDate() !== Number(d)
+  ) {
+    return null;
+  }
+  if (hh !== undefined && (Number(hh) > 23 || Number(mi) > 59 || Number(ss) > 59)) return null;
+  const iso = hh === undefined ? `${y}-${m}-${d}` : `${y}-${m}-${d}T${hh}:${mi}:${ss}${zone}`;
+  return isPlausibleEventDate(iso) ? iso : null;
 }
 
 function parseGaWeeks(value: unknown): number | null {
@@ -115,6 +137,21 @@ function plaintextOutcome(classification: AncLabClassification) {
   };
 }
 
+/**
+ * HOSxP's flags and reference text sit beside the result and can reveal it, so
+ * they are encrypted on every row. Choosing by test is not safe: a row named
+ * HIV that fails its shape check has no canonical test but is still sensitive.
+ * A concealed result keeps none of this, since HOSxP withheld it on purpose.
+ */
+function protectedContext(
+  value: string | null | undefined,
+  classification: AncLabClassification,
+  encryptionKey: string,
+): string | null {
+  if (classification.concealed || value === null || value === undefined) return null;
+  return encrypt(value, encryptionKey);
+}
+
 export async function loadExistingLabHashes(
   db: LabReader,
   hospitalId: string,
@@ -134,13 +171,19 @@ interface UpsertParams {
   encryptionKey: string;
 }
 
+export interface AncLabUpsertOutcome extends Omit<AncLabIngestStats, 'received' | 'skipped'> {
+  /** Apply to the push's hash map only after the transaction commits. */
+  writtenHashes: Map<string, string>;
+}
+
 /** Skips unchanged rows, so a re-pull of the same history costs no writes. */
 export async function upsertJourneyLabResults(
   db: LabWriter,
   params: UpsertParams,
-): Promise<Omit<AncLabIngestStats, 'received' | 'skipped'>> {
+): Promise<AncLabUpsertOutcome> {
   const { hospitalId, journeyId, rows, existingHashes, encryptionKey } = params;
   const stats = { upserted: 0, unchanged: 0, unclassified: 0, concealed: 0 };
+  const writtenHashes = new Map<string, string>();
   const now = new Date().toISOString();
 
   for (const row of rows) {
@@ -173,7 +216,7 @@ export async function upsertJourneyLabResults(
       classification.classificationNote,
       classification.interpretation,
     ]);
-    if (existingHashes.get(sourceKey) === hash) {
+    if ((writtenHashes.get(sourceKey) ?? existingHashes.get(sourceKey)) === hash) {
       stats.unchanged++;
       continue;
     }
@@ -223,19 +266,19 @@ export async function upsertJourneyLabResults(
         outcome.normalizedValue,
         outcome.interpretation,
         row.unit ?? null,
-        row.normalReference ?? null,
-        row.abnormalFlag ?? null,
-        row.ancResultNormalRaw ?? null,
+        protectedContext(row.normalReference, classification, encryptionKey),
+        protectedContext(row.abnormalFlag, classification, encryptionKey),
+        protectedContext(row.ancResultNormalRaw, classification, encryptionKey),
         classification.concealed,
         hash,
         now,
         now,
       ],
     );
-    existingHashes.set(sourceKey, hash);
+    writtenHashes.set(sourceKey, hash);
     stats.upserted++;
   }
-  return stats;
+  return { ...stats, writtenHashes };
 }
 
 // ─── Visit hemoglobin / hematocrit ──────────────────────────────────────────
@@ -337,9 +380,12 @@ function posNeg(interpretation: string | null): 'POS' | 'NEG' | null {
 }
 
 /**
- * The newest usable result per test, across every hospital in the journey.
- * Unknown, abnormal, missing and concealed readings are passed over so they
- * neither blank a known value nor get recorded as a POS/NEG they are not.
+ * The newest usable result per test, from the hospitals linked to the journey.
+ * Any hospital can push labs for a shared CID, and those stay visible in the
+ * lab list, but only a registering or current hospital may set these columns.
+ * Undated rows are passed over because their date failed validation. Unknown,
+ * abnormal, missing and concealed readings are passed over so they neither
+ * blank a known value nor get recorded as a POS/NEG they are not.
  *
  * Deliberately excludes: HIV/VDRL, which keep their person_anc source and are
  * not newly exposed through a plaintext column; and OGTT, because grading a
@@ -351,11 +397,14 @@ export async function refreshJourneyLabColumns(
   journeyId: string,
 ): Promise<void> {
   const rows = await db.query<JourneyLabRow>(
-    `SELECT canonical_test, interpretation, numeric_value, normalized_value
-       FROM cached_anc_lab_results
-      WHERE journey_id = ?
-        AND canonical_test IN (${JOURNEY_LAB_TESTS.map(() => '?').join(', ')})
-      ORDER BY result_date DESC NULLS LAST, synced_at DESC, source_key`,
+    `SELECT r.canonical_test, r.interpretation, r.numeric_value, r.normalized_value
+       FROM cached_anc_lab_results r
+       INNER JOIN maternal_journeys j ON j.id = r.journey_id
+      WHERE r.journey_id = ?
+        AND r.hospital_id IN (j.hospital_id, j.current_hospital_id)
+        AND r.result_date IS NOT NULL
+        AND r.canonical_test IN (${JOURNEY_LAB_TESTS.map(() => '?').join(', ')})
+      ORDER BY r.result_date DESC, r.synced_at DESC, r.source_key`,
     [journeyId, ...JOURNEY_LAB_TESTS],
   );
 

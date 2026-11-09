@@ -139,6 +139,37 @@ describe('listJourneyLabResults', () => {
     );
   });
 
+  it('returns the protected context fields decrypted', async () => {
+    await seed([
+      row('1', { normalReference: '12-16', abnormalFlag: 'N', ancResultNormalRaw: 'Y' }),
+    ]);
+    expect((await listJourneyLabResults(db, journeyId))[0]).toMatchObject({
+      normalReference: '12-16',
+      abnormalFlag: 'N',
+      ancResultNormalRaw: 'Y',
+      contextUnreadable: false,
+    });
+  });
+
+  it('returns no context for a concealed result', async () => {
+    await seed([row('1', { labItemsName: 'Anti HIV (ANC)', result: 'ปกปิด', abnormalFlag: 'Y' })]);
+    expect((await listJourneyLabResults(db, journeyId))[0].abnormalFlag).toBeNull();
+  });
+
+  it('flags context it cannot decrypt rather than showing ciphertext or nothing', async () => {
+    await seed([row('1', { abnormalFlag: 'N' })]);
+    await db.execute(`UPDATE cached_anc_lab_results SET abnormal_flag = 'not-ciphertext'`);
+    const warn = vi.spyOn(logger, 'warn');
+    const [lab] = await listJourneyLabResults(db, journeyId);
+    expect(lab.abnormalFlag).toBeNull();
+    expect(lab.contextUnreadable).toBe(true);
+    expect(lab.rawResultUnreadable).toBe(false);
+    expect(warn).toHaveBeenCalledWith(
+      'anc_lab_result_decrypt_failed',
+      expect.objectContaining({ count: 1 }),
+    );
+  });
+
   it('returns nothing for a journey with no labs', async () => {
     await seed([]);
     expect(await listJourneyLabResults(db, journeyId)).toEqual([]);

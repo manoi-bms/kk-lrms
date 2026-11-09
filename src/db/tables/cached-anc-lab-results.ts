@@ -3,7 +3,9 @@ import type { TableDefinition } from '../table-definition';
 /**
  * Every ANC laboratory result HOSxP holds for a pregnancy, classified or not.
  *
- * PDPA: `raw_result` is always AES-256-GCM ciphertext. For sensitive tests
+ * PDPA: `raw_result`, `normal_reference`, `abnormal_flag` and
+ * `anc_result_normal_raw` are always AES-256-GCM ciphertext, because HOSxP's
+ * flags and reference text can reveal a result. For sensitive tests
  * (see `sensitive` in src/config/anc-lab-canon.ts) `numeric_value`,
  * `normalized_value` and `interpretation` stay NULL so the outcome never sits
  * in a plaintext column; the read service re-derives them after decrypting.
@@ -36,9 +38,10 @@ export const cachedAncLabResultsTable: TableDefinition = {
     { name: 'normalized_value', type: 'string', maxLength: 10, nullable: true }, // e.g. blood group
     { name: 'interpretation', type: 'string', maxLength: 12, nullable: true },
     { name: 'unit', type: 'text', nullable: true },
-    { name: 'normal_reference', type: 'text', nullable: true },
-    { name: 'abnormal_flag', type: 'text', nullable: true },
-    // person_anc_lab.lab_result_normal: meaning unconfirmed, carried verbatim.
+    { name: 'normal_reference', type: 'text', nullable: true }, // encrypted
+    { name: 'abnormal_flag', type: 'text', nullable: true }, // encrypted
+    // person_anc_lab.lab_result_normal: meaning unconfirmed, carried verbatim
+    // (encrypted).
     { name: 'anc_result_normal_raw', type: 'text', nullable: true },
     { name: 'concealed', type: 'boolean', defaultValue: false },
     { name: 'content_hash', type: 'string', maxLength: 64 },
