@@ -15,7 +15,12 @@ import type { DatabaseAdapter } from '@/db/adapter';
 import { ANC_SEROLOGY_RISK_KEYS, isRestrictedDiagnosisCode } from '@/config/anc-risk-rules';
 import { listJourneyLabResults, type JourneyLabResult } from '@/services/anc-lab-results';
 import { getJourneyDetail } from '@/services/journey-list';
-import type { JourneyDetailResponse } from '@/types/api';
+import {
+  getReferralDetail,
+  listReferrals,
+  type ReferralListFilters,
+} from '@/services/referral-list';
+import type { JourneyDetailResponse, ReferralDetail, ReferralListResponse } from '@/types/api';
 import { ReferralStatus } from '@/types/domain';
 
 export type JourneyLabTier = 'full' | 'own_results';
@@ -36,6 +41,13 @@ const FULL_ACCESS_REFERRAL_STATUSES = [
   ReferralStatus.ARRIVED,
 ] as const;
 
+/** Needs the viewer as `h` and the journey as `mj`; binds the statuses once. */
+const IS_REFERRAL_DESTINATION = `EXISTS (SELECT 1 FROM cached_referrals r
+                     WHERE r.journey_id = mj.id
+                       AND r.to_hospital_id = h.id
+                       AND r.from_hospital_id <> r.to_hospital_id
+                       AND r.status IN (${FULL_ACCESS_REFERRAL_STATUSES.map(() => '?').join(', ')}))`;
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface LinkRow {
@@ -50,15 +62,10 @@ async function hospitalLink(
   journeyId: string,
   hospitalCode: string,
 ): Promise<LinkRow | undefined> {
-  const placeholders = FULL_ACCESS_REFERRAL_STATUSES.map(() => '?').join(', ');
   const rows = await db.query<LinkRow>(
     `SELECT h.id AS hospital_id,
             (mj.hospital_id = h.id) AS is_registering,
-            EXISTS (SELECT 1 FROM cached_referrals r
-                     WHERE r.journey_id = mj.id
-                       AND r.to_hospital_id = h.id
-                       AND r.from_hospital_id <> r.to_hospital_id
-                       AND r.status IN (${placeholders})) AS is_referral_destination,
+            ${IS_REFERRAL_DESTINATION} AS is_referral_destination,
             (EXISTS (SELECT 1 FROM cached_anc_visits v
                       WHERE v.journey_id = mj.id AND v.hospital_id = h.id)
              OR EXISTS (SELECT 1 FROM cached_anc_lab_results l
@@ -77,6 +84,45 @@ function hasFullAccess(link: LinkRow | undefined): boolean {
   return Boolean(link?.is_registering || link?.is_referral_destination);
 }
 
+/** The same test as hasFullAccess, for a whole page of journeys in one query. */
+async function journeysWithFullAccess(
+  db: DatabaseAdapter,
+  journeyIds: string[],
+  hospitalCode: string | null | undefined,
+): Promise<Set<string>> {
+  if (!hospitalCode || journeyIds.length === 0) return new Set();
+  const rows = await db.query<{ id: string }>(
+    `SELECT mj.id
+       FROM hospitals h
+       INNER JOIN maternal_journeys mj ON mj.id IN (${journeyIds.map(() => '?').join(', ')})
+      WHERE h.hcode = ?
+        AND (mj.hospital_id = h.id OR ${IS_REFERRAL_DESTINATION})`,
+    [...journeyIds, hospitalCode, ...FULL_ACCESS_REFERRAL_STATUSES],
+  );
+  return new Set(rows.map((row) => row.id));
+}
+
+function hasRestrictedCode(referral: { diagnosisCode: string | null }): boolean {
+  return Boolean(referral.diagnosisCode && isRestrictedDiagnosisCode(referral.diagnosisCode));
+}
+
+function blankRestrictedCode<T extends { diagnosisCode: string | null }>(referral: T): T {
+  return hasRestrictedCode(referral) ? { ...referral, diagnosisCode: null } : referral;
+}
+
+/**
+ * A withheld code must look exactly like a referral with no code: marking the
+ * row as restricted would itself say the diagnosis is HIV or syphilis.
+ */
+async function withholdRestrictedCodes<
+  T extends { journeyId: string; diagnosisCode: string | null },
+>(db: DatabaseAdapter, referrals: T[], hospitalCode: string | null | undefined): Promise<T[]> {
+  const journeyIds = [...new Set(referrals.filter(hasRestrictedCode).map((r) => r.journeyId))];
+  if (journeyIds.length === 0) return referrals;
+  const allowed = await journeysWithFullAccess(db, journeyIds, hospitalCode);
+  return referrals.map((r) => (allowed.has(r.journeyId) ? r : blankRestrictedCode(r)));
+}
+
 /** Removes every statement of HIV or syphilis status from a journey detail. */
 function withholdSerology(detail: JourneyDetailResponse): JourneyDetailResponse {
   return {
@@ -88,11 +134,7 @@ function withholdSerology(detail: JourneyDetailResponse): JourneyDetailResponse 
         (rule) => !ANC_SEROLOGY_RISK_KEYS.has(rule),
       ),
     },
-    referrals: detail.referrals.map((referral) =>
-      referral.diagnosisCode && isRestrictedDiagnosisCode(referral.diagnosisCode)
-        ? { ...referral, diagnosisCode: null }
-        : referral,
-    ),
+    referrals: detail.referrals.map(blankRestrictedCode),
   };
 }
 
@@ -114,6 +156,28 @@ export async function readJourneyDetailForHospital(
   return hasFullAccess(link)
     ? { ...detail, serologyWithheld: false }
     : { ...withholdSerology(detail), serologyWithheld: true };
+}
+
+/** The only way the referral board reads its list; the board stays province-wide. */
+export async function readReferralListForHospital(
+  db: DatabaseAdapter,
+  filters: ReferralListFilters,
+  hospitalCode: string | null | undefined,
+): Promise<ReferralListResponse> {
+  const list = await listReferrals(db, filters);
+  return { ...list, referrals: await withholdRestrictedCodes(db, list.referrals, hospitalCode) };
+}
+
+/** The only way the referral detail dialog reads a referral. */
+export async function readReferralDetailForHospital(
+  db: DatabaseAdapter,
+  id: string,
+  hospitalCode: string | null | undefined,
+): Promise<ReferralDetail | null> {
+  const referral = await getReferralDetail(db, id);
+  if (referral === null) return null;
+  const [visible] = await withholdRestrictedCodes(db, [referral], hospitalCode);
+  return visible;
 }
 
 /** The only way the labs route reads results, so tier and filter cannot drift. */
