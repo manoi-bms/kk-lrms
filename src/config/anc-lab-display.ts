@@ -28,6 +28,13 @@ export const ANC_LAB_TEST_LABEL: Record<AncLabTest, string> = {
   RH: 'Rh',
   URINE_ALBUMIN: 'Urine albumin',
   URINE_SUGAR: 'Urine sugar',
+  ALPHA1: 'Alpha-1',
+  THAL_RESULT: 'ผลตรวจธาลัสซีเมีย',
+  PARTNER_OF: 'OF (สามี)',
+  PARTNER_DCIP: 'DCIP (สามี)',
+  PARTNER_HB_TYPING: 'Hb typing (สามี)',
+  PARTNER_ALPHA1: 'Alpha-1 (สามี)',
+  PARTNER_THAL_RESULT: 'ผลตรวจธาลัสซีเมีย (สามี)',
 };
 
 export interface AncLabPanelGroup {
@@ -44,7 +51,22 @@ export const ANC_LAB_PANEL_GROUPS: readonly AncLabPanelGroup[] = [
     titleTh: 'คัดกรองการติดเชื้อ',
     tests: ['HBSAG', 'VDRL_RPR', 'TREPONEMAL', 'SYPHILIS_UNSPECIFIED', 'HIV', 'CD4'],
   },
-  { id: 'thalassemia', titleTh: 'ธาลัสซีเมีย', tests: ['MCV', 'MCH', 'OF', 'DCIP', 'HB_TYPING'] },
+  {
+    id: 'thalassemia',
+    titleTh: 'ธาลัสซีเมีย',
+    tests: ['MCV', 'MCH', 'OF', 'DCIP', 'HB_TYPING', 'ALPHA1', 'THAL_RESULT'],
+  },
+  {
+    id: 'thalassemia_partner',
+    titleTh: 'ธาลัสซีเมีย (สามี)',
+    tests: [
+      'PARTNER_OF',
+      'PARTNER_DCIP',
+      'PARTNER_HB_TYPING',
+      'PARTNER_ALPHA1',
+      'PARTNER_THAL_RESULT',
+    ],
+  },
   {
     id: 'glucose',
     titleTh: 'น้ำตาลในเลือด / OGTT',
@@ -89,6 +111,10 @@ export const ANC_LAB_CORE_ITEMS: readonly AncLabCoreItem[] = [
  * most women; the journey page's Rh tile has the same reading.
  */
 export const ANC_LAB_NEGATIVE_IS_NOTABLE: readonly AncLabTest[] = ['RH'];
+
+/** Beside an Rh word on the ANC form that the classifier would not read as a sign. */
+export const ANC_LAB_RH_FORM_NOTE =
+  'ข้อความนี้มาจากแบบบันทึก ANC บางโรงพยาบาลบันทึก negative หมายถึงไม่พบความผิดปกติ ไม่ใช่ Rh ลบ กรุณายืนยันจากผลห้องแล็บ';
 
 /** Grey covers numbers the panel does not assess and text it could not interpret. */
 export const ANC_LAB_GREY_LEGEND =

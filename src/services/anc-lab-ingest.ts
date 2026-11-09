@@ -378,6 +378,7 @@ interface JourneyLabRow {
   interpretation: string | null;
   numeric_value: number | string | null;
   normalized_value: string | null;
+  current_rh_factor: string | null;
 }
 
 function posNeg(interpretation: string | null): 'POS' | 'NEG' | null {
@@ -411,7 +412,8 @@ export async function refreshJourneyLabColumns(
   journeyId: string,
 ): Promise<void> {
   const rows = await db.query<JourneyLabRow>(
-    `SELECT r.canonical_test, r.interpretation, r.numeric_value, r.normalized_value
+    `SELECT r.canonical_test, r.interpretation, r.numeric_value, r.normalized_value,
+            j.rh_factor AS current_rh_factor
        FROM cached_anc_lab_results r
        INNER JOIN maternal_journeys j ON j.id = r.journey_id
       WHERE r.journey_id = ?
@@ -469,10 +471,25 @@ export async function refreshJourneyLabColumns(
     return signs.has('-') ? 'NEG' : 'POS';
   };
 
+  /**
+   * Rh-negative changes care, so it must rest on a readable result. A stored NEG
+   * is cleared when the only Rh on file is unreadable; a POS is left alone.
+   */
+  const unsupportedRhNegative = (): null | undefined =>
+    rows[0]?.current_rh_factor === 'NEG' &&
+    rows.some((r) => r.canonical_test === 'RH' && r.interpretation === 'unknown')
+      ? null
+      : undefined;
+
   const columns: [string, string | number | null | undefined][] = [
     // The ABO letter only: rh_factor carries the sign, and screens print both.
     ['blood_group', latest('BLOOD_GROUP', (r) => r.normalized_value?.replace(/[+-]$/, '') ?? null)],
-    ['rh_factor', latest('RH', (r) => posNeg(r.interpretation)) ?? rhFromBloodGroup()],
+    [
+      'rh_factor',
+      latest('RH', (r) => posNeg(r.interpretation)) ??
+        rhFromBloodGroup() ??
+        unsupportedRhNegative(),
+    ],
     ['hbsag_result', newestResult('HBSAG')],
     ['mcv_fl', latest('MCV', (r) => (r.numeric_value === null ? null : Number(r.numeric_value)))],
     ['dcip_result', newestResult('DCIP')],

@@ -3,7 +3,11 @@
 import { describe, it, expect } from 'vitest';
 import type { JourneyLabResult } from '@/services/anc-lab-results';
 import { ANC_LAB_TESTS, type AncLabTest } from '@/config/anc-lab-canon';
-import { ANC_LAB_PANEL_GROUPS, ANC_LAB_TEST_LABEL } from '@/config/anc-lab-display';
+import {
+  ANC_LAB_PANEL_GROUPS,
+  ANC_LAB_RH_FORM_NOTE,
+  ANC_LAB_TEST_LABEL,
+} from '@/config/anc-lab-display';
 import {
   buildJourneyLabPanel,
   codedTileStatus,
@@ -151,6 +155,59 @@ describe('presentLabResult', () => {
       presentLabResult(lab({ canonicalTest: null, rawResult: '30', abnormalFlag: 'Y' }))
         .hosxpFlagged,
     ).toBe(true);
+  });
+});
+
+describe('an Rh word on the ANC form that cannot be trusted', () => {
+  const rh = (over: Partial<JourneyLabResult>) =>
+    lab({ canonicalTest: 'RH', rawResult: 'NEGATIVE', interpretation: 'unknown', ...over });
+
+  it('stays grey, keeps the text and warns to check the lab result', () => {
+    const p = presentLabResult(rh({ source: 'anc_lab' }));
+    expect(p.tone).toBe('neutral');
+    expect(p.value).toBe('NEGATIVE');
+    expect(p.note).toBe(ANC_LAB_RH_FORM_NOTE);
+  });
+
+  it('adds no warning to an unreadable lab order', () => {
+    expect(presentLabResult(rh({ source: 'lab_order', rawResult: 'see' })).note).toBeNull();
+  });
+
+  it('adds no warning to a result it could read', () => {
+    const p = presentLabResult(rh({ rawResult: 'Rh neg', interpretation: 'negative' }));
+    expect(p.tone).toBe('abnormal');
+    expect(p.note).toBeNull();
+  });
+});
+
+describe('thalassemia flags from the ANC register', () => {
+  const flag = (over: Partial<JourneyLabResult>) =>
+    lab({ source: 'person_anc', canonicalTest: 'PARTNER_DCIP', resultDate: null, ...over });
+
+  it('shows the decoded word for abnormal, in red, without repeating it', () => {
+    const p = presentLabResult(
+      flag({ rawResult: 'N', normalizedValue: 'ผิดปกติ', interpretation: 'abnormal' }),
+    );
+    expect(p).toMatchObject({ tone: 'abnormal', value: 'ผิดปกติ', stateLabel: null });
+  });
+
+  it('shows the decoded word for normal, in green', () => {
+    const p = presentLabResult(
+      flag({ rawResult: 'Y', normalizedValue: 'ปกติ', interpretation: 'negative' }),
+    );
+    expect(p).toMatchObject({ tone: 'normal', value: 'ปกติ', stateLabel: null });
+  });
+
+  it('keeps the abnormal label when the value is a different text', () => {
+    const p = presentLabResult(lab({ rawResult: 'Pos', interpretation: 'positive' }));
+    expect(p).toMatchObject({ tone: 'abnormal', value: 'Pos', stateLabel: 'ผิดปกติ' });
+  });
+
+  it('lists a partner result under its own heading, not the woman’s', () => {
+    const panel = buildJourneyLabPanel([
+      flag({ rawResult: 'N', normalizedValue: 'ผิดปกติ', interpretation: 'abnormal' }),
+    ]);
+    expect(panel.groups.map((g) => g.id)).toEqual(['thalassemia_partner']);
   });
 });
 

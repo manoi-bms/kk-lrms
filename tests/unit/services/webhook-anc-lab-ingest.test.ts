@@ -627,6 +627,63 @@ describe('processAncWebhook — ANC lab ingest', () => {
       });
     });
 
+    describe('Rh words on the ANC form (11011 writes NEGATIVE on about 99% of rows)', () => {
+      const rhOrder = (sourceId: string, result: string) =>
+        hct({ source: 'lab_order', sourceId, labItemsName: 'Rh Typing', result });
+
+      it('does not record Rh-negative from the bare word on the ANC form', async () => {
+        await push(patient({ labResults: [named('1', 'Rh Typing', 'NEGATIVE')] }));
+        expect((await journey()).rh_factor).toBeNull();
+      });
+
+      it('records Rh-negative when the lab reports it', async () => {
+        await push(patient({ labResults: [rhOrder('1', 'Rh neg')] }));
+        expect((await journey()).rh_factor).toBe('NEG');
+      });
+
+      // The journey must exist before its stored value can be set.
+      const pushOverStoredRh = async (stored: 'NEG' | 'POS') => {
+        await push(patient());
+        await db.execute(`UPDATE maternal_journeys SET rh_factor = '${stored}'`);
+        expect((await journey()).rh_factor).toBe(stored);
+        await push(patient({ labResults: [named('1', 'Rh Typing', 'neg')] }));
+      };
+
+      it('clears a stored Rh-negative that no readable result supports', async () => {
+        await pushOverStoredRh('NEG');
+        expect((await journey()).rh_factor).toBeNull();
+      });
+
+      it('leaves a stored Rh-positive alone when only an unreadable word arrives', async () => {
+        await pushOverStoredRh('POS');
+        expect((await journey()).rh_factor).toBe('POS');
+      });
+
+      it('keeps the lab result over the ANC form word', async () => {
+        await push(
+          patient({ labResults: [named('1', 'Rh Typing', 'neg'), rhOrder('2', 'Rh Pos')] }),
+        );
+        expect((await journey()).rh_factor).toBe('POS');
+      });
+    });
+
+    it('does not fill the DCIP column from an undated register flag', async () => {
+      await push(
+        patient({
+          labResults: [
+            {
+              source: 'person_anc',
+              sourceId: '1:thalasseima_wife_dcip_result',
+              ancLabName: 'Thalassemia: DCIP (ภรรยา)',
+              labItemsName: null,
+              result: 'N',
+            },
+          ],
+        }),
+      );
+      expect((await journey()).dcip_result).toBeNull();
+    });
+
     it('does not record Rh-negative from a result that only says normal', async () => {
       await push(patient({ labResults: [named('1', 'Rh Typing', 'ปกติ')] }));
       expect((await journey()).rh_factor).toBeNull();

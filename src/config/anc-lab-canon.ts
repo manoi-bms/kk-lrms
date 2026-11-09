@@ -35,7 +35,14 @@ export type AncLabTest =
   | 'OGTT_UNSPECIFIED'
   | 'CD4'
   | 'URINE_ALBUMIN'
-  | 'URINE_SUGAR';
+  | 'URINE_SUGAR'
+  | 'ALPHA1'
+  | 'THAL_RESULT'
+  | 'PARTNER_OF'
+  | 'PARTNER_DCIP'
+  | 'PARTNER_HB_TYPING'
+  | 'PARTNER_ALPHA1'
+  | 'PARTNER_THAL_RESULT';
 
 export type AncLabSource = 'anc_lab' | 'lab_order' | 'person_anc';
 
@@ -45,22 +52,33 @@ export type AncLabInterpretation =
 export interface QualitativeResultForm {
   pattern: RegExp;
   interpretation: Extract<AncLabInterpretation, 'negative' | 'positive' | 'abnormal'>;
+  /** Shown instead of the raw text, which would mean nothing to a reader. */
+  display?: string;
 }
 
 export type AncLabResultShape =
   | { kind: 'numeric'; min: number; max: number }
   /** `forms` replaces the shared table for a test that reads results its own way. */
   | { kind: 'qualitative'; forms?: readonly QualitativeResultForm[] }
+  /** HOSxP lookup codes, which may be digits; anything unlisted stays unknown. */
+  | { kind: 'coded'; forms: readonly QualitativeResultForm[] }
   | { kind: 'blood_group' }
   | { kind: 'text' };
 
 export interface AncLabTestDefinition {
   shape: AncLabResultShape;
+  /** Overrides `shape` for rows from a source that writes this test differently. */
+  sourceShapes?: Partial<Record<AncLabSource, AncLabResultShape>>;
   /** Outcome never stored in a plaintext column; see cached_anc_lab_results. */
   sensitive?: boolean;
 }
 
 const QUALITATIVE: AncLabResultShape = { kind: 'qualitative' };
+
+const RH_POSITIVE: QualitativeResultForm = {
+  pattern: /^((rh\s*)?(pos|positive|post)|\+)$/i,
+  interpretation: 'positive',
+};
 
 /**
  * Rh takes explicit signs only. For an infection screen ปกติ or N means
@@ -68,9 +86,45 @@ const QUALITATIVE: AncLabResultShape = { kind: 'qualitative' };
  * as Rh-negative. A bare dash is not a sign either: it often means not done.
  */
 const RH_RESULT_FORMS: readonly QualitativeResultForm[] = [
-  { pattern: /^(neg|negative)$/i, interpretation: 'negative' },
-  { pattern: /^(pos|positive|\+)$/i, interpretation: 'positive' },
+  { pattern: /^(rh\s*)?(neg|negative)$/i, interpretation: 'negative' },
+  RH_POSITIVE,
 ];
+
+/**
+ * The ANC form needs the factor named before it counts as Rh-negative. At 11011
+ * it says NEGATIVE or neg on about 99% of rows while that hospital's own lab
+ * reports Rh neg on 0.4%, so there the bare word means nothing was abnormal.
+ */
+const RH_ANC_FORM_RESULT_FORMS: readonly QualitativeResultForm[] = [
+  { pattern: /^rh\s*(neg|negative)$/i, interpretation: 'negative' },
+  RH_POSITIVE,
+];
+
+const RH_SHAPE_BY_SOURCE = {
+  anc_lab: { kind: 'qualitative', forms: RH_ANC_FORM_RESULT_FORMS },
+} as const satisfies AncLabTestDefinition['sourceShapes'];
+
+const THAL_NORMAL = { interpretation: 'negative', display: 'ปกติ' } as const;
+const THAL_ABNORMAL = { interpretation: 'abnormal', display: 'ผิดปกติ' } as const;
+
+/** person_anc flags, from lookup_normal: Y is ปกติ, N is ผิดปกติ. Not yes and no. */
+const THAL_FLAG: AncLabResultShape = {
+  kind: 'coded',
+  forms: [
+    { pattern: /^Y$/, ...THAL_NORMAL },
+    { pattern: /^N$/, ...THAL_ABNORMAL },
+  ],
+};
+
+/** thalassaemia_result ids. HOSxP treats 3 (not tested) and 4 (awaiting) as no result. */
+const THAL_RESULT_ID: AncLabResultShape = {
+  kind: 'coded',
+  forms: [
+    { pattern: /^1$/, ...THAL_NORMAL },
+    { pattern: /^2$/, ...THAL_ABNORMAL },
+  ],
+};
+
 // Data-quality bounds for plasma glucose, mg/dL; not diagnostic thresholds.
 const GLUCOSE: AncLabResultShape = { kind: 'numeric', min: 10, max: 900 };
 
@@ -84,13 +138,23 @@ export const ANC_LAB_TESTS: Record<AncLabTest, AncLabTestDefinition> = {
   TREPONEMAL: { shape: QUALITATIVE, sensitive: true },
   SYPHILIS_UNSPECIFIED: { shape: QUALITATIVE, sensitive: true },
   HIV: { shape: QUALITATIVE, sensitive: true },
-  DCIP: { shape: QUALITATIVE },
-  OF: { shape: QUALITATIVE },
-  HB_TYPING: { shape: { kind: 'text' } },
+  DCIP: { shape: QUALITATIVE, sourceShapes: { person_anc: THAL_FLAG } },
+  OF: { shape: QUALITATIVE, sourceShapes: { person_anc: THAL_FLAG } },
+  HB_TYPING: { shape: { kind: 'text' }, sourceShapes: { person_anc: THAL_FLAG } },
+  ALPHA1: { shape: THAL_FLAG },
+  THAL_RESULT: { shape: THAL_RESULT_ID },
+  PARTNER_OF: { shape: THAL_FLAG },
+  PARTNER_DCIP: { shape: THAL_FLAG },
+  PARTNER_HB_TYPING: { shape: THAL_FLAG },
+  PARTNER_ALPHA1: { shape: THAL_FLAG },
+  PARTNER_THAL_RESULT: { shape: THAL_RESULT_ID },
   MCV: { shape: { kind: 'numeric', min: 40, max: 140 } },
   MCH: { shape: { kind: 'numeric', min: 10, max: 50 } },
   BLOOD_GROUP: { shape: { kind: 'blood_group' } },
-  RH: { shape: { kind: 'qualitative', forms: RH_RESULT_FORMS } },
+  RH: {
+    shape: { kind: 'qualitative', forms: RH_RESULT_FORMS },
+    sourceShapes: RH_SHAPE_BY_SOURCE,
+  },
   GST: { shape: GLUCOSE },
   OGTT_FASTING: { shape: GLUCOSE },
   OGTT_1H: { shape: GLUCOSE },
@@ -158,21 +222,47 @@ export const ANC_LAB_NAME_RULES: readonly AncLabNameRule[] = [
 ];
 
 /**
- * person_anc thalassemia columns, pulled as visible but never classified: they
- * are char(1) flags or lookup ids whose meaning is unconfirmed, so "N" here
- * must not read as a negative result. Columns from the HOSxP data dictionary.
+ * person_anc thalassemia columns: char(1) flags and lookup ids, so "N" here is
+ * abnormal, the opposite of N on an infection screen. The coding comes from
+ * HOSxP and was confirmed in lookup_normal and thalassaemia_result at 3 sites.
+ * These rows have no date, so they never set a journey column.
+ * Labels are stored on each row and are how a row finds its test.
  */
-export const ANC_THALASSEMIA_FIELDS: readonly { column: string; label: string }[] = [
-  { column: 'thalasseima_wife_of_result', label: 'Thalassemia: OF (ภรรยา)' },
-  { column: 'thalasseima_wife_dcip_result', label: 'Thalassemia: DCIP (ภรรยา)' },
-  { column: 'thalasseima_wife_hbtyping_result', label: 'Thalassemia: Hb typing (ภรรยา)' },
-  { column: 'thalasseima_wife_alpha1_result', label: 'Thalassemia: Alpha-1 (ภรรยา)' },
-  { column: 'thalasseima_husband_of_result', label: 'Thalassemia: OF (สามี)' },
-  { column: 'thalasseima_husband_dcip_result', label: 'Thalassemia: DCIP (สามี)' },
-  { column: 'thalasseima_husband_hbtyping_result', label: 'Thalassemia: Hb typing (สามี)' },
-  { column: 'thalasseima_husband_alpha1_result', label: 'Thalassemia: Alpha-1 (สามี)' },
-  { column: 'thalassaemia_result_id', label: 'Thalassemia: รหัสผลตรวจ (ภรรยา)' },
-  { column: 'husban_thalassaemia_result_id', label: 'Thalassemia: รหัสผลตรวจ (สามี)' },
+export const ANC_THALASSEMIA_FIELDS: readonly {
+  column: string;
+  label: string;
+  test: AncLabTest;
+}[] = [
+  { column: 'thalasseima_wife_of_result', label: 'Thalassemia: OF (ภรรยา)', test: 'OF' },
+  { column: 'thalasseima_wife_dcip_result', label: 'Thalassemia: DCIP (ภรรยา)', test: 'DCIP' },
+  {
+    column: 'thalasseima_wife_hbtyping_result',
+    label: 'Thalassemia: Hb typing (ภรรยา)',
+    test: 'HB_TYPING',
+  },
+  { column: 'thalasseima_wife_alpha1_result', label: 'Thalassemia: Alpha-1 (ภรรยา)', test: 'ALPHA1' },
+  { column: 'thalasseima_husband_of_result', label: 'Thalassemia: OF (สามี)', test: 'PARTNER_OF' },
+  {
+    column: 'thalasseima_husband_dcip_result',
+    label: 'Thalassemia: DCIP (สามี)',
+    test: 'PARTNER_DCIP',
+  },
+  {
+    column: 'thalasseima_husband_hbtyping_result',
+    label: 'Thalassemia: Hb typing (สามี)',
+    test: 'PARTNER_HB_TYPING',
+  },
+  {
+    column: 'thalasseima_husband_alpha1_result',
+    label: 'Thalassemia: Alpha-1 (สามี)',
+    test: 'PARTNER_ALPHA1',
+  },
+  { column: 'thalassaemia_result_id', label: 'Thalassemia: รหัสผลตรวจ (ภรรยา)', test: 'THAL_RESULT' },
+  {
+    column: 'husban_thalassaemia_result_id',
+    label: 'Thalassemia: รหัสผลตรวจ (สามี)',
+    test: 'PARTNER_THAL_RESULT',
+  },
 ];
 
 /**

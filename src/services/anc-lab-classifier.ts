@@ -12,10 +12,12 @@ import {
   AMBIGUOUS_RESULT_FORMS,
   ANC_LAB_NAME_RULES,
   ANC_LAB_TESTS,
+  ANC_THALASSEMIA_FIELDS,
   CONCEALED_RESULT_FORMS,
   MISSING_RESULT_FORMS,
   QUALITATIVE_RESULT_FORMS,
   type AncLabInterpretation,
+  type AncLabNameRule,
   type AncLabResultShape,
   type AncLabSource,
   type AncLabTest,
@@ -85,9 +87,11 @@ function matchesAny(forms: readonly RegExp[], value: string): boolean {
 
 function matchNameRule(
   input: Pick<AncLabClassifierInput, 'source' | 'ancLabName' | 'labItemsName'>,
-) {
-  // person_anc columns are flags of unconfirmed meaning; see ANC_THALASSEMIA_FIELDS.
-  if (input.source === 'person_anc') return null;
+): Pick<AncLabNameRule, 'test'> | null {
+  // person_anc rows are named by the app, so the label is an exact key.
+  if (input.source === 'person_anc') {
+    return ANC_THALASSEMIA_FIELDS.find((field) => field.label === input.ancLabName) ?? null;
+  }
   const name = normaliseName(input.labItemsName) || normaliseName(input.ancLabName);
   if (!name) return null;
   const ancLabName = normaliseName(input.ancLabName);
@@ -107,11 +111,13 @@ function parseNumber(value: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function qualitativeInterpretation(
-  value: string,
-  forms: readonly QualitativeResultForm[],
-): AncLabInterpretation {
-  return forms.find((f) => f.pattern.test(value))?.interpretation ?? 'unknown';
+function readForms(value: string, forms: readonly QualitativeResultForm[]): AncLabResultReading {
+  const form = forms.find((f) => f.pattern.test(value));
+  return {
+    numericValue: null,
+    normalizedValue: form?.display ?? null,
+    interpretation: form?.interpretation ?? 'unknown',
+  };
 }
 
 /** null = the value contradicts the shape its test requires. */
@@ -126,10 +132,9 @@ function readValue(shape: AncLabResultShape, value: string): AncLabResultReading
     }
     case 'qualitative':
       if (BARE_NUMBER.test(value)) return null;
-      return {
-        ...none,
-        interpretation: qualitativeInterpretation(value, shape.forms ?? QUALITATIVE_RESULT_FORMS),
-      };
+      return readForms(value, shape.forms ?? QUALITATIVE_RESULT_FORMS);
+    case 'coded':
+      return readForms(value, shape.forms);
     case 'blood_group': {
       const match = BLOOD_GROUP.exec(value);
       if (!match) return null;
@@ -175,7 +180,8 @@ export function classifyAncLab(input: AncLabClassifierInput): AncLabClassificati
       interpretation: 'unknown',
     };
   }
-  const reading = readValue(ANC_LAB_TESTS[test].shape, value);
+  const definition = ANC_LAB_TESTS[test];
+  const reading = readValue(definition.sourceShapes?.[input.source] ?? definition.shape, value);
   if (!reading) {
     return {
       ...base,

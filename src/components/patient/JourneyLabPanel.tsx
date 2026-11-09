@@ -63,6 +63,7 @@ function ResultNotes({ r }: { r: JourneyLabResult }) {
       {r.classificationNote === 'value_shape_mismatch' && (
         <div>รูปแบบผลไม่ตรงกับชื่อการตรวจ กรุณาตรวจสอบใน HOSxP</div>
       )}
+      {p.note && <div className="text-[var(--risk-medium-text)]">{p.note}</div>}
       {p.contextUnreadable && p.tone !== 'unreadable' && (
         <div className="text-[var(--risk-medium-text)]">
           อ่านข้อมูลประกอบบางส่วนไม่ได้ กรุณาตรวจสอบใน HOSxP

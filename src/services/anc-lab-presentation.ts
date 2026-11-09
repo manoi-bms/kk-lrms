@@ -12,6 +12,7 @@ import {
   ANC_LAB_CORE_ITEMS,
   ANC_LAB_NEGATIVE_IS_NOTABLE,
   ANC_LAB_PANEL_GROUPS,
+  ANC_LAB_RH_FORM_NOTE,
   ANC_LAB_TEST_LABEL,
   ANC_LAB_TREND_TESTS,
 } from '@/config/anc-lab-display';
@@ -28,6 +29,8 @@ export interface LabPresentation {
   contextUnreadable: boolean;
   /** HOSxP flagged it abnormal; for unclassified rows this is words, not colour. */
   hosxpFlagged: boolean;
+  /** A caution to print with the result, or null. */
+  note: string | null;
 }
 
 export interface LabTestSummary {
@@ -55,6 +58,7 @@ export interface JourneyLabPanelModel {
 }
 
 const UNREADABLE_LABEL = 'อ่านข้อมูลไม่ได้';
+const ABNORMAL_LABEL = 'ผิดปกติ';
 
 /**
  * Status for a journey tile holding a code. Only the exact normal code may be
@@ -115,7 +119,16 @@ export function presentLabResult(
   options: { earlierPositive?: boolean } = {},
 ): LabPresentation {
   const hosxpFlagged = r.abnormalFlag?.trim().toUpperCase() === ANC_LAB_ABNORMAL_FLAG_VALUE;
-  const base = { contextUnreadable: r.contextUnreadable, hosxpFlagged };
+  const unreadRhOnAncForm =
+    r.canonicalTest === 'RH' &&
+    r.source === 'anc_lab' &&
+    r.interpretation === 'unknown' &&
+    r.rawResult !== null;
+  const base = {
+    contextUnreadable: r.contextUnreadable,
+    hosxpFlagged,
+    note: unreadRhOnAncForm ? ANC_LAB_RH_FORM_NOTE : null,
+  };
   if (r.concealed) return { ...base, tone: 'concealed', value: null, stateLabel: 'ปกปิดผล' };
   if (r.rawResultUnreadable) {
     return { ...base, tone: 'unreadable', value: null, stateLabel: UNREADABLE_LABEL };
@@ -129,7 +142,12 @@ export function presentLabResult(
       : { ...base, tone: 'neutral', value, stateLabel: null };
   }
   if (statesAbnormal(r, hosxpFlagged)) {
-    return { ...base, tone: 'abnormal', value, stateLabel: 'ผิดปกติ' };
+    return {
+      ...base,
+      tone: 'abnormal',
+      value,
+      stateLabel: value === ABNORMAL_LABEL ? null : ABNORMAL_LABEL,
+    };
   }
   if (r.contextUnreadable) {
     return { ...base, tone: 'unreadable', value, stateLabel: UNREADABLE_LABEL };

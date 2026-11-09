@@ -135,16 +135,71 @@ describe('classifyAncLab — traps', () => {
     },
   );
 
-  it('never classifies person_anc thalassemia flags, whose meaning is unconfirmed', () => {
-    const c = classifyAncLab({
-      source: 'person_anc',
-      labItemsName: null,
-      ancLabName: 'Thalassemia: Hb typing (สามี)',
-      result: 'N',
+  describe('person_anc thalassemia fields (coding confirmed in lookup_normal at 3 sites)', () => {
+    const registered = (ancLabName: string, result: string) =>
+      classifyAncLab({ source: 'person_anc', labItemsName: null, ancLabName, result });
+
+    it.each([
+      ['Thalassemia: OF (ภรรยา)', 'OF'],
+      ['Thalassemia: DCIP (ภรรยา)', 'DCIP'],
+      ['Thalassemia: Hb typing (ภรรยา)', 'HB_TYPING'],
+      ['Thalassemia: Alpha-1 (ภรรยา)', 'ALPHA1'],
+      ['Thalassemia: OF (สามี)', 'PARTNER_OF'],
+      ['Thalassemia: DCIP (สามี)', 'PARTNER_DCIP'],
+      ['Thalassemia: Hb typing (สามี)', 'PARTNER_HB_TYPING'],
+      ['Thalassemia: Alpha-1 (สามี)', 'PARTNER_ALPHA1'],
+    ])('reads %s as %s, where Y is normal and N is abnormal', (label, test) => {
+      const normal = registered(label, 'Y');
+      expect(normal.canonicalTest).toBe(test);
+      expect(normal.interpretation).toBe('negative');
+      expect(normal.normalizedValue).toBe('ปกติ');
+      expect(normal.rawResult).toBe('Y');
+
+      const abnormal = registered(label, 'N');
+      expect(abnormal.canonicalTest).toBe(test);
+      expect(abnormal.interpretation).toBe('abnormal');
+      expect(abnormal.normalizedValue).toBe('ผิดปกติ');
     });
-    expect(c.canonicalTest).toBeNull();
-    expect(c.interpretation).toBe('unknown');
-    expect(c.rawResult).toBe('N');
+
+    it.each([
+      ['Thalassemia: รหัสผลตรวจ (ภรรยา)', 'THAL_RESULT'],
+      ['Thalassemia: รหัสผลตรวจ (สามี)', 'PARTNER_THAL_RESULT'],
+    ])('reads %s as %s from the thalassaemia_result ids', (label, test) => {
+      expect(registered(label, '1')).toMatchObject({
+        canonicalTest: test,
+        interpretation: 'negative',
+        normalizedValue: 'ปกติ',
+      });
+      expect(registered(label, '2')).toMatchObject({
+        canonicalTest: test,
+        interpretation: 'abnormal',
+        normalizedValue: 'ผิดปกติ',
+      });
+    });
+
+    it.each([['0'], ['3'], ['4']])('does not read result id %s as a result', (id) => {
+      expect(registered('Thalassemia: รหัสผลตรวจ (ภรรยา)', id)).toMatchObject({
+        canonicalTest: 'THAL_RESULT',
+        interpretation: 'unknown',
+        normalizedValue: null,
+      });
+    });
+
+    it('keeps an unrecognised flag unknown', () => {
+      expect(registered('Thalassemia: DCIP (ภรรยา)', 'X').interpretation).toBe('unknown');
+    });
+
+    it('does not classify a field it has no definition for', () => {
+      const c = registered('Thalassemia: something new', 'N');
+      expect(c.canonicalTest).toBeNull();
+      expect(c.classificationNote).toBe('no_rule');
+      expect(c.interpretation).toBe('unknown');
+    });
+
+    it('applies the Y/N coding only to registered fields, not to a lab result', () => {
+      expect(labOrder('OF', 'N').interpretation).toBe('negative');
+      expect(labOrder('OF', 'Y').interpretation).toBe('unknown');
+    });
   });
 
   it('does not read an unknown lab into any test', () => {
@@ -326,13 +381,39 @@ describe('classifyAncLab — result forms', () => {
       },
     );
 
-    it.each([['neg'], ['Negative']])('reads Rh %s as negative', (result) => {
-      expect(ancLab('Rh Typing', result).interpretation).toBe('negative');
-    });
+    it.each([['neg'], ['Negative'], ['Rh neg'], ['Rh Negative']])(
+      'reads a lab order of Rh %s as negative',
+      (result) => {
+        expect(labOrder('Rh Typing', result).interpretation).toBe('negative');
+      },
+    );
 
-    it.each([['pos'], ['Positive'], ['+']])('reads Rh %s as positive', (result) => {
-      expect(ancLab('Rh Typing', result).interpretation).toBe('positive');
-    });
+    // 11011's ANC form: NEGATIVE/neg on about 99% of 2,131 rows, while its own
+    // lab reports Rh neg on 0.4%. There the word means nothing was abnormal.
+    it.each([['NEGATIVE'], ['neg'], ['Negative']])(
+      'keeps %s on the ANC form unknown because it may only mean not abnormal',
+      (result) => {
+        const c = ancLab('Rh .(D) typing ( slide method)', result);
+        expect(c.canonicalTest).toBe('RH');
+        expect(c.interpretation).toBe('unknown');
+        expect(c.rawResult).toBe(result);
+      },
+    );
+
+    it.each([['Rh neg'], ['Rh Negative']])(
+      'reads an ANC form that names the factor, %s, as negative',
+      (result) => {
+        expect(ancLab('Rh Typing', result).interpretation).toBe('negative');
+      },
+    );
+
+    it.each([['pos'], ['Positive'], ['+'], ['post'], ['Rh Pos'], ['Rh Positive']])(
+      'reads Rh %s as positive from either source',
+      (result) => {
+        expect(ancLab('Rh Typing', result).interpretation).toBe('positive');
+        expect(labOrder('Rh Typing', result).interpretation).toBe('positive');
+      },
+    );
   });
 
   it('keeps the original text as the raw result', () => {
