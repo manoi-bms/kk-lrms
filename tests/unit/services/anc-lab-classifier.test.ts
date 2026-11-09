@@ -202,6 +202,35 @@ describe('classifyAncLab — result forms', () => {
     },
   );
 
+  it.each([
+    ['Reactive'],
+    ['reactive'],
+    ['R'],
+    ['พบ'],
+    ['Pos 1:8'],
+    ['pos'],
+    ['2+'],
+    ['3+'],
+    ['++'],
+    ['++++'],
+  ])('reads the positive form %s as positive', (result) => {
+    expect(ancLab('HBs Ag', result).interpretation).toBe('positive');
+  });
+
+  it.each([['ไม่พบ'], ['Neg 1:2'], ['Non-reactive'], ['non reactive'], ['NONREACTIVE']])(
+    'reads %s as negative, never as the positive form it contains',
+    (result) => {
+      expect(ancLab('HBs Ag', result).interpretation).toBe('negative');
+    },
+  );
+
+  it.each([['W+'], ['w+']])(
+    'reads the weak form %s as abnormal, not positive or negative',
+    (result) => {
+      expect(ancLab('HBs Ag', result).interpretation).toBe('abnormal');
+    },
+  );
+
   it('reads ผิดปกติ as abnormal, which is not the same as positive', () => {
     expect(ancLab('HBs Ag', 'ผิดปกติ').interpretation).toBe('abnormal');
   });

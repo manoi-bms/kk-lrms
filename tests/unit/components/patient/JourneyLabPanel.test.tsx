@@ -15,6 +15,7 @@ let hook: HookResult;
 vi.mock('@/hooks/useJourneyLabs', () => ({ useJourneyLabs: () => hook }));
 
 import { JourneyLabPanel } from '@/components/patient/JourneyLabPanel';
+import { ANC_LAB_GREY_LEGEND } from '@/config/anc-lab-display';
 
 let seq = 0;
 function lab(over: Partial<JourneyLabResult> = {}): JourneyLabResult {
@@ -49,7 +50,15 @@ function lab(over: Partial<JourneyLabResult> = {}): JourneyLabResult {
 }
 
 function show(results: JourneyLabResult[] | null, over: Partial<HookResult> = {}) {
-  hook = { results, tier: results ? 'full' : null, error: undefined, isForbidden: false, isLoading: false, mutate: () => {}, ...over };
+  hook = {
+    results,
+    tier: results ? 'full' : null,
+    error: undefined,
+    isForbidden: false,
+    isLoading: false,
+    mutate: () => {},
+    ...over,
+  };
   return render(<JourneyLabPanel journeyId="j-1" />);
 }
 const tile = (label: string) => screen.getByTestId(`lab-tile-${label}`);
@@ -123,7 +132,15 @@ describe('JourneyLabPanel', () => {
   });
 
   it('shows a concealed result without any value', () => {
-    show([lab({ canonicalTest: 'HIV', concealed: true, rawResult: null, numericValue: null, interpretation: 'concealed' })]);
+    show([
+      lab({
+        canonicalTest: 'HIV',
+        concealed: true,
+        rawResult: null,
+        numericValue: null,
+        interpretation: 'concealed',
+      }),
+    ]);
     const t = tile('Anti-HIV');
     expect(t.textContent).toContain('ปกปิดผล');
     expect(t.dataset.status).toBe('concealed');
@@ -145,7 +162,16 @@ describe('JourneyLabPanel', () => {
   });
 
   it('lists unclassified results by original name with no colour', () => {
-    show([lab({ canonicalTest: null, labItemsName: 'Ferritin', rawResult: '30', numericValue: null, interpretation: 'unknown', abnormalFlag: 'Y' })]);
+    show([
+      lab({
+        canonicalTest: null,
+        labItemsName: 'Ferritin',
+        rawResult: '30',
+        numericValue: null,
+        interpretation: 'unknown',
+        abnormalFlag: 'Y',
+      }),
+    ]);
     const section = screen.getByTestId('lab-other');
     expect(within(section).getByText('Ferritin')).toBeTruthy();
     expect(tile('Ferritin').dataset.status).toBe('neutral');
@@ -179,9 +205,31 @@ describe('JourneyLabPanel', () => {
 
   it('never puts a result in a tooltip', () => {
     const { container } = show([
-      lab({ canonicalTest: 'HIV', rawResult: 'Positive', numericValue: null, interpretation: 'positive' }),
+      lab({
+        canonicalTest: 'HIV',
+        rawResult: 'Positive',
+        numericValue: null,
+        interpretation: 'positive',
+      }),
     ]);
     expect(container.querySelector('[title]')).toBeNull();
     expect(tile('Anti-HIV').textContent).toContain('Positive');
+  });
+});
+
+describe('JourneyLabPanel — grey legend', () => {
+  it('says grey was not interpreted, to read the text, and is not a normal result', () => {
+    hook = {
+      results: [lab()],
+      tier: 'full',
+      error: undefined,
+      isForbidden: false,
+      isLoading: false,
+      mutate: () => {},
+    };
+    render(<JourneyLabPanel journeyId="j1" />);
+    expect(screen.getByText(ANC_LAB_GREY_LEGEND)).toBeTruthy();
+    expect(ANC_LAB_GREY_LEGEND).toContain('แปลผล');
+    expect(ANC_LAB_GREY_LEGEND).toContain('ไม่ได้หมายความว่าผลปกติ');
   });
 });

@@ -12,6 +12,7 @@ import { LoadingState } from '@/components/shared/LoadingState';
 import { SectionCard } from '@/components/shared/SectionCard';
 import {
   ANC_LAB_ACCESS_DENIED,
+  ANC_LAB_GREY_LEGEND,
   ANC_LAB_OWN_RESULTS_NOTICE,
   ANC_LAB_SOURCE_LABEL,
 } from '@/config/anc-lab-display';
@@ -187,6 +188,7 @@ function PanelBody({
       <p className="mt-1 text-caption text-[var(--ink-navy-muted)]">
         สีแดงแสดงเฉพาะผลที่ HOSxP หรือตัวผลตรวจระบุว่าผิดปกติ ระบบไม่ได้ประเมินค่าตัวเลขในส่วนนี้
       </p>
+      <p className="mt-1 text-caption text-[var(--ink-navy-muted)]">{ANC_LAB_GREY_LEGEND}</p>
       {panel.trends.length > 0 && (
         <>
           <SubHeading>แนวโน้ม</SubHeading>
@@ -269,7 +271,11 @@ export function JourneyLabPanel({ journeyId }: { journeyId: string }) {
         {results.length === 0 ? (
           <>
             <EmptyState
-              title={ownResultsOnly ? 'โรงพยาบาลนี้ยังไม่มีผลตรวจของผู้ป่วยรายนี้' : 'ยังไม่มีผลตรวจในระบบ'}
+              title={
+                ownResultsOnly
+                  ? 'โรงพยาบาลนี้ยังไม่มีผลตรวจของผู้ป่วยรายนี้'
+                  : 'ยังไม่มีผลตรวจในระบบ'
+              }
               description="ผลตรวจจะแสดงเมื่อ HOSxP ของโรงพยาบาลซิงก์ข้อมูลเข้ามา"
             />
             {!ownResultsOnly && <MissingTests items={panel.missing} />}

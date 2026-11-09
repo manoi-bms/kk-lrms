@@ -173,9 +173,15 @@ export const QUALITATIVE_RESULT_FORMS: readonly {
   pattern: RegExp;
   interpretation: Extract<AncLabInterpretation, 'negative' | 'positive' | 'abnormal'>;
 }[] = [
-  { pattern: /^(neg|negative|nr|n|ne|ปกติ)$/i, interpretation: 'negative' },
+  // Negative forms first, so Non-reactive and ไม่พบ can never read as positive.
+  { pattern: /^(neg|negative|nr|n|ne|ปกติ|ไม่พบ)$/i, interpretation: 'negative' },
+  { pattern: /^neg\b/i, interpretation: 'negative' },
   { pattern: /^non[- ]?react/i, interpretation: 'negative' },
-  { pattern: /^(pos|positive|possitive|\+)$/i, interpretation: 'positive' },
+  // Weak: neither a clear positive nor a negative.
+  { pattern: /^w\+$/i, interpretation: 'abnormal' },
+  { pattern: /^(pos|positive|possitive|reactive|r|พบ)$/i, interpretation: 'positive' },
+  { pattern: /^pos\b/i, interpretation: 'positive' }, // Pos 1:8
+  { pattern: /^\d?\+{1,4}$/, interpretation: 'positive' }, // +, ++, 2+, 3+
   { pattern: /^ผิดปกติ$/, interpretation: 'abnormal' },
 ];
 
