@@ -28,7 +28,24 @@ export interface AncLabClassifierInput {
   result: string | null;
 }
 
-export type AncLabClassificationNote = 'no_rule' | 'excluded_by_rule' | 'value_shape_mismatch';
+/** One HOSxP lab row as the browser pushes it; raw and unclassified. */
+export interface AncLabPayloadRow {
+  source: AncLabSource;
+  /** HOSxP row identity, stable across pulls. */
+  sourceId: string;
+  resultDate?: string | null;
+  gaWeeks?: number | null;
+  ancLabName?: string | null;
+  labItemsName?: string | null;
+  labItemsCode?: string | null;
+  result?: string | null;
+  unit?: string | null;
+  normalReference?: string | null;
+  abnormalFlag?: string | null;
+  ancResultNormalRaw?: string | null;
+}
+
+export type AncLabClassificationNote ='no_rule' | 'excluded_by_rule' | 'value_shape_mismatch';
 
 export interface AncLabClassification {
   canonicalTest: AncLabTest | null;
@@ -64,6 +81,8 @@ function matchesAny(forms: readonly RegExp[], value: string): boolean {
 }
 
 function matchNameRule(input: Pick<AncLabClassifierInput, 'source' | 'ancLabName' | 'labItemsName'>) {
+  // person_anc columns are flags of unconfirmed meaning; see ANC_THALASSEMIA_FIELDS.
+  if (input.source === 'person_anc') return null;
   const name = normaliseName(input.labItemsName) || normaliseName(input.ancLabName);
   if (!name) return null;
   const ancLabName = normaliseName(input.ancLabName);

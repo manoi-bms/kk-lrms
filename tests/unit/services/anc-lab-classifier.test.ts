@@ -10,7 +10,7 @@ import {
 import { ANC_LAB_ORDER_SQL_LIKE_TERMS, ANC_LAB_TESTS } from '@/config/anc-lab-canon';
 import { plausibleHctPct } from '@/config/lab-plausibility';
 
-const ancLab = (labItemsName: string | null, result: string, ancLabName?: string) =>
+const ancLab = (labItemsName: string | null, result: string, ancLabName?: string | null) =>
   classifyAncLab({ source: 'anc_lab', labItemsName, ancLabName: ancLabName ?? null, result });
 const labOrder = (labItemsName: string, result: string) =>
   classifyAncLab({ source: 'lab_order', labItemsName, ancLabName: null, result });
@@ -127,6 +127,18 @@ describe('classifyAncLab — traps', () => {
       expect(c.rawResult).toBe('5.4');
     },
   );
+
+  it('never classifies person_anc thalassemia flags, whose meaning is unconfirmed', () => {
+    const c = classifyAncLab({
+      source: 'person_anc',
+      labItemsName: null,
+      ancLabName: 'Thalassemia: Hb typing (สามี)',
+      result: 'N',
+    });
+    expect(c.canonicalTest).toBeNull();
+    expect(c.interpretation).toBe('unknown');
+    expect(c.rawResult).toBe('N');
+  });
 
   it('does not read an unknown lab into any test', () => {
     const c = ancLab('Ferritin', '30');

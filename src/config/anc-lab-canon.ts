@@ -142,6 +142,24 @@ export const ANC_LAB_NAME_RULES: readonly AncLabNameRule[] = [
   { pattern: /^urine\s*sugar/, test: 'URINE_SUGAR' },
 ];
 
+/**
+ * person_anc thalassemia columns, pulled as visible but never classified: they
+ * are char(1) flags or lookup ids whose meaning is unconfirmed, so "N" here
+ * must not read as a negative result. Columns from the HOSxP data dictionary.
+ */
+export const ANC_THALASSEMIA_FIELDS: readonly { column: string; label: string }[] = [
+  { column: 'thalasseima_wife_of_result', label: 'Thalassemia: OF (ภรรยา)' },
+  { column: 'thalasseima_wife_dcip_result', label: 'Thalassemia: DCIP (ภรรยา)' },
+  { column: 'thalasseima_wife_hbtyping_result', label: 'Thalassemia: Hb typing (ภรรยา)' },
+  { column: 'thalasseima_wife_alpha1_result', label: 'Thalassemia: Alpha-1 (ภรรยา)' },
+  { column: 'thalasseima_husband_of_result', label: 'Thalassemia: OF (สามี)' },
+  { column: 'thalasseima_husband_dcip_result', label: 'Thalassemia: DCIP (สามี)' },
+  { column: 'thalasseima_husband_hbtyping_result', label: 'Thalassemia: Hb typing (สามี)' },
+  { column: 'thalasseima_husband_alpha1_result', label: 'Thalassemia: Alpha-1 (สามี)' },
+  { column: 'thalassaemia_result_id', label: 'Thalassemia: รหัสผลตรวจ (ภรรยา)' },
+  { column: 'husban_thalassaemia_result_id', label: 'Thalassemia: รหัสผลตรวจ (สามี)' },
+];
+
 /** Exact (trimmed) text meaning no result was recorded. */
 export const MISSING_RESULT_FORMS: readonly RegExp[] = [/^$/, /^null$/i];
 
