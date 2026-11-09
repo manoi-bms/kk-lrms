@@ -300,6 +300,25 @@ describe('classifyAncLab — result forms', () => {
     expect(c.rawResult).toBe(result);
   });
 
+  describe('Rh accepts only explicit signs', () => {
+    it.each([['ปกติ'], ['N'], ['NR'], ['ne'], ['Reactive'], ['W+'], ['ผิดปกติ'], ['2+']])(
+      'keeps Rh %s as unknown because normal is not Rh-negative',
+      (result) => {
+        const c = ancLab('Rh Typing', result);
+        expect(c.canonicalTest).toBe('RH');
+        expect(c.interpretation).toBe('unknown');
+      },
+    );
+
+    it.each([['neg'], ['Negative'], ['-']])('reads Rh %s as negative', (result) => {
+      expect(ancLab('Rh Typing', result).interpretation).toBe('negative');
+    });
+
+    it.each([['pos'], ['Positive'], ['+']])('reads Rh %s as positive', (result) => {
+      expect(ancLab('Rh Typing', result).interpretation).toBe('positive');
+    });
+  });
+
   it('keeps the original text as the raw result', () => {
     expect(ancLab('HIV-Ab', ' NONREACT  <0.030 ').rawResult).toBe('NONREACT  <0.030');
   });

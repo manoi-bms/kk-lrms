@@ -19,6 +19,7 @@ import {
   type AncLabResultShape,
   type AncLabSource,
   type AncLabTest,
+  type QualitativeResultForm,
 } from '@/config/anc-lab-canon';
 
 export interface AncLabClassifierInput {
@@ -106,14 +107,21 @@ function parseNumber(value: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function qualitativeInterpretation(value: string): AncLabInterpretation {
-  return QUALITATIVE_RESULT_FORMS.find((f) => f.pattern.test(value))?.interpretation ?? 'unknown';
+function qualitativeInterpretation(
+  value: string,
+  forms: readonly QualitativeResultForm[],
+): AncLabInterpretation {
+  return forms.find((f) => f.pattern.test(value))?.interpretation ?? 'unknown';
 }
 
 /** null = the value contradicts the shape its test requires. */
 function readValue(shape: AncLabResultShape, value: string): AncLabResultReading | null {
   const none = { numericValue: null, normalizedValue: null };
-  if (matchesAny(AMBIGUOUS_RESULT_FORMS, value)) return { ...none, interpretation: 'unknown' };
+  // A test with its own table has already decided what its forms mean.
+  const ownForms = shape.kind === 'qualitative' ? shape.forms : undefined;
+  if (!ownForms && matchesAny(AMBIGUOUS_RESULT_FORMS, value)) {
+    return { ...none, interpretation: 'unknown' };
+  }
   switch (shape.kind) {
     case 'numeric': {
       const n = parseNumber(value);
@@ -122,7 +130,10 @@ function readValue(shape: AncLabResultShape, value: string): AncLabResultReading
     }
     case 'qualitative':
       if (BARE_NUMBER.test(value)) return null;
-      return { ...none, interpretation: qualitativeInterpretation(value) };
+      return {
+        ...none,
+        interpretation: qualitativeInterpretation(value, ownForms ?? QUALITATIVE_RESULT_FORMS),
+      };
     case 'blood_group': {
       const match = BLOOD_GROUP.exec(value);
       if (!match) return null;

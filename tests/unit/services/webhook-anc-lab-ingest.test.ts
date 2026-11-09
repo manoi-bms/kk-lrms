@@ -515,6 +515,39 @@ describe('processAncWebhook — ANC lab ingest', () => {
       expect((await journey()).hbsag_result).toBe('NEG');
     });
 
+    it('does not record Rh-negative from a result that only says normal', async () => {
+      await push(patient({ labResults: [named('1', 'Rh Typing', 'ปกติ')] }));
+      expect((await journey()).rh_factor).toBeNull();
+    });
+
+    it('does not let an unreadable Rh change a known value', async () => {
+      await push(
+        patient({
+          labResults: [
+            hct({
+              sourceId: '1',
+              labItemsName: 'Rh Typing',
+              result: 'Positive',
+              resultDate: '2026-02-01',
+            }),
+          ],
+        }),
+      );
+      await push(
+        patient({
+          labResults: [
+            hct({
+              sourceId: '2',
+              labItemsName: 'Rh Typing',
+              result: 'ปกติ',
+              resultDate: '2026-04-01',
+            }),
+          ],
+        }),
+      );
+      expect((await journey()).rh_factor).toBe('POS');
+    });
+
     // The journey page paints any OGTT text other than ABNORMAL as normal, and
     // grading a glucose value needs thresholds nobody has signed off.
     it('leaves ogtt_result empty rather than implying a normal result', async () => {

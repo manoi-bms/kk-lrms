@@ -42,9 +42,15 @@ export type AncLabSource = 'anc_lab' | 'lab_order' | 'person_anc';
 export type AncLabInterpretation =
   'negative' | 'positive' | 'abnormal' | 'unknown' | 'missing' | 'concealed';
 
+export interface QualitativeResultForm {
+  pattern: RegExp;
+  interpretation: Extract<AncLabInterpretation, 'negative' | 'positive' | 'abnormal'>;
+}
+
 export type AncLabResultShape =
   | { kind: 'numeric'; min: number; max: number }
-  | { kind: 'qualitative' }
+  /** `forms` replaces the shared table for a test that reads results its own way. */
+  | { kind: 'qualitative'; forms?: readonly QualitativeResultForm[] }
   | { kind: 'blood_group' }
   | { kind: 'text' };
 
@@ -55,6 +61,16 @@ export interface AncLabTestDefinition {
 }
 
 const QUALITATIVE: AncLabResultShape = { kind: 'qualitative' };
+
+/**
+ * Rh takes explicit signs only. For an infection screen ปกติ or N means
+ * negative, the good result; for Rh that reading would report a normal woman
+ * as Rh-negative.
+ */
+const RH_RESULT_FORMS: readonly QualitativeResultForm[] = [
+  { pattern: /^(neg|negative|-)$/i, interpretation: 'negative' },
+  { pattern: /^(pos|positive|\+)$/i, interpretation: 'positive' },
+];
 // Data-quality bounds for plasma glucose, mg/dL; not diagnostic thresholds.
 const GLUCOSE: AncLabResultShape = { kind: 'numeric', min: 10, max: 900 };
 
@@ -74,7 +90,7 @@ export const ANC_LAB_TESTS: Record<AncLabTest, AncLabTestDefinition> = {
   MCV: { shape: { kind: 'numeric', min: 40, max: 140 } },
   MCH: { shape: { kind: 'numeric', min: 10, max: 50 } },
   BLOOD_GROUP: { shape: { kind: 'blood_group' } },
-  RH: { shape: QUALITATIVE },
+  RH: { shape: { kind: 'qualitative', forms: RH_RESULT_FORMS } },
   GST: { shape: GLUCOSE },
   OGTT_FASTING: { shape: GLUCOSE },
   OGTT_1H: { shape: GLUCOSE },
@@ -169,10 +185,7 @@ export const CONCEALED_RESULT_FORMS: readonly RegExp[] = [/^ปกปิด$/];
 export const AMBIGUOUS_RESULT_FORMS: readonly RegExp[] = [/^-$/];
 
 /** Anything not listed here stays 'unknown'. */
-export const QUALITATIVE_RESULT_FORMS: readonly {
-  pattern: RegExp;
-  interpretation: Extract<AncLabInterpretation, 'negative' | 'positive' | 'abnormal'>;
-}[] = [
+export const QUALITATIVE_RESULT_FORMS: readonly QualitativeResultForm[] = [
   // Negative forms first, so Non-reactive and ไม่พบ can never read as positive.
   { pattern: /^(neg|negative|nr|n|ne|ปกติ|ไม่พบ)$/i, interpretation: 'negative' },
   { pattern: /^neg\b/i, interpretation: 'negative' },
