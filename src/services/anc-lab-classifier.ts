@@ -191,6 +191,13 @@ export function classifyAncLab(input: AncLabClassifierInput): AncLabClassificati
   return { ...base, ...reading, canonicalTest: test, classificationNote: null };
 }
 
+/** The test a row's name points to, whatever its value turned out to be. */
+export function testNamedBy(
+  input: Pick<AncLabClassifierInput, 'source' | 'ancLabName' | 'labItemsName'>,
+): AncLabTest | null {
+  return matchNameRule(input)?.test ?? null;
+}
+
 /** Whether a lab_order item is one the app wants; its value is judged later. */
 export function isClassifiableLabOrderName(labItemsName: string): boolean {
   return matchNameRule({ source: 'lab_order', ancLabName: null, labItemsName })?.test != null;

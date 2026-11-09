@@ -16,6 +16,7 @@ import {
   ANC_LAB_TREND_TESTS,
 } from '@/config/anc-lab-display';
 import { ANC_LAB_STICKY_POSITIVE_TESTS, type AncLabTest } from '@/config/anc-lab-canon';
+import { testNamedBy } from '@/services/anc-lab-classifier';
 import type { JourneyLabResult } from '@/services/anc-lab-results';
 
 export type LabTone = 'abnormal' | 'normal' | 'neutral' | 'concealed' | 'unreadable' | 'none';
@@ -168,6 +169,12 @@ export function buildJourneyLabPanel(results: JourneyLabResult[]): JourneyLabPan
     else byTest.set(r.canonicalTest, [...(byTest.get(r.canonicalTest) ?? []), r]);
   }
 
+  // A row named for the test but failing its shape check is under "other", with
+  // a warning. The result exists, so it must not also be listed as absent.
+  const namedOnly = new Set(
+    results.filter((r) => r.classificationNote === 'value_shape_mismatch').map(testNamedBy),
+  );
+
   return {
     groups: ANC_LAB_PANEL_GROUPS.map((group) => ({
       id: group.id,
@@ -183,7 +190,10 @@ export function buildJourneyLabPanel(results: JourneyLabResult[]): JourneyLabPan
     }),
     other,
     missing: ANC_LAB_CORE_ITEMS.filter(
-      (item) => !item.tests.some((test) => byTest.get(test)?.some((r) => !isMissing(r))),
+      (item) =>
+        !item.tests.some(
+          (test) => namedOnly.has(test) || byTest.get(test)?.some((r) => !isMissing(r)),
+        ),
     ).map(({ id, labelTh }) => ({ id, labelTh })),
     sources: latestSyncPerHospital(results),
   };

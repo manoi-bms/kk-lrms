@@ -344,3 +344,41 @@ describe('a positive earlier in this pregnancy', () => {
     expect(presentLabResult(r, { earlierPositive: true }).tone).toBe('abnormal');
   });
 });
+
+describe('core tests with a result that failed the shape check', () => {
+  const mismatch = (labItemsName: string, rawResult: string) =>
+    lab({
+      canonicalTest: null,
+      classificationNote: 'value_shape_mismatch',
+      labItemsName,
+      ancLabName: labItemsName,
+      rawResult,
+      interpretation: 'unknown',
+    });
+  const missingIds = (rows: JourneyLabResult[]) =>
+    buildJourneyLabPanel(rows).missing.map((m) => m.id);
+
+  it.each([
+    ['HBs Ag', '1.5', 'hbsag'],
+    ['Hct', '0.36', 'hb_hct'],
+    ['Anti HIV', '36', 'hiv'],
+  ])('does not call %s %s missing', (name, raw, id) => {
+    expect(missingIds([mismatch(name, raw)])).not.toContain(id);
+  });
+
+  it('still reports the tests with nothing on file', () => {
+    expect(missingIds([mismatch('HBs Ag', '1.5')])).toContain('hiv');
+  });
+
+  it('does not count an unrelated unclassified result', () => {
+    const ferritin = lab({
+      canonicalTest: null,
+      classificationNote: 'no_rule',
+      labItemsName: 'Ferritin',
+      ancLabName: 'Ferritin',
+      rawResult: '30',
+      interpretation: 'unknown',
+    });
+    expect(missingIds([ferritin])).toContain('hbsag');
+  });
+});
