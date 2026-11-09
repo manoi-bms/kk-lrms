@@ -24,6 +24,9 @@ import { KpiTip } from '@/components/shared/KpiTip';
 import { FlagChip } from '@/components/shared/FlagChip';
 import { IncompleteAssessmentMarker } from '@/components/shared/IncompleteAssessmentMarker';
 import { STATUS_META, URGENCY_META } from '@/components/referrals/chips';
+import { Sparkline } from '@/components/charts/Sparkline';
+import { LabTile } from '@/components/patient/LabTile';
+import { JourneyLabPanel } from '@/components/patient/JourneyLabPanel';
 import {
   BP_SYS_HIGH,
   BP_SYS_AMBER,
@@ -437,77 +440,6 @@ function LabResult({
   );
 }
 
-// Serology tile for the labs panel — wider click-target with a clear
-// normal/abnormal color-coded status line. Abnormal tiles use a saturated
-// red background + white-on-red value with a warning icon so they pop out
-// of a row of otherwise-normal serology.
-function LabTile({
-  label,
-  value,
-  status,
-}: {
-  label: string;
-  value: string | null;
-  status: 'normal' | 'abnormal' | 'missing';
-}) {
-  if (status === 'abnormal') {
-    return (
-      <div
-        className="flex flex-col gap-0.5 border px-2.5 py-1.5"
-        style={{
-          borderColor: 'var(--risk-high)',
-          background: 'rgba(239, 68, 68, 0.14)',
-          boxShadow: 'inset 3px 0 0 var(--risk-high)',
-        }}
-      >
-        <div
-          className="inline-flex items-center gap-1 font-mono text-caption font-bold uppercase tracking-[0.12em]"
-          style={{ color: 'var(--risk-high)' }}
-        >
-          <AlertTriangle className="h-2.5 w-2.5" />
-          {label}
-        </div>
-        <div
-          className="inline-flex w-fit items-center rounded-sm px-1.5 py-0.5 font-mono text-caption font-bold tabular-nums text-white"
-          style={{ background: 'var(--risk-high)' }}
-        >
-          {value ?? '—'}
-        </div>
-      </div>
-    );
-  }
-  const palette =
-    status === 'normal'
-      ? {
-          fg: 'var(--ink-navy)',
-          accent: 'var(--risk-low)',
-          bg: 'rgba(34, 197, 94, 0.06)',
-        }
-      : {
-          fg: 'var(--ink-navy-muted)',
-          accent: 'var(--ink-navy-muted)',
-          bg: 'white',
-        };
-  return (
-    <div
-      className="flex flex-col gap-0.5 border px-2.5 py-1.5"
-      style={{
-        borderColor: 'var(--rule-strong)',
-        borderLeftColor: palette.accent,
-        borderLeftWidth: 3,
-        background: palette.bg,
-      }}
-    >
-      <div className="font-mono text-caption uppercase tracking-[0.12em] text-[var(--ink-navy-muted)]">
-        {label}
-      </div>
-      <div className="font-mono text-caption font-bold tabular-nums" style={{ color: palette.fg }}>
-        {value ?? '—'}
-      </div>
-    </div>
-  );
-}
-
 const DANGER_LABEL_TH: Record<string, string> = {
   severe_headache: 'ปวดศีรษะรุนแรง',
   blurred_vision: 'ตาพร่ามัว',
@@ -656,82 +588,6 @@ function MetricTile({
         {sub && <div className="font-mono text-caption text-[var(--ink-navy-muted)]">{sub}</div>}
       </div>
     </div>
-  );
-}
-
-// ─── Inline sparkline (no external chart lib for tiny trends) ─────────────
-//
-// Renders a polyline + dots for a small time-series of numbers. Values that
-// fall outside [lowBand, highBand] render the dot red so a clinician can
-// spot an abnormal point at a glance without reading exact numbers.
-function Sparkline({
-  values,
-  width = 140,
-  height = 34,
-  lowBand,
-  highBand,
-  color = 'var(--accent-navy)',
-}: {
-  values: Array<number | null>;
-  width?: number;
-  height?: number;
-  lowBand?: number;
-  highBand?: number;
-  color?: string;
-}) {
-  const pts = values.filter((v): v is number => v != null);
-  if (pts.length < 1) {
-    return <span className="font-mono text-caption text-[var(--ink-navy-muted)]">—</span>;
-  }
-  const min = Math.min(...pts, lowBand ?? Infinity);
-  const max = Math.max(...pts, highBand ?? -Infinity);
-  const span = max - min || 1;
-  const pad = 4;
-  const w = width - pad * 2;
-  const h = height - pad * 2;
-  const x = (i: number) => pad + (values.length === 1 ? w / 2 : (i / (values.length - 1)) * w);
-  const y = (v: number) => pad + h - ((v - min) / span) * h;
-  const polyPts = values
-    .map((v, i) => (v == null ? null : `${x(i)},${y(v)}`))
-    .filter(Boolean)
-    .join(' ');
-  // Normal band shading when both lowBand and highBand are provided.
-  const bandY0 = highBand != null ? y(highBand) : null;
-  const bandY1 = lowBand != null ? y(lowBand) : null;
-  return (
-    <svg width={width} height={height} className="block" role="img" aria-label="trend">
-      {bandY0 != null && bandY1 != null && (
-        <rect
-          x={0}
-          y={Math.min(bandY0, bandY1)}
-          width={width}
-          height={Math.abs(bandY1 - bandY0)}
-          fill="var(--risk-low)"
-          opacity={0.08}
-        />
-      )}
-      <polyline
-        points={polyPts}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.4}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-      {values.map((v, i) => {
-        if (v == null) return null;
-        const abnormal = (lowBand != null && v < lowBand) || (highBand != null && v > highBand);
-        return (
-          <circle
-            key={i}
-            cx={x(i)}
-            cy={y(v)}
-            r={abnormal ? 2.4 : 1.8}
-            fill={abnormal ? 'var(--risk-high)' : color}
-          />
-        );
-      })}
-    </svg>
   );
 }
 
@@ -2177,6 +2033,8 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
               );
             })()}
           </SectionCard>
+
+          <JourneyLabPanel journeyId={journeyId} />
 
           {/* 04 — Immunization (RTCOG: Tdap every pregnancy 27-36w) */}
           <SectionCard title="วัคซีน" description={`Tdap ${derived?.immunization.tdap.length ?? 0} ครั้ง · ไข้หวัดใหญ่ ${derived?.immunization.influenza.length ?? 0} ครั้ง`}>
