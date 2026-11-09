@@ -515,6 +515,50 @@ describe('processAncWebhook — ANC lab ingest', () => {
       expect((await journey()).hbsag_result).toBe('NEG');
     });
 
+    describe('a newer result that is not a clear POS or NEG', () => {
+      const at = (sourceId: string, labItemsName: string, result: string, resultDate: string) =>
+        hct({ sourceId, labItemsName, result, resultDate });
+
+      it.each([
+        ['HBs Ag', 'hbsag_result', 'ผิดปกติ'],
+        ['HBs Ag', 'hbsag_result', 'ดูผลในใบรายงาน'],
+        ['DCIP', 'dcip_result', 'ผิดปกติ'],
+        ['DCIP', 'dcip_result', 'W+'],
+      ])('clears an older NEG when %s turns to %s %s', async (name, column, later) => {
+        await push(
+          patient({
+            labResults: [
+              at('1', name, 'Negative', '2026-02-01'),
+              at('2', name, later, '2026-05-01'),
+            ],
+          }),
+        );
+        expect((await journey())[column]).toBeNull();
+      });
+
+      it.each([['null'], ['ปกปิด']])(
+        'keeps an older NEG when the newest row is %s',
+        async (later) => {
+          await push(
+            patient({
+              labResults: [
+                at('1', 'HBs Ag', 'Negative', '2026-02-01'),
+                at('2', 'HBs Ag', later, '2026-05-01'),
+              ],
+            }),
+          );
+          expect((await journey()).hbsag_result).toBe('NEG');
+        },
+      );
+
+      it('leaves a column alone when no row for that test exists', async () => {
+        await push(patient());
+        await db.execute(`UPDATE maternal_journeys SET hbsag_result = 'NEG'`);
+        await push(patient({ labResults: [at('1', 'DCIP', 'Negative', '2026-02-01')] }));
+        expect((await journey()).hbsag_result).toBe('NEG');
+      });
+    });
+
     it('does not record Rh-negative from a result that only says normal', async () => {
       await push(patient({ labResults: [named('1', 'Rh Typing', 'ปกติ')] }));
       expect((await journey()).rh_factor).toBeNull();

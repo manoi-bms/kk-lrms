@@ -4,7 +4,11 @@ import { describe, it, expect } from 'vitest';
 import type { JourneyLabResult } from '@/services/anc-lab-results';
 import { ANC_LAB_TESTS, type AncLabTest } from '@/config/anc-lab-canon';
 import { ANC_LAB_PANEL_GROUPS, ANC_LAB_TEST_LABEL } from '@/config/anc-lab-display';
-import { buildJourneyLabPanel, presentLabResult } from '@/services/anc-lab-presentation';
+import {
+  buildJourneyLabPanel,
+  codedTileStatus,
+  presentLabResult,
+} from '@/services/anc-lab-presentation';
 
 let seq = 0;
 function lab(over: Partial<JourneyLabResult> = {}): JourneyLabResult {
@@ -143,7 +147,8 @@ describe('presentLabResult', () => {
 
   it('still reports HOSxP flag on an unclassified row, as words', () => {
     expect(
-      presentLabResult(lab({ canonicalTest: null, rawResult: '30', abnormalFlag: 'Y' })).hosxpFlagged,
+      presentLabResult(lab({ canonicalTest: null, rawResult: '30', abnormalFlag: 'Y' }))
+        .hosxpFlagged,
     ).toBe(true);
   });
 });
@@ -198,7 +203,13 @@ describe('buildJourneyLabPanel', () => {
   it('builds a chronological trend from repeated numeric values only', () => {
     const panel = buildJourneyLabPanel([
       hct(30, { resultDate: '2026-05-01' }),
-      hct(0, { rawResult: null, numericValue: null, concealed: true, interpretation: 'concealed', resultDate: '2026-04-01' }),
+      hct(0, {
+        rawResult: null,
+        numericValue: null,
+        concealed: true,
+        interpretation: 'concealed',
+        resultDate: '2026-04-01',
+      }),
       hct(33, { resultDate: '2026-03-01' }),
       hct(35, { resultDate: null }),
     ]);
@@ -234,8 +245,12 @@ describe('buildJourneyLabPanel', () => {
     const missing = (over: Partial<JourneyLabResult>) =>
       buildJourneyLabPanel([lab({ canonicalTest: 'HIV', ...over })]).missing.map((m) => m.id);
     expect(missing({ rawResult: null, interpretation: 'missing' })).toContain('hiv');
-    expect(missing({ rawResult: null, concealed: true, interpretation: 'concealed' })).not.toContain('hiv');
-    expect(missing({ rawResult: null, rawResultUnreadable: true, interpretation: 'unknown' })).not.toContain('hiv');
+    expect(
+      missing({ rawResult: null, concealed: true, interpretation: 'concealed' }),
+    ).not.toContain('hiv');
+    expect(
+      missing({ rawResult: null, rawResultUnreadable: true, interpretation: 'unknown' }),
+    ).not.toContain('hiv');
   });
 
   it('reports the latest sync per hospital', () => {
@@ -248,5 +263,25 @@ describe('buildJourneyLabPanel', () => {
       { hospitalName: 'รพ.หนึ่ง', lastSyncedAt: '2026-03-05T01:00:00.000Z' },
       { hospitalName: 'รพ.สอง', lastSyncedAt: '2026-03-01T01:00:00.000Z' },
     ]);
+  });
+});
+
+describe('codedTileStatus', () => {
+  it.each([
+    [null, 'missing'],
+    ['', 'missing'],
+    ['POS', 'abnormal'],
+    ['NEG', 'normal'],
+    ['PENDING', 'neutral'],
+    ['Negative', 'neutral'],
+    ['Non-reactive', 'neutral'],
+  ])('reads %j as %s on a POS/NEG tile', (value, status) => {
+    expect(codedTileStatus(value, 'NEG', 'POS')).toBe(status);
+  });
+
+  it('reads Rh the other way round', () => {
+    expect(codedTileStatus('NEG', 'POS', 'NEG')).toBe('abnormal');
+    expect(codedTileStatus('POS', 'POS', 'NEG')).toBe('normal');
+    expect(codedTileStatus('ปกติ', 'POS', 'NEG')).toBe('neutral');
   });
 });

@@ -389,9 +389,12 @@ function posNeg(interpretation: string | null): 'POS' | 'NEG' | null {
  * creating a referral sets it to the sender. The two hospitals must differ
  * because only the destination is checked when a referral is accepted, so a
  * hospital could otherwise refer a woman to itself and accept.
- * Undated rows are passed over because their date failed validation. Unknown,
- * abnormal, missing and concealed readings are passed over so they neither
- * blank a known value nor get recorded as a POS/NEG they are not.
+ * Undated rows are passed over because their date failed validation.
+ *
+ * HBsAg and DCIP follow the newest row that holds a result: when that result is
+ * not a clear POS or NEG the column is cleared, because keeping an older NEG
+ * would leave a green tile over a newer abnormal. Missing and concealed rows
+ * say nothing either way, so they are skipped.
  *
  * Deliberately excludes: HIV/VDRL, which keep their person_anc source and are
  * not newly exposed through a plaintext column; and OGTT, because grading a
@@ -423,33 +426,39 @@ export async function refreshJourneyLabColumns(
     [journeyId, ...JOURNEY_LAB_REFERRAL_STATUSES, ...JOURNEY_LAB_TESTS],
   );
 
+  // In every helper: undefined = no evidence, leave the column; null = clear it.
   const latest = (test: JourneyLabTest, read: (r: JourneyLabRow) => string | number | null) => {
     for (const row of rows) {
       if (row.canonical_test !== test) continue;
       const value = read(row);
       if (value !== null) return value;
     }
-    return null;
+    return undefined;
+  };
+  const newestResult = (test: JourneyLabTest) => {
+    const newest = rows.find(
+      (r) =>
+        r.canonical_test === test &&
+        r.interpretation !== 'missing' &&
+        r.interpretation !== 'concealed',
+    );
+    return newest ? posNeg(newest.interpretation) : undefined;
   };
 
-  const values = [
-    latest('BLOOD_GROUP', (r) => r.normalized_value),
-    latest('RH', (r) => posNeg(r.interpretation)),
-    latest('HBSAG', (r) => posNeg(r.interpretation)),
-    latest('MCV', (r) => (r.numeric_value === null ? null : Number(r.numeric_value))),
-    latest('DCIP', (r) => posNeg(r.interpretation)),
+  const columns: [string, string | number | null | undefined][] = [
+    ['blood_group', latest('BLOOD_GROUP', (r) => r.normalized_value)],
+    ['rh_factor', latest('RH', (r) => posNeg(r.interpretation))],
+    ['hbsag_result', newestResult('HBSAG')],
+    ['mcv_fl', latest('MCV', (r) => (r.numeric_value === null ? null : Number(r.numeric_value)))],
+    ['dcip_result', newestResult('DCIP')],
   ];
-  if (values.every((v) => v === null)) return;
+  const changes = columns.filter(([, value]) => value !== undefined);
+  if (changes.length === 0) return;
 
   await db.execute(
-    `UPDATE maternal_journeys SET
-       blood_group = COALESCE(?, blood_group),
-       rh_factor = COALESCE(?, rh_factor),
-       hbsag_result = COALESCE(?, hbsag_result),
-       mcv_fl = COALESCE(?, mcv_fl),
-       dcip_result = COALESCE(?, dcip_result),
+    `UPDATE maternal_journeys SET ${changes.map(([column]) => `${column} = ?`).join(', ')},
        updated_at = ?
      WHERE id = ?`,
-    [...values, new Date().toISOString(), journeyId],
+    [...changes.map(([, value]) => value), new Date().toISOString(), journeyId],
   );
 }

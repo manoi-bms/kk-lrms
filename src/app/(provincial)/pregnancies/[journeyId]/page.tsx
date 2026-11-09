@@ -26,6 +26,7 @@ import { IncompleteAssessmentMarker } from '@/components/shared/IncompleteAssess
 import { STATUS_META, URGENCY_META } from '@/components/referrals/chips';
 import { Sparkline } from '@/components/charts/Sparkline';
 import { LabTile } from '@/components/patient/LabTile';
+import { codedTileStatus } from '@/services/anc-lab-presentation';
 import { JourneyLabPanel } from '@/components/patient/JourneyLabPanel';
 import {
   BP_SYS_HIGH,
@@ -994,7 +995,9 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
         <Icon className="h-10 w-10 text-[var(--ink-navy-muted)] opacity-50" />
         <p className="font-mono text-caption text-[var(--ink-navy-muted)]">{heading}</p>
         {error ? (
-          <p className="max-w-md text-center font-mono text-caption text-danger-text">{apiMessage}</p>
+          <p className="max-w-md text-center font-mono text-caption text-danger-text">
+            {apiMessage}
+          </p>
         ) : null}
         <button
           onClick={() => router.back()}
@@ -1071,7 +1074,8 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
         className="px-5 py-3"
         style={{
           borderBottom: '1px solid var(--rule-strong)',
-          background: 'linear-gradient(90deg, var(--brand-soft) 0%, var(--surface-page) 70%, var(--surface-card) 100%)',
+          background:
+            'linear-gradient(90deg, var(--brand-soft) 0%, var(--surface-page) 70%, var(--surface-card) 100%)',
         }}
       >
         <div className="text-label text-brand">ข้อมูลการตั้งครรภ์รายบุคคล</div>
@@ -1394,7 +1398,10 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
         {/* ─── LEFT: timeline + trends + labs ─── */}
         <div className="flex min-w-0 flex-col gap-5">
           {/* 01 — Vital trends (new) */}
-          <SectionCard title="แนวโน้มสัญญาณชีพ" description={`${derived?.visitsChrono.length ?? 0} ครั้ง · เรียงจากเก่าไปใหม่ (ซ้าย → ขวา)`}>
+          <SectionCard
+            title="แนวโน้มสัญญาณชีพ"
+            description={`${derived?.visitsChrono.length ?? 0} ครั้ง · เรียงจากเก่าไปใหม่ (ซ้าย → ขวา)`}
+          >
             <div className="mt-2 border bg-white" style={{ borderColor: 'var(--rule-strong)' }}>
               {(derived?.visitsChrono.length ?? 0) === 0 ? (
                 <div className="px-4 py-8 text-center font-mono text-caption text-[var(--ink-navy-muted)]">
@@ -1709,22 +1716,26 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
           </SectionCard>
 
           {/* 03 — Labs + screening + PMH (RTCOG OB 66-029 booking panel) */}
-          <SectionCard title="ผลตรวจทางห้องปฏิบัติการ คัดกรอง และโรคประจำตัว" actions={(derived?.labFlags.length ?? 0) > 0 ? (
-                  <span className="flex flex-wrap items-center gap-1">
-                    {derived!.labFlags.map((f) => (
-                      <span
-                        key={f.key}
-                        className="inline-flex items-center border px-1.5 py-0.5 font-mono text-caption font-semibold tracking-[0.06em]"
-                        style={{ color: f.color, borderColor: f.color }}
-                      >
-                        {f.label}
-                      </span>
-                    ))}
-                  </span>
-                ) : (
-                  <span className="text-label text-ok-text">ไม่พบค่าผิดปกติ</span>
-                )}>
-
+          <SectionCard
+            title="ผลตรวจทางห้องปฏิบัติการ คัดกรอง และโรคประจำตัว"
+            actions={
+              (derived?.labFlags.length ?? 0) > 0 ? (
+                <span className="flex flex-wrap items-center gap-1">
+                  {derived!.labFlags.map((f) => (
+                    <span
+                      key={f.key}
+                      className="inline-flex items-center border px-1.5 py-0.5 font-mono text-caption font-semibold tracking-[0.06em]"
+                      style={{ color: f.color, borderColor: f.color }}
+                    >
+                      {f.label}
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                <span className="text-label text-ok-text">ไม่พบค่าผิดปกติ</span>
+              )
+            }
+          >
             {/* Iron contraindication banner — RTCOG: no iron in Hb H / β-thal */}
             {derived?.ironContra && (
               <div
@@ -1764,46 +1775,22 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
                 <LabTile
                   label="Rh"
                   value={journey.rhFactor}
-                  status={
-                    !journey.rhFactor
-                      ? 'missing'
-                      : journey.rhFactor === 'NEG'
-                        ? 'abnormal'
-                        : 'normal'
-                  }
+                  status={codedTileStatus(journey.rhFactor, 'POS', 'NEG')}
                 />
                 <LabTile
                   label="HBsAg"
                   value={journey.hbsagResult}
-                  status={
-                    !journey.hbsagResult
-                      ? 'missing'
-                      : journey.hbsagResult === 'POS'
-                        ? 'abnormal'
-                        : 'normal'
-                  }
+                  status={codedTileStatus(journey.hbsagResult, 'NEG', 'POS')}
                 />
                 <LabTile
                   label="VDRL"
                   value={journey.vdrlResult}
-                  status={
-                    !journey.vdrlResult
-                      ? 'missing'
-                      : journey.vdrlResult === 'POS'
-                        ? 'abnormal'
-                        : 'normal'
-                  }
+                  status={codedTileStatus(journey.vdrlResult, 'NEG', 'POS')}
                 />
                 <LabTile
                   label="HIV"
                   value={journey.hivResult}
-                  status={
-                    !journey.hivResult
-                      ? 'missing'
-                      : journey.hivResult === 'POS'
-                        ? 'abnormal'
-                        : 'normal'
-                  }
+                  status={codedTileStatus(journey.hivResult, 'NEG', 'POS')}
                 />
                 <LabTile
                   label="OGTT"
@@ -1838,24 +1825,12 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
                 <LabTile
                   label="DCIP"
                   value={journey.dcipResult ?? null}
-                  status={
-                    !journey.dcipResult
-                      ? 'missing'
-                      : journey.dcipResult === 'POS'
-                        ? 'abnormal'
-                        : 'normal'
-                  }
+                  status={codedTileStatus(journey.dcipResult, 'NEG', 'POS')}
                 />
                 <LabTile
                   label="Hb E"
                   value={journey.hbEResult ?? null}
-                  status={
-                    !journey.hbEResult
-                      ? 'missing'
-                      : journey.hbEResult === 'POS'
-                        ? 'abnormal'
-                        : 'normal'
-                  }
+                  status={codedTileStatus(journey.hbEResult, 'NEG', 'POS')}
                 />
                 <LabTile
                   label="THAL TYPE"
@@ -1915,13 +1890,7 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
                 <LabTile
                   label="GBS (35-37w)"
                   value={journey.gbsResult ?? null}
-                  status={
-                    !journey.gbsResult
-                      ? 'missing'
-                      : journey.gbsResult === 'POS'
-                        ? 'abnormal'
-                        : 'normal'
-                  }
+                  status={codedTileStatus(journey.gbsResult, 'NEG', 'POS')}
                 />
               </div>
             </div>
@@ -2037,7 +2006,10 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
           <JourneyLabPanel journeyId={journeyId} />
 
           {/* 04 — Immunization (RTCOG: Tdap every pregnancy 27-36w) */}
-          <SectionCard title="วัคซีน" description={`Tdap ${derived?.immunization.tdap.length ?? 0} ครั้ง · ไข้หวัดใหญ่ ${derived?.immunization.influenza.length ?? 0} ครั้ง`}>
+          <SectionCard
+            title="วัคซีน"
+            description={`Tdap ${derived?.immunization.tdap.length ?? 0} ครั้ง · ไข้หวัดใหญ่ ${derived?.immunization.influenza.length ?? 0} ครั้ง`}
+          >
             <div
               className="mt-2 grid grid-cols-4 gap-0 border bg-white"
               style={{ borderColor: 'var(--rule-strong)' }}
@@ -2074,7 +2046,10 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
           </SectionCard>
 
           {/* 05 — Ultrasound timeline (T1 dating, T2 anatomy, T3 wellbeing) */}
-          <SectionCard title="อัลตราซาวด์และสุขภาพทารกในครรภ์" description="ไตรมาส 1 กำหนดอายุครรภ์ · ไตรมาส 2 ตรวจโครงสร้าง · ไตรมาส 3 ประเมินสุขภาพทารก">
+          <SectionCard
+            title="อัลตราซาวด์และสุขภาพทารกในครรภ์"
+            description="ไตรมาส 1 กำหนดอายุครรภ์ · ไตรมาส 2 ตรวจโครงสร้าง · ไตรมาส 3 ประเมินสุขภาพทารก"
+          >
             <div
               className="mt-2 grid grid-cols-1 gap-0 border bg-white md:grid-cols-3"
               style={{ borderColor: 'var(--rule-strong)' }}
@@ -2282,7 +2257,10 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
         </div>
 
         {/* ─── RIGHT: sticky clinical summary rail ─── */}
-        <aside data-testid="journey-rail" className="min-w-0 overflow-hidden rounded-2xl bg-surface-card shadow-soft @min-[1160px]:sticky @min-[1160px]:top-[calc(var(--app-header-h,0px)_+_16px)]">
+        <aside
+          data-testid="journey-rail"
+          className="min-w-0 overflow-hidden rounded-2xl bg-surface-card shadow-soft @min-[1160px]:sticky @min-[1160px]:top-[calc(var(--app-header-h,0px)_+_16px)]"
+        >
           <div className="flex flex-col @min-[1160px]:max-h-[calc(100dvh_-_var(--app-header-h,0px)_-_32px)] @min-[1160px]:overflow-y-auto">
             {/* Risk assessment — always shown; extra emphasis when HR2+ */}
             <div
@@ -2704,7 +2682,8 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
       {/* ─── Footer ─── */}
       <div className="flex flex-wrap justify-between gap-2 border-t border-border bg-surface-card px-5 py-2 text-caption text-ink-muted">
         <span>
-          รหัสการตั้งครรภ์ <span className="font-semibold tabular-nums text-ink">{journey.id.slice(0, 8)}</span>
+          รหัสการตั้งครรภ์{' '}
+          <span className="font-semibold tabular-nums text-ink">{journey.id.slice(0, 8)}</span>
         </span>
         <span>รีเฟรชอัตโนมัติทุก {REFRESH_INTERVAL_MS / 1000} วินาที</span>
       </div>

@@ -52,6 +52,20 @@ export interface JourneyLabPanelModel {
 
 const UNREADABLE_LABEL = 'อ่านข้อมูลไม่ได้';
 
+/**
+ * Status for a journey tile holding a code. Only the exact normal code may be
+ * green: these columns can hold PENDING or free text from person_anc.
+ */
+export function codedTileStatus(
+  value: string | null | undefined,
+  normalCode: string,
+  abnormalCode: string,
+): 'missing' | 'normal' | 'abnormal' | 'neutral' {
+  if (!value) return 'missing';
+  if (value === abnormalCode) return 'abnormal';
+  return value === normalCode ? 'normal' : 'neutral';
+}
+
 function isMissing(r: JourneyLabResult): boolean {
   return r.interpretation === 'missing' && !r.concealed && !r.rawResultUnreadable;
 }
@@ -109,10 +123,7 @@ function summariseTest(test: AncLabTest, rows: JourneyLabResult[]): LabTestSumma
 function trendOf(test: AncLabTest, rows: JourneyLabResult[]): LabTrend | null {
   const usable = rows.filter(
     (r): r is JourneyLabResult & { resultDate: string; numericValue: number } =>
-      r.resultDate !== null &&
-      r.numericValue !== null &&
-      !r.concealed &&
-      !r.rawResultUnreadable,
+      r.resultDate !== null && r.numericValue !== null && !r.concealed && !r.rawResultUnreadable,
   );
   if (usable.length < 2) return null;
   return {

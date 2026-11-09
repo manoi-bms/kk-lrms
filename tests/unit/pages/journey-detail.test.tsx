@@ -354,10 +354,25 @@ describe('JourneyDetailPage — sub-project 4 chrome', () => {
 
   it('main sections are Thai SectionCards, not SectionLabels', async () => {
     await renderPage();
-    for (const name of ['แนวโน้มสัญญาณชีพ', 'ประวัติการฝากครรภ์', 'ผลตรวจทางห้องปฏิบัติการ คัดกรอง และโรคประจำตัว', 'วัคซีน', 'อัลตราซาวด์และสุขภาพทารกในครรภ์']) {
+    for (const name of [
+      'แนวโน้มสัญญาณชีพ',
+      'ประวัติการฝากครรภ์',
+      'ผลตรวจทางห้องปฏิบัติการ คัดกรอง และโรคประจำตัว',
+      'วัคซีน',
+      'อัลตราซาวด์และสุขภาพทารกในครรภ์',
+    ]) {
       expect(await screen.findByRole('region', { name })).toBeInTheDocument();
     }
-    for (const en of ['PROVINCIAL REGISTRY', 'JOURNEY DETAIL', 'Vital trends', 'ANC visit timeline', 'Immunization', 'JOURNEY ID', 'REFRESHING EVERY', 'Risk ·']) {
+    for (const en of [
+      'PROVINCIAL REGISTRY',
+      'JOURNEY DETAIL',
+      'Vital trends',
+      'ANC visit timeline',
+      'Immunization',
+      'JOURNEY ID',
+      'REFRESHING EVERY',
+      'Risk ·',
+    ]) {
       expect(screen.queryByText(new RegExp(en))).toBeNull();
     }
     expect(screen.getByText(/รีเฟรชอัตโนมัติทุก/)).toBeInTheDocument();
@@ -375,5 +390,36 @@ describe('JourneyDetailPage — sub-project 4 chrome', () => {
     expect(await screen.findByText('อายุครรภ์ (GA)')).toBeInTheDocument();
     expect(screen.getByText('กำหนดคลอด (EDC)')).toBeInTheDocument();
     expect(screen.getByText('นัดถัดไป')).toBeInTheDocument();
+  });
+});
+
+// A journey column can hold PENDING or free text from person_anc; only an exact
+// NEG may read as a normal result.
+describe('JourneyDetailPage — serology tiles', () => {
+  const tileStatus = (label: string) =>
+    screen.getByText(label).closest('[data-status]')?.getAttribute('data-status');
+
+  it.each([
+    ['hbsagResult', 'HBsAg'],
+    ['vdrlResult', 'VDRL'],
+    ['hivResult', 'HIV'],
+    ['dcipResult', 'DCIP'],
+    ['hbEResult', 'Hb E'],
+    ['gbsResult', 'GBS (35-37w)'],
+  ])('does not paint %s green unless it is NEG', async (field, label) => {
+    const journey = fixture.journey as Record<string, unknown>;
+    const before = journey[field];
+    journey[field] = 'Non-reactive';
+    try {
+      await renderPage();
+      expect(tileStatus(label)).toBe('neutral');
+    } finally {
+      journey[field] = before;
+    }
+  });
+
+  it('paints NEG normal', async () => {
+    await renderPage();
+    expect(tileStatus('HBsAg')).toBe('normal');
   });
 });
