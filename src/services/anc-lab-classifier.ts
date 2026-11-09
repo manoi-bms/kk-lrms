@@ -117,11 +117,7 @@ function qualitativeInterpretation(
 /** null = the value contradicts the shape its test requires. */
 function readValue(shape: AncLabResultShape, value: string): AncLabResultReading | null {
   const none = { numericValue: null, normalizedValue: null };
-  // A test with its own table has already decided what its forms mean.
-  const ownForms = shape.kind === 'qualitative' ? shape.forms : undefined;
-  if (!ownForms && matchesAny(AMBIGUOUS_RESULT_FORMS, value)) {
-    return { ...none, interpretation: 'unknown' };
-  }
+  if (matchesAny(AMBIGUOUS_RESULT_FORMS, value)) return { ...none, interpretation: 'unknown' };
   switch (shape.kind) {
     case 'numeric': {
       const n = parseNumber(value);
@@ -132,7 +128,7 @@ function readValue(shape: AncLabResultShape, value: string): AncLabResultReading
       if (BARE_NUMBER.test(value)) return null;
       return {
         ...none,
-        interpretation: qualitativeInterpretation(value, ownForms ?? QUALITATIVE_RESULT_FORMS),
+        interpretation: qualitativeInterpretation(value, shape.forms ?? QUALITATIVE_RESULT_FORMS),
       };
     case 'blood_group': {
       const match = BLOOD_GROUP.exec(value);

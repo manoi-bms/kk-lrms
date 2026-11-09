@@ -65,10 +65,10 @@ const QUALITATIVE: AncLabResultShape = { kind: 'qualitative' };
 /**
  * Rh takes explicit signs only. For an infection screen ปกติ or N means
  * negative, the good result; for Rh that reading would report a normal woman
- * as Rh-negative.
+ * as Rh-negative. A bare dash is not a sign either: it often means not done.
  */
 const RH_RESULT_FORMS: readonly QualitativeResultForm[] = [
-  { pattern: /^(neg|negative|-)$/i, interpretation: 'negative' },
+  { pattern: /^(neg|negative)$/i, interpretation: 'negative' },
   { pattern: /^(pos|positive|\+)$/i, interpretation: 'positive' },
 ];
 // Data-quality bounds for plasma glucose, mg/dL; not diagnostic thresholds.

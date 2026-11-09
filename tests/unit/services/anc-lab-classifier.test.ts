@@ -311,6 +311,12 @@ describe('classifyAncLab — result forms', () => {
   });
 
   describe('Rh accepts only explicit signs', () => {
+    it('keeps a bare dash as unknown because it often means not done', () => {
+      const c = ancLab('Rh Typing', '-');
+      expect(c.canonicalTest).toBe('RH');
+      expect(c.interpretation).toBe('unknown');
+    });
+
     it.each([['ปกติ'], ['N'], ['NR'], ['ne'], ['Reactive'], ['W+'], ['ผิดปกติ'], ['2+']])(
       'keeps Rh %s as unknown because normal is not Rh-negative',
       (result) => {
@@ -320,7 +326,7 @@ describe('classifyAncLab — result forms', () => {
       },
     );
 
-    it.each([['neg'], ['Negative'], ['-']])('reads Rh %s as negative', (result) => {
+    it.each([['neg'], ['Negative']])('reads Rh %s as negative', (result) => {
       expect(ancLab('Rh Typing', result).interpretation).toBe('negative');
     });
 

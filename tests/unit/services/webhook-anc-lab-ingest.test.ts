@@ -632,6 +632,33 @@ describe('processAncWebhook — ANC lab ingest', () => {
       expect((await journey()).rh_factor).toBeNull();
     });
 
+    it('does not record Rh-negative from a bare dash', async () => {
+      await push(patient({ labResults: [named('1', 'Rh Typing', '-')] }));
+      expect((await journey()).rh_factor).toBeNull();
+    });
+
+    it('does not let a bare dash change a known Rh', async () => {
+      await push(
+        patient({
+          labResults: [
+            hct({
+              sourceId: '1',
+              labItemsName: 'Rh Typing',
+              result: 'Positive',
+              resultDate: '2026-02-01',
+            }),
+            hct({
+              sourceId: '2',
+              labItemsName: 'Rh Typing',
+              result: '-',
+              resultDate: '2026-04-01',
+            }),
+          ],
+        }),
+      );
+      expect((await journey()).rh_factor).toBe('POS');
+    });
+
     it('does not let an unreadable Rh change a known value', async () => {
       await push(
         patient({
