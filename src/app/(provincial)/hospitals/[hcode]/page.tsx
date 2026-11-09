@@ -1015,10 +1015,11 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
                 ? `${journey.bloodGroup} ${journey.rhFactor === 'NEG' ? 'Rh-' : journey.rhFactor === 'POS' ? 'Rh+' : ''}`.trim()
                 : null
             }
+            alarm={journey.rhFactor === 'NEG'}
           />
-          <LabCell label="HBSAG" value={journey.hbsagResult} />
-          <LabCell label="VDRL" value={journey.vdrlResult} />
-          <LabCell label="HIV" value={journey.hivResult} />
+          <LabCell label="HBSAG" value={journey.hbsagResult} alarmIfMatches={['POS']} />
+          <LabCell label="VDRL" value={journey.vdrlResult} alarmIfMatches={['POS']} />
+          <LabCell label="HIV" value={journey.hivResult} alarmIfMatches={['POS']} />
           <LabCell label="OGTT" value={journey.ogttResult} alarmIfMatches={['ABNORMAL', 'POS']} />
           <LabCell label="DCIP" value={journey.dcipResult} alarmIfMatches={['POS']} />
           <LabCell label="HbE" value={journey.hbEResult} alarmIfMatches={['POS']} />
@@ -1033,12 +1034,14 @@ function LabCell({
   label,
   value,
   alarmIfMatches,
+  alarm = false,
 }: {
   label: string;
   value: string | null | undefined;
   alarmIfMatches?: string[];
+  alarm?: boolean;
 }) {
-  const isAlarm = !!value && (alarmIfMatches ?? []).includes(value);
+  const isAlarm = !!value && (alarm || (alarmIfMatches ?? []).includes(value));
   const isPending = value === 'PENDING';
   const display = value ?? '—';
   return (

@@ -59,7 +59,7 @@ function incoming() {
   return { hubHcode: '10670', minGaWeeks: 34, count: 7, byTrigger: { ga: 5, fw: 1, risk: 1 }, items: [] };
 }
 
-async function renderConsole(opts: { laborFails?: boolean } = {}) {
+async function renderConsole(opts: { laborFails?: boolean; journeyDetail?: unknown } = {}) {
   const fetcher = vi.fn(async (url: string) => {
     if (url.includes('/patients?')) {
       if (opts.laborFails) throw new Error('labor feed down');
@@ -67,7 +67,7 @@ async function renderConsole(opts: { laborFails?: boolean } = {}) {
     }
     if (url.includes('/journeys?stage=PREGNANCY')) return anc();
     if (url.includes('/incoming-pregnancies')) return incoming();
-    if (url.startsWith('/api/journeys/')) return { journey: null };
+    if (url.startsWith('/api/journeys/')) return opts.journeyDetail ?? { journey: null };
     throw new Error(`unexpected fetch ${url}`);
   });
   await act(async () => {
@@ -206,5 +206,39 @@ describe('HospitalConsolePage — nurse-facing labels are Thai', () => {
     await screen.findAllByRole('button', { name: /นาง ดาว/ });
     const text = document.body.textContent ?? '';
     for (const en of BANNED) expect(text).not.toMatch(new RegExp(en));
+  });
+});
+
+describe('HospitalConsolePage: ANC preview lab cells', () => {
+  async function previewLabs(journey: Record<string, unknown>) {
+    const j = anc().journeys[1];
+    await renderConsole({ journeyDetail: { journey: { ...j, ...journey }, ancVisits: [], ancRisks: [], referrals: [], newborns: [] } });
+    fireEvent.click(await screen.findByRole('button', { name: /ทะเบียนฝากครรภ์/ }));
+    fireEvent.mouseEnter((await screen.findAllByRole('button', { name: /นาง ดาว/ }))[0]);
+    await screen.findByText('ผลตรวจล่าสุด');
+  }
+  const cell = (label: string) => screen.getByText(label).nextElementSibling as HTMLElement;
+  const RED = 'rgb(161, 39, 27)';
+
+  it.each([
+    ['HBSAG', { hbsagResult: 'POS' }],
+    ['VDRL', { vdrlResult: 'POS' }],
+    ['HIV', { hivResult: 'POS' }],
+    ['DCIP', { dcipResult: 'POS' }],
+  ])('marks a positive %s red, as the journey page does', async (label, journey) => {
+    await previewLabs(journey);
+    expect(cell(label).style.color).toBe(RED);
+  });
+
+  it('marks Rh negative red', async () => {
+    await previewLabs({ bloodGroup: 'O', rhFactor: 'NEG' });
+    expect(cell('หมู่เลือด').textContent).toBe('O Rh-');
+    expect(cell('หมู่เลือด').style.color).toBe(RED);
+  });
+
+  it('leaves a negative result uncoloured', async () => {
+    await previewLabs({ hbsagResult: 'NEG', bloodGroup: 'O', rhFactor: 'POS' });
+    expect(cell('HBSAG').style.color).not.toBe(RED);
+    expect(cell('หมู่เลือด').style.color).not.toBe(RED);
   });
 });
