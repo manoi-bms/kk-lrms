@@ -72,6 +72,10 @@ async function purgeRecentSyncs(
       journeyIds,
     );
     ancVisits = (v as { rowCount?: number } | undefined)?.rowCount ?? 0;
+    await db.execute(
+      `DELETE FROM cached_anc_lab_results WHERE journey_id IN (${placeholders})`,
+      journeyIds,
+    );
     const r = await db.execute(
       `DELETE FROM cached_anc_risks WHERE journey_id IN (${placeholders})`,
       journeyIds,
