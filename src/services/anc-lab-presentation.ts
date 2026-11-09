@@ -16,7 +16,7 @@ import {
   ANC_LAB_TREND_TESTS,
 } from '@/config/anc-lab-display';
 import { ANC_LAB_STICKY_POSITIVE_TESTS, type AncLabTest } from '@/config/anc-lab-canon';
-import { testNamedBy } from '@/services/anc-lab-classifier';
+import { interpretStoredResult, testNamedBy } from '@/services/anc-lab-classifier';
 import type { JourneyLabResult } from '@/services/anc-lab-results';
 
 export type LabTone = 'abnormal' | 'normal' | 'neutral' | 'concealed' | 'unreadable' | 'none';
@@ -68,6 +68,22 @@ export function codedTileStatus(
   if (!value) return 'missing';
   if (value === abnormalCode) return 'abnormal';
   return value === normalCode ? 'normal' : 'neutral';
+}
+
+/**
+ * For columns that hold person_anc free text rather than a code (hiv_result,
+ * vdrl_result). Uses the same reading as the lab results, so exact codes work
+ * too. Anything it cannot read stays neutral: a VDRL titer such as 1:8 needs a
+ * clinician, and no threshold is applied here.
+ */
+export function serologyTextTileStatus(
+  value: string | null | undefined,
+  test: AncLabTest,
+): 'missing' | 'normal' | 'abnormal' | 'neutral' {
+  if (!value) return 'missing';
+  const { interpretation } = interpretStoredResult(test, value);
+  if (interpretation === 'positive' || interpretation === 'abnormal') return 'abnormal';
+  return interpretation === 'negative' ? 'normal' : 'neutral';
 }
 
 function isMissing(r: JourneyLabResult): boolean {

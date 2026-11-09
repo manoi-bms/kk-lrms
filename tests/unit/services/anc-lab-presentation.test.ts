@@ -8,6 +8,7 @@ import {
   buildJourneyLabPanel,
   codedTileStatus,
   presentLabResult,
+  serologyTextTileStatus,
 } from '@/services/anc-lab-presentation';
 
 let seq = 0;
@@ -380,5 +381,29 @@ describe('core tests with a result that failed the shape check', () => {
       interpretation: 'unknown',
     });
     expect(missingIds([ferritin])).toContain('hbsag');
+  });
+});
+
+describe('serologyTextTileStatus', () => {
+  describe.each<[AncLabTest]>([['HIV'], ['VDRL_RPR']])('%s', (test) => {
+    it.each([
+      [null, 'missing'],
+      ['', 'missing'],
+      ['POS', 'abnormal'],
+      ['Positive', 'abnormal'],
+      ['Reactive', 'abnormal'],
+      ['Pos 1:8', 'abnormal'],
+      ['ผิดปกติ', 'abnormal'],
+      ['W+', 'abnormal'],
+      ['NEG', 'normal'],
+      ['neg', 'normal'],
+      ['Non-reactive', 'normal'],
+      ['-', 'neutral'],
+      ['1:8', 'neutral'],
+      ['PENDING', 'neutral'],
+      ['ดูผลในใบรายงาน', 'neutral'],
+    ])('reads %j as %s', (value, status) => {
+      expect(serologyTextTileStatus(value, test)).toBe(status);
+    });
   });
 });

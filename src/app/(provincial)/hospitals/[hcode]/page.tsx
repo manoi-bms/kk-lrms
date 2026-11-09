@@ -51,6 +51,7 @@ import type {
   AncRiskEntry,
 } from '@/types/api';
 import { ArrowLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { serologyTextTileStatus } from '@/services/anc-lab-presentation';
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
@@ -1018,8 +1019,16 @@ function AncPreview({ journeyId, hcode }: { journeyId: string; hcode: string }) 
             alarm={journey.rhFactor === 'NEG'}
           />
           <LabCell label="HBSAG" value={journey.hbsagResult} alarmIfMatches={['POS']} />
-          <LabCell label="VDRL" value={journey.vdrlResult} alarmIfMatches={['POS']} />
-          <LabCell label="HIV" value={journey.hivResult} alarmIfMatches={['POS']} />
+          <LabCell
+            label="VDRL"
+            value={journey.vdrlResult}
+            alarm={serologyTextTileStatus(journey.vdrlResult, 'VDRL_RPR') === 'abnormal'}
+          />
+          <LabCell
+            label="HIV"
+            value={journey.hivResult}
+            alarm={serologyTextTileStatus(journey.hivResult, 'HIV') === 'abnormal'}
+          />
           <LabCell label="OGTT" value={journey.ogttResult} alarmIfMatches={['ABNORMAL', 'POS']} />
           <LabCell label="DCIP" value={journey.dcipResult} alarmIfMatches={['POS']} />
           <LabCell label="HbE" value={journey.hbEResult} alarmIfMatches={['POS']} />

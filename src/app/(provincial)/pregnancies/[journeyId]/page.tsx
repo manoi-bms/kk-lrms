@@ -26,7 +26,7 @@ import { IncompleteAssessmentMarker } from '@/components/shared/IncompleteAssess
 import { STATUS_META, URGENCY_META } from '@/components/referrals/chips';
 import { Sparkline } from '@/components/charts/Sparkline';
 import { LabTile } from '@/components/patient/LabTile';
-import { codedTileStatus } from '@/services/anc-lab-presentation';
+import { codedTileStatus, serologyTextTileStatus } from '@/services/anc-lab-presentation';
 import { JourneyLabPanel } from '@/components/patient/JourneyLabPanel';
 import {
   BP_SYS_HIGH,
@@ -1785,12 +1785,12 @@ export default function JourneyDetailPage({ params }: { params: Promise<{ journe
                 <LabTile
                   label="VDRL"
                   value={journey.vdrlResult}
-                  status={codedTileStatus(journey.vdrlResult, 'NEG', 'POS')}
+                  status={serologyTextTileStatus(journey.vdrlResult, 'VDRL_RPR')}
                 />
                 <LabTile
                   label="HIV"
                   value={journey.hivResult}
-                  status={codedTileStatus(journey.hivResult, 'NEG', 'POS')}
+                  status={serologyTextTileStatus(journey.hivResult, 'HIV')}
                 />
                 <LabTile
                   label="OGTT"

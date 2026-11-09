@@ -401,8 +401,6 @@ describe('JourneyDetailPage — serology tiles', () => {
 
   it.each([
     ['hbsagResult', 'HBsAg'],
-    ['vdrlResult', 'VDRL'],
-    ['hivResult', 'HIV'],
     ['dcipResult', 'DCIP'],
     ['hbEResult', 'Hb E'],
     ['gbsResult', 'GBS (35-37w)'],
@@ -413,6 +411,31 @@ describe('JourneyDetailPage — serology tiles', () => {
     try {
       await renderPage();
       expect(tileStatus(label)).toBe('neutral');
+    } finally {
+      journey[field] = before;
+    }
+  });
+
+  // person_anc free text: interpreted, because these two columns are not coded.
+  it.each([
+    ['vdrlResult', 'VDRL', 'Positive', 'abnormal'],
+    ['vdrlResult', 'VDRL', 'Reactive', 'abnormal'],
+    ['vdrlResult', 'VDRL', 'neg', 'normal'],
+    ['vdrlResult', 'VDRL', 'Non-reactive', 'normal'],
+    ['vdrlResult', 'VDRL', '-', 'neutral'],
+    ['vdrlResult', 'VDRL', '1:8', 'neutral'],
+    ['hivResult', 'HIV', 'Positive', 'abnormal'],
+    ['hivResult', 'HIV', 'Reactive', 'abnormal'],
+    ['hivResult', 'HIV', 'neg', 'normal'],
+    ['hivResult', 'HIV', 'Non-reactive', 'normal'],
+    ['hivResult', 'HIV', '-', 'neutral'],
+  ])('reads %s on the %s tile holding %j as %s', async (field, label, value, status) => {
+    const journey = fixture.journey as Record<string, unknown>;
+    const before = journey[field];
+    journey[field] = value;
+    try {
+      await renderPage();
+      expect(tileStatus(label)).toBe(status);
     } finally {
       journey[field] = before;
     }
