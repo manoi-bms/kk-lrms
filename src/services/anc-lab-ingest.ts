@@ -1,0 +1,385 @@
+/**
+ * Persists HOSxP ANC lab rows and keeps the columns derived from them current.
+ *
+ * Labs never touch risk levels, screening rows or alerts: acting on a positive
+ * result needs obstetric sign-off. Only upserts happen here, so a partial pull
+ * can never remove data. Logs carry counts and ids, never names or results.
+ */
+import { createHmac } from 'node:crypto';
+import { v4 as uuidv4 } from 'uuid';
+import type { DatabaseAdapter } from '@/db/adapter';
+import { ANC_LAB_TESTS, type AncLabSource, type AncLabTest } from '@/config/anc-lab-canon';
+import { encrypt } from '@/lib/encryption';
+import { toIsoDate } from '@/lib/dates';
+import { normalizeHosxpDate } from '@/lib/hosxp-date';
+import {
+  classifyAncLab,
+  type AncLabClassification,
+  type AncLabPayloadRow,
+} from '@/services/anc-lab-classifier';
+
+export const ANC_LAB_MAX_ROWS_PER_PATIENT = 400;
+const MAX_SOURCE_ID_LENGTH = 140;
+const MAX_TEXT_LENGTH = 2000;
+const MAX_GA_WEEKS = 60;
+
+type LabWriter = Pick<DatabaseAdapter, 'execute'>;
+type LabReader = Pick<DatabaseAdapter, 'query'>;
+
+export interface AncLabIngestStats {
+  received: number;
+  upserted: number;
+  unchanged: number;
+  /** Rows rejected at the boundary or over the per-patient cap. */
+  skipped: number;
+  unclassified: number;
+  concealed: number;
+}
+
+export function emptyAncLabStats(): AncLabIngestStats {
+  return { received: 0, upserted: 0, unchanged: 0, skipped: 0, unclassified: 0, concealed: 0 };
+}
+
+const SOURCES: readonly AncLabSource[] = ['anc_lab', 'lab_order', 'person_anc'];
+const TEXT_FIELDS = [
+  'resultDate',
+  'ancLabName',
+  'labItemsName',
+  'labItemsCode',
+  'result',
+  'unit',
+  'normalReference',
+  'abnormalFlag',
+  'ancResultNormalRaw',
+] as const;
+
+function isValidText(value: unknown): boolean {
+  return (
+    value === undefined ||
+    value === null ||
+    (typeof value === 'string' && value.length <= MAX_TEXT_LENGTH)
+  );
+}
+
+function isValidRow(row: unknown): row is AncLabPayloadRow {
+  if (!row || typeof row !== 'object') return false;
+  const r = row as Record<string, unknown>;
+  if (!SOURCES.includes(r.source as AncLabSource)) return false;
+  if (typeof r.sourceId !== 'string' || r.sourceId.length === 0) return false;
+  if (r.sourceId.length > MAX_SOURCE_ID_LENGTH) return false;
+  return TEXT_FIELDS.every((field) => isValidText(r[field]));
+}
+
+/** The push boundary: bad rows are dropped and counted, never fatal. */
+export function sanitizeAncLabRows(value: unknown): {
+  rows: AncLabPayloadRow[];
+  skipped: number;
+} {
+  if (value === undefined || value === null) return { rows: [], skipped: 0 };
+  if (!Array.isArray(value)) return { rows: [], skipped: 1 };
+  const valid = value.filter(isValidRow);
+  const rows = valid.slice(0, ANC_LAB_MAX_ROWS_PER_PATIENT);
+  return { rows, skipped: value.length - rows.length };
+}
+
+function parseResultDate(value: string | null | undefined): string | null {
+  const normalized = normalizeHosxpDate(value);
+  if (!normalized || /^0{4}-0{2}-0{2}/.test(normalized)) return null;
+  return Number.isNaN(Date.parse(normalized)) ? null : normalized;
+}
+
+function parseGaWeeks(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+  const weeks = Math.trunc(value);
+  return weeks >= 0 && weeks <= MAX_GA_WEEKS ? weeks : null;
+}
+
+/** Keyed so tiny result domains (neg/pos) cannot be recovered by guessing. */
+function contentHash(encryptionKey: string, parts: readonly unknown[]): string {
+  const hashKey = createHmac('sha256', Buffer.from(encryptionKey, 'hex'))
+    .update('anc-lab-content-hash-v1')
+    .digest();
+  return createHmac('sha256', hashKey).update(JSON.stringify(parts)).digest('hex');
+}
+
+/** Sensitive tests keep their outcome only inside the encrypted raw result. */
+function plaintextOutcome(classification: AncLabClassification) {
+  const test = classification.canonicalTest;
+  if (test && ANC_LAB_TESTS[test].sensitive) {
+    return { numericValue: null, normalizedValue: null, interpretation: null };
+  }
+  return {
+    numericValue: classification.numericValue,
+    normalizedValue: classification.normalizedValue,
+    interpretation: classification.interpretation,
+  };
+}
+
+export async function loadExistingLabHashes(
+  db: LabReader,
+  hospitalId: string,
+): Promise<Map<string, string>> {
+  const rows = await db.query<{ source_key: string; content_hash: string }>(
+    'SELECT source_key, content_hash FROM cached_anc_lab_results WHERE hospital_id = ?',
+    [hospitalId],
+  );
+  return new Map(rows.map((r) => [r.source_key, r.content_hash]));
+}
+
+interface UpsertParams {
+  hospitalId: string;
+  journeyId: string;
+  rows: readonly AncLabPayloadRow[];
+  existingHashes: Map<string, string>;
+  encryptionKey: string;
+}
+
+/** Skips unchanged rows, so a re-pull of the same history costs no writes. */
+export async function upsertJourneyLabResults(
+  db: LabWriter,
+  params: UpsertParams,
+): Promise<Omit<AncLabIngestStats, 'received' | 'skipped'>> {
+  const { hospitalId, journeyId, rows, existingHashes, encryptionKey } = params;
+  const stats = { upserted: 0, unchanged: 0, unclassified: 0, concealed: 0 };
+  const now = new Date().toISOString();
+
+  for (const row of rows) {
+    const classification = classifyAncLab({
+      source: row.source,
+      ancLabName: row.ancLabName ?? null,
+      labItemsName: row.labItemsName ?? null,
+      result: row.result ?? null,
+    });
+    if (!classification.canonicalTest) stats.unclassified++;
+    if (classification.concealed) stats.concealed++;
+
+    const sourceKey = `${row.source}:${row.sourceId}`;
+    const resultDate = parseResultDate(row.resultDate);
+    const gaWeeks = parseGaWeeks(row.gaWeeks);
+    const outcome = plaintextOutcome(classification);
+    const hash = contentHash(encryptionKey, [
+      journeyId,
+      resultDate,
+      gaWeeks,
+      row.ancLabName ?? null,
+      row.labItemsName ?? null,
+      row.labItemsCode ?? null,
+      classification.rawResult,
+      row.unit ?? null,
+      row.normalReference ?? null,
+      row.abnormalFlag ?? null,
+      row.ancResultNormalRaw ?? null,
+      classification.canonicalTest,
+      classification.classificationNote,
+      classification.interpretation,
+    ]);
+    if (existingHashes.get(sourceKey) === hash) {
+      stats.unchanged++;
+      continue;
+    }
+
+    await db.execute(
+      `INSERT INTO cached_anc_lab_results
+         (id, journey_id, hospital_id, source, source_key, result_date, ga_weeks,
+          canonical_test, classification_note, anc_lab_name, lab_items_name, lab_items_code,
+          raw_result, numeric_value, normalized_value, interpretation, unit, normal_reference,
+          abnormal_flag, anc_result_normal_raw, concealed, content_hash, synced_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT (hospital_id, source_key) DO UPDATE SET
+         journey_id = EXCLUDED.journey_id,
+         result_date = EXCLUDED.result_date,
+         ga_weeks = EXCLUDED.ga_weeks,
+         canonical_test = EXCLUDED.canonical_test,
+         classification_note = EXCLUDED.classification_note,
+         anc_lab_name = EXCLUDED.anc_lab_name,
+         lab_items_name = EXCLUDED.lab_items_name,
+         lab_items_code = EXCLUDED.lab_items_code,
+         raw_result = EXCLUDED.raw_result,
+         numeric_value = EXCLUDED.numeric_value,
+         normalized_value = EXCLUDED.normalized_value,
+         interpretation = EXCLUDED.interpretation,
+         unit = EXCLUDED.unit,
+         normal_reference = EXCLUDED.normal_reference,
+         abnormal_flag = EXCLUDED.abnormal_flag,
+         anc_result_normal_raw = EXCLUDED.anc_result_normal_raw,
+         concealed = EXCLUDED.concealed,
+         content_hash = EXCLUDED.content_hash,
+         synced_at = EXCLUDED.synced_at`,
+      [
+        uuidv4(),
+        journeyId,
+        hospitalId,
+        row.source,
+        sourceKey,
+        resultDate,
+        gaWeeks,
+        classification.canonicalTest,
+        classification.classificationNote,
+        row.ancLabName ?? null,
+        row.labItemsName ?? null,
+        row.labItemsCode ?? null,
+        classification.rawResult === null ? null : encrypt(classification.rawResult, encryptionKey),
+        outcome.numericValue,
+        outcome.normalizedValue,
+        outcome.interpretation,
+        row.unit ?? null,
+        row.normalReference ?? null,
+        row.abnormalFlag ?? null,
+        row.ancResultNormalRaw ?? null,
+        classification.concealed,
+        hash,
+        now,
+        now,
+      ],
+    );
+    existingHashes.set(sourceKey, hash);
+    stats.upserted++;
+  }
+  return stats;
+}
+
+// ─── Visit hemoglobin / hematocrit ──────────────────────────────────────────
+
+export interface VisitLabValue {
+  hb?: number;
+  hct?: number;
+}
+/** journeyId → calendar day → values. */
+export type VisitLabValues = Map<string, Map<string, VisitLabValue>>;
+
+interface VisitLabRow {
+  journey_id: string;
+  canonical_test: 'HB' | 'HCT';
+  result_date: string | Date;
+  numeric_value: number | string;
+}
+
+/**
+ * Visits are re-inserted on every push, while labs are pulled every few
+ * minutes, so visit values must come from the store rather than the payload.
+ * A lab only fills the visit on its own day: anything else would attribute a
+ * result to a contact where it was not taken.
+ */
+async function queryVisitLabRows(
+  db: LabReader,
+  hospitalId: string,
+  journeyId?: string,
+): Promise<VisitLabRow[]> {
+  // anc_lab sorts last so it overwrites a lab order from the same day.
+  return db.query<VisitLabRow>(
+    `SELECT journey_id, canonical_test, result_date, numeric_value
+       FROM cached_anc_lab_results
+      WHERE hospital_id = ?
+        ${journeyId ? 'AND journey_id = ?' : ''}
+        AND canonical_test IN ('HB', 'HCT')
+        AND numeric_value IS NOT NULL
+        AND result_date IS NOT NULL
+      ORDER BY CASE WHEN source = 'anc_lab' THEN 1 ELSE 0 END, result_date, source_key`,
+    journeyId ? [hospitalId, journeyId] : [hospitalId],
+  );
+}
+
+function addVisitLabRows(target: VisitLabValues, rows: readonly VisitLabRow[]): void {
+  for (const row of rows) {
+    const day = toIsoDate(row.result_date);
+    if (!day) continue;
+    const days = target.get(row.journey_id) ?? new Map<string, VisitLabValue>();
+    const value = days.get(day) ?? {};
+    if (row.canonical_test === 'HB') value.hb = Number(row.numeric_value);
+    else value.hct = Number(row.numeric_value);
+    days.set(day, value);
+    target.set(row.journey_id, days);
+  }
+}
+
+export async function loadVisitLabValues(
+  db: LabReader,
+  hospitalId: string,
+): Promise<VisitLabValues> {
+  const target: VisitLabValues = new Map();
+  addVisitLabRows(target, await queryVisitLabRows(db, hospitalId));
+  return target;
+}
+
+/** Re-reads one journey after its labs changed mid-push. */
+export async function refreshVisitLabValues(
+  db: LabReader,
+  hospitalId: string,
+  journeyId: string,
+  target: VisitLabValues,
+): Promise<void> {
+  target.delete(journeyId);
+  addVisitLabRows(target, await queryVisitLabRows(db, hospitalId, journeyId));
+}
+
+// ─── Journey screening columns ──────────────────────────────────────────────
+
+const JOURNEY_LAB_TESTS = ['HBSAG', 'BLOOD_GROUP', 'RH', 'DCIP', 'MCV'] as const satisfies readonly AncLabTest[];
+type JourneyLabTest = (typeof JOURNEY_LAB_TESTS)[number];
+
+interface JourneyLabRow {
+  canonical_test: JourneyLabTest;
+  interpretation: string | null;
+  numeric_value: number | string | null;
+  normalized_value: string | null;
+}
+
+function posNeg(interpretation: string | null): 'POS' | 'NEG' | null {
+  if (interpretation === 'positive') return 'POS';
+  if (interpretation === 'negative') return 'NEG';
+  return null;
+}
+
+/**
+ * The newest usable result per test, across every hospital in the journey.
+ * Unknown, abnormal, missing and concealed readings are passed over so they
+ * neither blank a known value nor get recorded as a POS/NEG they are not.
+ *
+ * Deliberately excludes: HIV/VDRL, which keep their person_anc source and are
+ * not newly exposed through a plaintext column; and OGTT, because grading a
+ * glucose needs thresholds nobody has signed off and the journey page paints
+ * any text other than ABNORMAL as normal.
+ */
+export async function refreshJourneyLabColumns(
+  db: LabWriter & LabReader,
+  journeyId: string,
+): Promise<void> {
+  const rows = await db.query<JourneyLabRow>(
+    `SELECT canonical_test, interpretation, numeric_value, normalized_value
+       FROM cached_anc_lab_results
+      WHERE journey_id = ?
+        AND canonical_test IN (${JOURNEY_LAB_TESTS.map(() => '?').join(', ')})
+      ORDER BY result_date DESC NULLS LAST, synced_at DESC, source_key`,
+    [journeyId, ...JOURNEY_LAB_TESTS],
+  );
+
+  const latest = (test: JourneyLabTest, read: (r: JourneyLabRow) => string | number | null) => {
+    for (const row of rows) {
+      if (row.canonical_test !== test) continue;
+      const value = read(row);
+      if (value !== null) return value;
+    }
+    return null;
+  };
+
+  const values = [
+    latest('BLOOD_GROUP', (r) => r.normalized_value),
+    latest('RH', (r) => posNeg(r.interpretation)),
+    latest('HBSAG', (r) => posNeg(r.interpretation)),
+    latest('MCV', (r) => (r.numeric_value === null ? null : Number(r.numeric_value))),
+    latest('DCIP', (r) => posNeg(r.interpretation)),
+  ];
+  if (values.every((v) => v === null)) return;
+
+  await db.execute(
+    `UPDATE maternal_journeys SET
+       blood_group = COALESCE(?, blood_group),
+       rh_factor = COALESCE(?, rh_factor),
+       hbsag_result = COALESCE(?, hbsag_result),
+       mcv_fl = COALESCE(?, mcv_fl),
+       dcip_result = COALESCE(?, dcip_result),
+       updated_at = ?
+     WHERE id = ?`,
+    [...values, new Date().toISOString(), journeyId],
+  );
+}
