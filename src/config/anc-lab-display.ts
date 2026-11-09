@@ -1,0 +1,100 @@
+/**
+ * How ANC lab results are grouped and named on screen. The rules that use this
+ * live in src/services/anc-lab-presentation.ts.
+ */
+import type { AncLabSource, AncLabTest } from '@/config/anc-lab-canon';
+
+export const ANC_LAB_TEST_LABEL: Record<AncLabTest, string> = {
+  HB: 'Hb',
+  HCT: 'Hct',
+  HBSAG: 'HBsAg',
+  VDRL_RPR: 'VDRL / RPR',
+  TREPONEMAL: 'Treponemal',
+  SYPHILIS_UNSPECIFIED: 'Syphilis',
+  HIV: 'Anti-HIV',
+  CD4: 'CD4',
+  MCV: 'MCV',
+  MCH: 'MCH',
+  OF: 'OF',
+  DCIP: 'DCIP',
+  HB_TYPING: 'Hb typing',
+  GST: 'GCT / GST',
+  OGTT_FASTING: 'OGTT ก่อนดื่ม',
+  OGTT_1H: 'OGTT 1 ชม.',
+  OGTT_2H: 'OGTT 2 ชม.',
+  OGTT_3H: 'OGTT 3 ชม.',
+  OGTT_UNSPECIFIED: 'OGTT (ไม่ระบุเวลา)',
+  BLOOD_GROUP: 'หมู่เลือด ABO',
+  RH: 'Rh',
+  URINE_ALBUMIN: 'Urine albumin',
+  URINE_SUGAR: 'Urine sugar',
+};
+
+export interface AncLabPanelGroup {
+  id: string;
+  titleTh: string;
+  tests: readonly AncLabTest[];
+}
+
+/** Every AncLabTest belongs to exactly one group, or it would never be shown. */
+export const ANC_LAB_PANEL_GROUPS: readonly AncLabPanelGroup[] = [
+  { id: 'hematology', titleTh: 'ความเข้มข้นของเลือด', tests: ['HB', 'HCT'] },
+  {
+    id: 'infection',
+    titleTh: 'คัดกรองการติดเชื้อ',
+    tests: ['HBSAG', 'VDRL_RPR', 'TREPONEMAL', 'SYPHILIS_UNSPECIFIED', 'HIV', 'CD4'],
+  },
+  { id: 'thalassemia', titleTh: 'ธาลัสซีเมีย', tests: ['MCV', 'MCH', 'OF', 'DCIP', 'HB_TYPING'] },
+  {
+    id: 'glucose',
+    titleTh: 'น้ำตาลในเลือด / OGTT',
+    tests: ['GST', 'OGTT_FASTING', 'OGTT_1H', 'OGTT_2H', 'OGTT_3H', 'OGTT_UNSPECIFIED'],
+  },
+  { id: 'blood_group', titleTh: 'หมู่เลือด', tests: ['BLOOD_GROUP', 'RH'] },
+  { id: 'urine', titleTh: 'ปัสสาวะ', tests: ['URINE_ALBUMIN', 'URINE_SUGAR'] },
+];
+
+/** Numeric tests drawn as a trend when they have been repeated. */
+export const ANC_LAB_TREND_TESTS: readonly AncLabTest[] = ['HB', 'HCT'];
+
+export interface AncLabCoreItem {
+  id: string;
+  labelTh: string;
+  /** Any one of these on file counts; hospitals record the same screen differently. */
+  tests: readonly AncLabTest[];
+}
+
+/**
+ * Core tests reported as "not in the system yet" when absent. A data-completeness
+ * list only: it carries no gestational-age deadline and no clinical judgement.
+ */
+export const ANC_LAB_CORE_ITEMS: readonly AncLabCoreItem[] = [
+  { id: 'hb_hct', labelTh: 'Hb / Hct', tests: ['HB', 'HCT'] },
+  { id: 'hbsag', labelTh: 'HBsAg', tests: ['HBSAG'] },
+  {
+    id: 'syphilis',
+    labelTh: 'ซิฟิลิส (VDRL / RPR / Treponemal)',
+    tests: ['VDRL_RPR', 'TREPONEMAL', 'SYPHILIS_UNSPECIFIED'],
+  },
+  { id: 'hiv', labelTh: 'Anti-HIV', tests: ['HIV'] },
+  { id: 'thal_screen', labelTh: 'MCV / OF', tests: ['MCV', 'OF'] },
+  { id: 'dcip', labelTh: 'DCIP', tests: ['DCIP'] },
+  { id: 'blood_group', labelTh: 'หมู่เลือด ABO', tests: ['BLOOD_GROUP'] },
+  { id: 'rh', labelTh: 'Rh', tests: ['RH'] },
+];
+
+/**
+ * Tests where a negative result is the notable one. Rh "positive" is the usual
+ * result, so reading these like an infection screen would put a false alarm on
+ * most women; the journey page's Rh tile has the same reading.
+ */
+export const ANC_LAB_NEGATIVE_IS_NOTABLE: readonly AncLabTest[] = ['RH'];
+
+/** lab_order.abnormal_result: HOSxP writes Y for abnormal; N or empty is not a flag. */
+export const ANC_LAB_ABNORMAL_FLAG_VALUE = 'Y';
+
+export const ANC_LAB_SOURCE_LABEL: Record<AncLabSource, string> = {
+  anc_lab: 'ANC',
+  lab_order: 'ห้องแล็บ',
+  person_anc: 'ทะเบียน ANC',
+};
