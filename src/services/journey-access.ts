@@ -12,7 +12,7 @@
  * make any director an ADMIN, and those hcodes are not care providers.
  */
 import type { DatabaseAdapter } from '@/db/adapter';
-import { ANC_SEROLOGY_RISK_KEYS } from '@/config/anc-risk-rules';
+import { ANC_SEROLOGY_RISK_KEYS, isSerologyIcd10 } from '@/config/anc-risk-rules';
 import { listJourneyLabResults, type JourneyLabResult } from '@/services/anc-lab-results';
 import { getJourneyDetail } from '@/services/journey-list';
 import type { JourneyDetailResponse } from '@/types/api';
@@ -88,6 +88,11 @@ function withholdSerology(detail: JourneyDetailResponse): JourneyDetailResponse 
         (rule) => !ANC_SEROLOGY_RISK_KEYS.has(rule),
       ),
     },
+    referrals: detail.referrals.map((referral) =>
+      referral.diagnosisCode && isSerologyIcd10(referral.diagnosisCode)
+        ? { ...referral, diagnosisCode: null }
+        : referral,
+    ),
   };
 }
 

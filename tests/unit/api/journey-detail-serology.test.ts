@@ -179,6 +179,38 @@ describe('GET /api/journeys/[journeyId] — HIV and syphilis visibility', () => 
     expect(body.latestRisk?.triggeredRules).toEqual(OTHER_RULES);
   });
 
+  describe('referral diagnosis codes', () => {
+    async function referralCode(code: string) {
+      await addReferral(REGISTERING.id, REFERRED_TO.id, 'ACCEPTED');
+      await db.execute('UPDATE cached_referrals SET diagnosis_code = ?', [code]);
+      const body = (await (await call(journeyId)).json()) as {
+        referrals: { diagnosisCode: string | null }[];
+      };
+      return body.referrals[0].diagnosisCode;
+    }
+
+    it.each([['B20'], ['B24'], ['b20.9'], ['Z21'], ['R75'], ['O98.7'], ['A50.0'], ['A53.9'], ['O98.1']])(
+      'blanks %s for a hospital without full access',
+      async (code) => {
+        signInAt(UNRELATED.hcode);
+        expect(await referralCode(code)).toBeNull();
+      },
+    );
+
+    it.each([['O24.4'], ['O14.1'], ['B18.1'], ['A49.9'], ['O98.4']])(
+      'keeps the unrelated code %s',
+      async (code) => {
+        signInAt(UNRELATED.hcode);
+        expect(await referralCode(code)).toBe(code);
+      },
+    );
+
+    it('keeps the code for a hospital with full access', async () => {
+      signInAt(REGISTERING.hcode);
+      expect(await referralCode('B20')).toBe('B20');
+    });
+  });
+
   it('withholds serology from a hospital with only its own records', async () => {
     await addVisit(VISITED.id);
     signInAt(VISITED.hcode);

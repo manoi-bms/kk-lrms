@@ -68,10 +68,7 @@ export interface AncRiskLevelConfig {
   action: string;
 }
 
-import {
-  ANC_CLASSIFYING_CANON,
-  ancClassifyingFallbackLabel,
-} from '@/config/anc-classifying-canon';
+import { ANC_CLASSIFYING_CANON, ancClassifyingFallbackLabel } from '@/config/anc-classifying-canon';
 
 // Mapping from HOSxP anc_risk_id to lab boolean flags
 // These IDs correspond to entries in the HOSxP anc_risk lookup table
@@ -107,6 +104,16 @@ export const ANC_SEROLOGY_RISK_KEYS: ReadonlySet<string> = new Set([
     .filter(([, flag]) => flag === 'syphilisPositive' || flag === 'hivPositive')
     .map(([id]) => ancClassifyingFallbackLabel(Number(id))),
 ]);
+
+/**
+ * ICD-10 codes that state HIV or syphilis, matched without the dot: HIV disease
+ * B20-B24, Z21, R75, Z20.6, Z71.7 and O98.7; syphilis A50-A53 and O98.1.
+ */
+const SEROLOGY_ICD10 = /^(B2[0-4]|Z21|R75|Z206|Z717|O98[17]|A5[0-3])/;
+
+export function isSerologyIcd10(code: string): boolean {
+  return SEROLOGY_ICD10.test(code.trim().toUpperCase().replace('.', ''));
+}
 
 export const ANC_RISK_LEVEL_ORDER: Record<AncRiskLevel, number> = {
   [AncRiskLevel.LOW]: 0,
