@@ -62,7 +62,9 @@ describe('POST /api/sync/browser-push — ANC labs', () => {
     expect(body.anc.labs).toMatchObject({ upserted: 1, skipped: 1 });
     expect(await db.query('SELECT id FROM cached_anc_lab_results')).toHaveLength(1);
 
-    const rows = await db.query<{ id: string }>('SELECT id FROM hospitals WHERE hcode = ?', [HCODE]);
+    const rows = await db.query<{ id: string }>('SELECT id FROM hospitals WHERE hcode = ?', [
+      HCODE,
+    ]);
     const run = await getLatestSyncRun(rows[0].id);
     const step = run!.steps.find((s) => s.name === 'persist_anc' && s.status === 'success');
     expect(step!.counts).toMatchObject({ labsUpserted: 1, labsSkipped: 1 });

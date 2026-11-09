@@ -135,9 +135,7 @@ describe('shouldPullAncLabs', () => {
 
 describe('pullAncLabBundle', () => {
   it('groups rows by pregnancy with stable source ids', async () => {
-    const bundle = await pullAncLabBundle(
-      fakeRun({ anc: [ancRow()], order: [orderRow()] }),
-    );
+    const bundle = await pullAncLabBundle(fakeRun({ anc: [ancRow()], order: [orderRow()] }));
     const rows = bundle.byAncId.get('1') ?? [];
     expect(rows.map((r) => r.sourceId).sort()).toEqual(['11', 'S1:202']);
     const anc = rows.find((r) => r.source === 'anc_lab');
@@ -253,7 +251,14 @@ describe('mapAncBundle — lab attachment', () => {
   it('no longer sends a hematocrit from the visit row', () => {
     const [patient] = mapAncBundle(
       [master(1, cid)],
-      [{ person_anc_id: 1, anc_service_date: '2026-03-01', anc_service_number: 1, hct_result: '36' }],
+      [
+        {
+          person_anc_id: 1,
+          anc_service_date: '2026-03-01',
+          anc_service_number: 1,
+          hct_result: '36',
+        },
+      ],
       [],
     );
     expect(patient.visits?.[0]).not.toHaveProperty('hctPct');

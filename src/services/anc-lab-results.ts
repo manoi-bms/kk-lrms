@@ -76,7 +76,10 @@ interface LabResultRow {
   synced_at: string | Date;
 }
 
-function decryptRaw(ciphertext: string | null, key: string): { value: string | null; failed: boolean } {
+function decryptRaw(
+  ciphertext: string | null,
+  key: string,
+): { value: string | null; failed: boolean } {
   if (ciphertext === null) return { value: null, failed: false };
   try {
     return { value: decrypt(ciphertext, key), failed: false };

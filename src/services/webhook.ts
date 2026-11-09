@@ -1830,7 +1830,9 @@ export async function processAncWebhook(
         // row pointing at a journey that no longer exists.
         await db.transaction(async (tx) => {
           await tx.execute(`DELETE FROM cached_anc_visits WHERE journey_id = ?`, [existing.id]);
-          await tx.execute(`DELETE FROM cached_anc_lab_results WHERE journey_id = ?`, [existing.id]);
+          await tx.execute(`DELETE FROM cached_anc_lab_results WHERE journey_id = ?`, [
+            existing.id,
+          ]);
           await tx.execute(`DELETE FROM cached_anc_risks WHERE journey_id = ?`, [existing.id]);
           await tx.execute(`DELETE FROM cached_newborns WHERE journey_id = ?`, [existing.id]);
           await tx.execute(`DELETE FROM cached_referrals WHERE journey_id = ?`, [existing.id]);

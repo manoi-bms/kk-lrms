@@ -6,7 +6,11 @@
  * value shape are used. To support a newly seen spelling or result form, add
  * a row here; the logic in src/services/anc-lab-classifier.ts stays unchanged.
  */
-import { HB_G_DL_PLAUSIBLE_MAX, HCT_PCT_PLAUSIBLE_MAX, HCT_PCT_PLAUSIBLE_MIN } from './lab-plausibility';
+import {
+  HB_G_DL_PLAUSIBLE_MAX,
+  HCT_PCT_PLAUSIBLE_MAX,
+  HCT_PCT_PLAUSIBLE_MIN,
+} from './lab-plausibility';
 
 export type AncLabTest =
   | 'HCT'
@@ -36,12 +40,7 @@ export type AncLabTest =
 export type AncLabSource = 'anc_lab' | 'lab_order' | 'person_anc';
 
 export type AncLabInterpretation =
-  | 'negative'
-  | 'positive'
-  | 'abnormal'
-  | 'unknown'
-  | 'missing'
-  | 'concealed';
+  'negative' | 'positive' | 'abnormal' | 'unknown' | 'missing' | 'concealed';
 
 export type AncLabResultShape =
   | { kind: 'numeric'; min: number; max: number }

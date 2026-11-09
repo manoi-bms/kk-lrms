@@ -314,7 +314,13 @@ export async function refreshVisitLabValues(
 
 // ─── Journey screening columns ──────────────────────────────────────────────
 
-const JOURNEY_LAB_TESTS = ['HBSAG', 'BLOOD_GROUP', 'RH', 'DCIP', 'MCV'] as const satisfies readonly AncLabTest[];
+const JOURNEY_LAB_TESTS = [
+  'HBSAG',
+  'BLOOD_GROUP',
+  'RH',
+  'DCIP',
+  'MCV',
+] as const satisfies readonly AncLabTest[];
 type JourneyLabTest = (typeof JOURNEY_LAB_TESTS)[number];
 
 interface JourneyLabRow {

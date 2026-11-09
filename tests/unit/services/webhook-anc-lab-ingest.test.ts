@@ -107,8 +107,7 @@ describe('processAncWebhook — ANC lab ingest', () => {
 
   const push = (p: WebhookAncPatient, extra?: Partial<WebhookAncPayload>) =>
     processAncWebhook(db, HOSPITAL_ID, payload(p, extra), sse);
-  const labs = () =>
-    db.query<LabRow>('SELECT * FROM cached_anc_lab_results ORDER BY source_key');
+  const labs = () => db.query<LabRow>('SELECT * FROM cached_anc_lab_results ORDER BY source_key');
   const visit = async () =>
     (
       await db.query<{ hb_g_dl: string | null; hct_pct: string | null }>(
@@ -274,9 +273,7 @@ describe('processAncWebhook — ANC lab ingest', () => {
     });
 
     it('ignores a labResults value that is not an array', async () => {
-      const result = await push(
-        patient({ labResults: 'nope' as unknown as AncLabPayloadRow[] }),
-      );
+      const result = await push(patient({ labResults: 'nope' as unknown as AncLabPayloadRow[] }));
       expect(await labs()).toHaveLength(0);
       expect(result.labs?.skipped).toBe(1);
     });
@@ -386,8 +383,18 @@ describe('processAncWebhook — ANC lab ingest', () => {
       await push(
         patient({
           labResults: [
-            hct({ sourceId: '1', labItemsName: 'HBs Ag', result: 'Negative', resultDate: '2026-02-01' }),
-            hct({ sourceId: '2', labItemsName: 'HBs Ag', result: 'Positive', resultDate: '2026-04-01' }),
+            hct({
+              sourceId: '1',
+              labItemsName: 'HBs Ag',
+              result: 'Negative',
+              resultDate: '2026-02-01',
+            }),
+            hct({
+              sourceId: '2',
+              labItemsName: 'HBs Ag',
+              result: 'Positive',
+              resultDate: '2026-04-01',
+            }),
           ],
         }),
       );
@@ -397,10 +404,7 @@ describe('processAncWebhook — ANC lab ingest', () => {
     it('does not turn an unknown or abnormal reading into a journey value', async () => {
       await push(
         patient({
-          labResults: [
-            named('1', 'HBs Ag', 'ผิดปกติ'),
-            named('2', 'DCIP', '-'),
-          ],
+          labResults: [named('1', 'HBs Ag', 'ผิดปกติ'), named('2', 'DCIP', '-')],
         }),
       );
       const j = await journey();
@@ -424,7 +428,10 @@ describe('processAncWebhook — ANC lab ingest', () => {
     it('leaves HIV and VDRL columns to their existing source', async () => {
       await push(
         patient({
-          labResults: [named('1', 'Anti HIV (ANC)', 'Positive'), named('2', 'VDRL ( RPR )', 'Positive')],
+          labResults: [
+            named('1', 'Anti HIV (ANC)', 'Positive'),
+            named('2', 'VDRL ( RPR )', 'Positive'),
+          ],
         }),
       );
       const j = await journey();

@@ -45,7 +45,7 @@ export interface AncLabPayloadRow {
   ancResultNormalRaw?: string | null;
 }
 
-export type AncLabClassificationNote ='no_rule' | 'excluded_by_rule' | 'value_shape_mismatch';
+export type AncLabClassificationNote = 'no_rule' | 'excluded_by_rule' | 'value_shape_mismatch';
 
 export interface AncLabClassification {
   canonicalTest: AncLabTest | null;
@@ -80,7 +80,9 @@ function matchesAny(forms: readonly RegExp[], value: string): boolean {
   return forms.some((form) => form.test(value));
 }
 
-function matchNameRule(input: Pick<AncLabClassifierInput, 'source' | 'ancLabName' | 'labItemsName'>) {
+function matchNameRule(
+  input: Pick<AncLabClassifierInput, 'source' | 'ancLabName' | 'labItemsName'>,
+) {
   // person_anc columns are flags of unconfirmed meaning; see ANC_THALASSEMIA_FIELDS.
   if (input.source === 'person_anc') return null;
   const name = normaliseName(input.labItemsName) || normaliseName(input.ancLabName);
@@ -174,9 +176,7 @@ export function classifyAncLab(input: AncLabClassifierInput): AncLabClassificati
 
 /** Whether a lab_order item is one the app wants; its value is judged later. */
 export function isClassifiableLabOrderName(labItemsName: string): boolean {
-  return (
-    matchNameRule({ source: 'lab_order', ancLabName: null, labItemsName })?.test != null
-  );
+  return matchNameRule({ source: 'lab_order', ancLabName: null, labItemsName })?.test != null;
 }
 
 /** Re-derives what a sensitive test keeps out of its plaintext columns. */

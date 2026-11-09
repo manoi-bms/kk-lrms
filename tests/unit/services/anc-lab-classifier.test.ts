@@ -16,17 +16,14 @@ const labOrder = (labItemsName: string, result: string) =>
   classifyAncLab({ source: 'lab_order', labItemsName, ancLabName: null, result });
 
 describe('classifyAncLab — names', () => {
-  it.each([
-    ['Hematocrit (HCT)'],
-    ['Hct'],
-    ['HCT1'],
-    ['Hct anc 1'],
-    ['Hematocrit 2'],
-  ])('classifies %s as hematocrit from a percent-shaped value', (name) => {
-    const c = ancLab(name, '34.5');
-    expect(c.canonicalTest).toBe('HCT');
-    expect(c.numericValue).toBe(34.5);
-  });
+  it.each([['Hematocrit (HCT)'], ['Hct'], ['HCT1'], ['Hct anc 1'], ['Hematocrit 2']])(
+    'classifies %s as hematocrit from a percent-shaped value',
+    (name) => {
+      const c = ancLab(name, '34.5');
+      expect(c.canonicalTest).toBe('HCT');
+      expect(c.numericValue).toBe(34.5);
+    },
+  );
 
   it.each([['HBs Ag'], ['HBsAg (ECLIA)'], ['HBs Ag anc 1']])('classifies %s as HBsAg', (name) => {
     expect(ancLab(name, 'Negative').canonicalTest).toBe('HBSAG');
