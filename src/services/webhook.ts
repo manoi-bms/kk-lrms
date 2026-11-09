@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createHash, randomBytes } from 'crypto';
 import type { DatabaseAdapter } from '@/db/adapter';
 import { encrypt, getEncryptionKey } from '@/lib/encryption';
+import { plausibleHbGDl } from '@/config/lab-plausibility';
 import {
   upsertCachedPatients,
   detectChanges,
@@ -2138,7 +2139,7 @@ export async function processAncWebhook(
               fitOrNull(visit.engagement, 50, 'engagement'),
               fitOrNull(visit.urineProtein, 50, 'urine_protein'),
               fitOrNull(visit.urineGlucose, 50, 'urine_glucose'),
-              visit.hbGDl ?? null,
+              plausibleHbGDl(visit.hbGDl),
               visit.hctPct ?? null,
               visit.ttDoseNo ?? null,
               // Postgres is strict on boolean columns — must be true/false,

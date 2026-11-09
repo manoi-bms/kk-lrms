@@ -331,21 +331,19 @@ export function ancActiveCids(masters: Record<string, unknown>[]): string[] | un
   return [...cids];
 }
 
-const ancVisitsSql = (): string => `
+export const ancVisitsSql = (): string => `
   SELECT s.person_anc_id,
          s.anc_service_date, s.anc_service_number, s.pa_week,
          sc.bw, sc.bps, sc.bpd, sc.baby_fetal_heart_sound,
          sc.albumin, sc.sugar,
          bp.anc_baby_position_name AS presentation_name,
          bl.anc_baby_lead_name     AS engagement_name,
-         plh.anc_lab_result AS hct_result,
-         plb.anc_lab_result AS hb_result
+         plh.anc_lab_result AS hct_result
     FROM person_anc_service s
     LEFT JOIN person_anc_screen sc ON sc.person_anc_service_id = s.person_anc_service_id
     LEFT JOIN anc_baby_position bp ON bp.anc_baby_position_id = sc.anc_baby_position_id
     LEFT JOIN anc_baby_lead     bl ON bl.anc_baby_lead_id     = sc.anc_baby_lead_id
     LEFT JOIN person_anc_lab    plh ON plh.person_anc_service_id = s.person_anc_service_id AND plh.anc_lab_id = 6
-    LEFT JOIN person_anc_lab    plb ON plb.person_anc_service_id = s.person_anc_service_id AND plb.anc_lab_id = 8
    WHERE s.person_anc_id IN (SELECT pa.person_anc_id FROM person_anc pa WHERE ${ancActiveWhere()})
    ORDER BY s.person_anc_id, s.anc_service_number`;
 
@@ -588,7 +586,6 @@ function mapAncBundle(
         const fhr = intOrNull(v.baby_fetal_heart_sound);
         if (fhr != null) visit.fetalHr = fhr;
         visit.hctPct = parseLabFloat(strOrNull(v.hct_result));
-        visit.hbGDl = parseLabFloat(strOrNull(v.hb_result));
         visit.urineProtein = strOrNull(v.albumin);
         visit.urineGlucose = strOrNull(v.sugar);
         visit.presentation = strOrNull(v.presentation_name);
