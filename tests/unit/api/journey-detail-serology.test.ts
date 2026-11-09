@@ -189,15 +189,30 @@ describe('GET /api/journeys/[journeyId] — HIV and syphilis visibility', () => 
       return body.referrals[0].diagnosisCode;
     }
 
-    it.each([['B20'], ['B24'], ['b20.9'], ['Z21'], ['R75'], ['O98.7'], ['A50.0'], ['A53.9'], ['O98.1']])(
-      'blanks %s for a hospital without full access',
+    it.each([
+      ['B20'],
+      ['B24'],
+      ['b20.9'],
+      ['Z21'],
+      ['R75'],
+      ['O98.7'],
+      ['A50.0'],
+      ['A53.9'],
+      ['O98.1'],
+    ])('blanks %s for a hospital without full access', async (code) => {
+      signInAt(UNRELATED.hcode);
+      expect(await referralCode(code)).toBeNull();
+    });
+
+    it.each([['O24.4, B20'], ['O24/B20'], ['O24 B20'], ['see B20'], ['O24.4.B20'], ['O244B20']])(
+      'blanks %s because it is not one well-formed code',
       async (code) => {
         signInAt(UNRELATED.hcode);
         expect(await referralCode(code)).toBeNull();
       },
     );
 
-    it.each([['O24.4'], ['O14.1'], ['B18.1'], ['A49.9'], ['O98.4']])(
+    it.each([['O24.4'], ['O14.1'], ['B18.1'], ['A49.9'], ['O98.4'], ['O244'], ['O24']])(
       'keeps the unrelated code %s',
       async (code) => {
         signInAt(UNRELATED.hcode);

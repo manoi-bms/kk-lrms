@@ -111,8 +111,13 @@ export const ANC_SEROLOGY_RISK_KEYS: ReadonlySet<string> = new Set([
  */
 const SEROLOGY_ICD10 = /^(B2[0-4]|Z21|R75|Z206|Z717|O98[17]|A5[0-3])/;
 
-export function isSerologyIcd10(code: string): boolean {
-  return SEROLOGY_ICD10.test(code.trim().toUpperCase().replace('.', ''));
+/** One code and nothing else; the field is unchecked text at every write path. */
+const SINGLE_ICD10 = /^[A-Z]\d{2}(\.?\d{0,4}[A-Z]?)$/;
+
+/** Fails closed: a value that is not one clean code could be hiding a listed one. */
+export function isRestrictedDiagnosisCode(code: string): boolean {
+  const normalised = code.trim().toUpperCase();
+  return !SINGLE_ICD10.test(normalised) || SEROLOGY_ICD10.test(normalised.replace('.', ''));
 }
 
 export const ANC_RISK_LEVEL_ORDER: Record<AncRiskLevel, number> = {
